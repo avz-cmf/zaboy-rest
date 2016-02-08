@@ -1,0 +1,49 @@
+{
+  "name": "avz-cmf/zaboy-rest",
+  "description": "REST resource as middleware",
+  "type": "library",
+  "license": "GPL-3.0",
+  "keywords": [
+    "php",
+    "rest",
+    "data store",
+    "middleware"
+  ],
+  
+  "homepage": "https://github.com/avz-cmf/zaboy-rest",
+  
+  "support": {
+    "issues": "https://github.com/avz-cmf/zaboy-rest/issues",
+    "source": "https://github.com/avz-cmf/zaboy-rest"
+  },
+
+    "require": {
+        "avz-cmf/zaboy-res": "^1.0.3",
+        "zendframework/zend-stratigility": "^1.1",
+	"psr/http-message": "^1.0",
+        "zendframework/zend-diactoros": "^1.1",
+        "zendframework/zend-config": "^2.5",
+        "zendframework/zend-servicemanager": "^2.5",
+        "xiag/rql-parser": "*",
+        "zendframework/zend-stdlib": "^2.5"
+     },
+    "require-dev": {
+        "phpunit/phpunit": "^4.0"
+    },
+    "autoload": {
+      "psr-4": {
+        "zaboy\\rest\\": "src/"
+      }
+    },
+    "autoload-dev": {
+      "psr-4": {
+        "zaboy\\test\\rest\\": "test/src/"
+      }
+    },
+    "suggest": {
+
+    },
+    "scripts": {
+
+    }
+}
