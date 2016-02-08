@@ -13,8 +13,15 @@ use Psr\Http\Message\ServerRequestInterface;
 use Zend\Stratigility\MiddlewareInterface;
 
 /**
+ * Extracts resource name and row id from URL
  * 
+ * If URL is 'site,com/api/rest/RESOURCE-NAME/ROWS-ID'
+ * request->getAttribute('Resource-Name') returns 'RESOURCE-NAME'
+ * request->getAttribute('id') returns 'ROWS-ID'
  * 
+ * If URL is 'site,com/restapi/RESOURCE-NAME?a=1&limit(2,5)'
+ * request->getAttribute('Resource-Name') returns 'RESOURCE-NAME'
+ * request->getAttribute('id') returns null
  * 
  * @category   Rest
  * @package    Rest
@@ -23,15 +30,6 @@ class ResourceResolver implements MiddlewareInterface
 {
     
     /**
-     * Extracts resource name and row id from URL
-     * 
-     * If URL is 'site,com/api/rest/RESOURCE-NAME/ROWS-ID'
-     * request->getAttribute('Resource-Name') returns 'RESOURCE-NAME'
-     * request->getAttribute('id') returns 'ROWS-ID'
-     * 
-     * If URL is 'site,com/restapi/RESOURCE-NAME?a=1&limit(2,5)'
-     * request->getAttribute('Resource-Name') returns 'RESOURCE-NAME'
-     * request->getAttribute('id') returns null
      * 
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
