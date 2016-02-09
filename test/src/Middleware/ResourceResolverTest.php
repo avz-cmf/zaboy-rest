@@ -61,7 +61,7 @@ class ResourceResolverTest extends \PHPUnit_Framework_TestCase {
                 'foo'
         );
         $this->assertSame(
-                $returnedResponse->getAttribute('id'),
+                $returnedResponse->getAttribute('Primary-Key-Value'),
                 null
         );  
     }
@@ -78,7 +78,7 @@ class ResourceResolverTest extends \PHPUnit_Framework_TestCase {
                 'foo-bar_baz'
         );
         $this->assertSame(
-                $returnedResponse->getAttribute('id'),
+                $returnedResponse->getAttribute('Primary-Key-Value'),
                 '2'
         );  
     }
@@ -96,7 +96,7 @@ class ResourceResolverTest extends \PHPUnit_Framework_TestCase {
                 '1foo-AbarD_baz3'
         );
         $this->assertSame(
-                $returnedResponse->getAttribute('id'),
+                $returnedResponse->getAttribute('Primary-Key-Value'),
                 'a-b_C2'
         );  
     }
@@ -113,7 +113,7 @@ class ResourceResolverTest extends \PHPUnit_Framework_TestCase {
                 '123'
         );
         $this->assertSame(
-                $returnedResponse->getAttribute('id'),
+                $returnedResponse->getAttribute('Primary-Key-Value'),
                 null
         );  
     }
@@ -130,7 +130,7 @@ class ResourceResolverTest extends \PHPUnit_Framework_TestCase {
                 null
         );
         $this->assertSame(
-                $returnedResponse->getAttribute('id'),
+                $returnedResponse->getAttribute('Primary-Key-Value'),
                 null
         );  
     }

@@ -17,11 +17,11 @@ use Zend\Stratigility\MiddlewareInterface;
  * 
  * If URL is 'site,com/api/rest/RESOURCE-NAME/ROWS-ID'
  * request->getAttribute('Resource-Name') returns 'RESOURCE-NAME'
- * request->getAttribute('id') returns 'ROWS-ID'
+ * request->getAttribute('Primary-Key-Value') returns 'ROWS-ID'
  * 
  * If URL is 'site,com/restapi/RESOURCE-NAME?a=1&limit(2,5)'
  * request->getAttribute('Resource-Name') returns 'RESOURCE-NAME'
- * request->getAttribute('id') returns null
+ * request->getAttribute('Primary-Key-Value') returns null
  * 
  * @category   Rest
  * @package    Rest
@@ -45,7 +45,7 @@ class ResourceResolver implements MiddlewareInterface
         $id = isset($matches[2])?$matches[2]:null;
 
         $request = $request->withAttribute('Resource-Name', $resourceName);
-        $request = $request->withAttribute('id', $id);
+        $request = $request->withAttribute('Primary-Key-Value', $id);
 
         if ($next) {
             return $next($request, $response);
