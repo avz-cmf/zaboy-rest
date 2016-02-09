@@ -7,9 +7,8 @@ require '/vendor/autoload.php';
 
 use Zend\Stratigility\MiddlewarePipe;
 use Zend\Diactoros\Server;
-use zaboy\middleware\Middleware;
-use zaboy\middleware\Middlewares\Factory\RestActionPipeFactory;
-
+use zaboy\rest\Middleware;
+use zaboy\rest\Middlewares\Factory\RestPipeFactory;
 
 $container = include 'config/container.php';
 
@@ -25,9 +24,9 @@ $restMiddlewareLazy = function (
     $next = null
     ) use ($container) {
         $resourceName = $request->getAttribute('Resource-Name');
-        $restActionPipeFactory = new RestActionPipeFactory();
-        $restActionPipe = $restActionPipeFactory($container, $resourceName);
-        return $restActionPipe($request, $response, $next);
+        $restPipeFactory = new RestPipeFactory();
+        $restPipe = $restPipeFactory($container, $resourceName);
+        return $restPipe($request, $response, $next);
 };
 $rest->pipe('/',  $restMiddlewareLazy);
 $app->pipe('/api/rest', $rest);
