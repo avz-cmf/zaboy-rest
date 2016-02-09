@@ -6,7 +6,7 @@
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  */
 
-namespace zaboy\middleware\Middlewares\Factory;
+namespace zaboy\rest\Pipes\Factory;
 
 //use Zend\ServiceManager\Factory\FactoryInterface; 
 //uncomment it ^^ for Zend\ServiceManager V3
@@ -15,17 +15,16 @@ use Zend\ServiceManager\FactoryInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
 use zaboy\rest\RestException;
 use Interop\Container\ContainerInterface;
-use zaboy\res\DataStore\DbTable;
 use zaboy\rest\Middleware;
 use zaboy\rest\Pipe\RestPipe;
 use zaboy\res\DataStore\DbTable;
 
 /**
  * 
- * @category   DataStores
- * @package    DataStores
+ * @category   Rest
+ * @package    Rest
  */
-class RestActionPipeFactory  implements FactoryInterface
+class RestPipeFactory  implements FactoryInterface
 {
     /**
      * Create and return an instance of the PipeMiddleware for Rest.
@@ -69,7 +68,7 @@ class RestActionPipeFactory  implements FactoryInterface
             case is_a($resourceObject, 'zaboy\res\DataStores\DataStoresAbstract'):
                 $dataStore = $resourceObject;
                 $resourceObject = new Middleware\StoreMiddleware($dataStore);
-            case $resourceObject instanceof Zend\Stratigility\MiddlewareInterface:
+            case $resourceObject instanceof \Zend\Stratigility\MiddlewareInterface:
                 $storeMiddleware = $resourceObject;
             default:
                 if (!$storeMiddleware) {
@@ -94,7 +93,7 @@ class RestActionPipeFactory  implements FactoryInterface
      * @param ServiceLocatorInterface $serviceLocator
      * @return mixed
      */
-    public function createService(ServiceLocatorInterface $serviceLocator) 
+    public function createService(ServiceLocatorInterface $serviceLocator)
     {
         throw new RestException(
                 'Don\'t use it as factory in config. ' . PHP_EOL
