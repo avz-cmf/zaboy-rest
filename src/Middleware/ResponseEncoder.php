@@ -37,11 +37,9 @@ class ResponseEncoder implements MiddlewareInterface
     {
         $responseBody = $request->getAttribute('Response-Body');       
         $accept = $request->getHeaderLine('Accept');
-var_dump(preg_match('#^application/([^+\s]+\+)?json#', $accept))  ;      
         if (isset($accept) && preg_match('#^application/([^+\s]+\+)?json#', $accept)) {
             $status = $response->getStatusCode();
             $headers = $response->getHeaders();
-var_dump($responseBody);            
             $response = new JsonResponse($responseBody, $status, $headers);
         }else{
             /**
@@ -51,6 +49,8 @@ var_dump($responseBody);
             ]));
              * 
              */
+            
+            $response->end(var_dump($responseBody));
         }
         
         if ($next) {

@@ -32,20 +32,14 @@ class StoreMiddleware extends StoreMiddlewareAbstract
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next = null)
     {
 
-        $id = $request->getAttribute('id');
+        $isPrimaryKeyValue = null !== $request->getAttribute('Primary-Key-Value');
         $rqlQueryObject = $request->getAttribute('Rql-Query-Object');
+        $httpMethod = $request->getMethod();
         switch ($request->getMethod()) {
-            case 'GET':
-                $rowset = $this->dataStore->query($rqlQueryObject);
-                $request = $request->withAttribute('Response-Body', $rowset);
-                $rowCount = count($request);                
-                $limitObject = $rqlQueryObject->getLimit();
-                $offset = !$limitObject ? 0 : $limitObject->getOffset(); 
-                $contentRange = 'items ' . $offset . '-' . $offset + $rowCount-1;
-                $contentRange =  $contentRange . '/' . $rowCount;
-                $response = $response->withHeader('Content-Range', $contentRange);
-                $response = $response->withStatus(200);    
-                break;
+            case $httpMethod === 'GET' && $isPrimaryKeyValue:
+                return $this->methodGetWithId($request, $response, $next);
+            case $httpMethod === 'GET' && !($isPrimaryKeyValue):
+                return $this->methodGetWithoutId($request, $response, $next);    
             case 'POST':    
                 try {
                     $body = $request->getParsedBody();
@@ -67,6 +61,48 @@ class StoreMiddleware extends StoreMiddlewareAbstract
             break;
         }
 
+        if ($next) {
+            return $next($request, $response);
+        }
+        return $response;
+    }
+    
+    /**
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
+     * @param callable|null $next
+     * @return ResponseInterface
+     */
+    public function methodGetWithId(ServerRequestInterface $request, ResponseInterface $response, callable $next = null)
+    {
+        $primaryKeyValue = $request->getAttribute('Primary-Key-Value');
+        $row = $this->dataStore->read($primaryKeyValue);
+        $request = $request->withAttribute('Response-Body', $row);
+        $rowCount = empty($request) ? 0 : 1;                
+        $contentRange = 'items ' . $primaryKeyValue . '-' . $primaryKeyValue;
+        $response = $response->withHeader('Content-Range', $contentRange);
+        $response = $response->withStatus(200);
+        if ($next) {
+            return $next($request, $response);
+        }
+        return $response;
+    }    
+    /**
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
+     * @param callable|null $next
+     * @return ResponseInterface
+     */
+    public function methodGetWithoutId(ServerRequestInterface $request, ResponseInterface $response, callable $next = null)
+    {
+        $rowset = $this->dataStore->query($rqlQueryObject);
+        $request = $request->withAttribute('Response-Body', $rowset);
+        $rowCount = count($request);                
+        $limitObject = $rqlQueryObject->getLimit();
+        $offset = !$limitObject ? 0 : $limitObject->getOffset(); 
+        $contentRange = 'items ' . $offset . '-' . $offset + $rowCount-1 . '/' . $rowCount;
+        $response = $response->withHeader('Content-Range', $contentRange);
+        $response = $response->withStatus(200);
         if ($next) {
             return $next($request, $response);
         }
