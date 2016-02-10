@@ -96,7 +96,7 @@ class StoreMiddleware extends StoreMiddlewareAbstract
         $rqlQueryObject = $request->getAttribute('Rql-Query-Object');
         $rowset = $this->dataStore->query($rqlQueryObject);
         $request = $request->withAttribute('Response-Body', $rowset);
-        $rowCount = count($request);                
+        $rowCount = count($rowset);                
         $limitObject = $rqlQueryObject->getLimit();
         $offset = !$limitObject ? 0 : $limitObject->getOffset(); 
         $contentRange = 'items ' . $offset . '-' . $offset + $rowCount-1 . '/' . $rowCount;

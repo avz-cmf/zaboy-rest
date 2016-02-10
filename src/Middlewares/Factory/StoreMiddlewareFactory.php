@@ -6,7 +6,7 @@
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  */
 
-namespace zaboy\rest\Pipes\Factory;
+namespace zaboy\rest\Middlewares\Factory;
 
 //use Zend\ServiceManager\Factory\FactoryInterface; 
 //uncomment it ^^ for Zend\ServiceManager V3
@@ -16,8 +16,6 @@ use Zend\ServiceManager\ServiceLocatorInterface;
 use zaboy\rest\RestException;
 use Interop\Container\ContainerInterface;
 use zaboy\rest\Middleware;
-use zaboy\rest\Middlewares\Factory\StoreMiddlewareFactory;
-use zaboy\rest\Pipe\RestPipe;
 use zaboy\res\DataStore\DbTable;
 
 /**
@@ -25,7 +23,7 @@ use zaboy\res\DataStore\DbTable;
  * @category   Rest
  * @package    Rest
  */
-class RestPipeFactory  implements FactoryInterface
+class StoreMiddlewareFactory  implements FactoryInterface
 {
     /**
      * Create and return an instance of the PipeMiddleware for Rest.
@@ -52,24 +50,34 @@ class RestPipeFactory  implements FactoryInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null) 
     {
-        $storeMiddlewareLazy = function (
-            $request, 
-            $response,   
-            $next = null
-            ) use ($container) {
-                $resourceName = $request->getAttribute('Resource-Name');
-                $storeMiddlewareFactory = new StoreMiddlewareFactory();
-                $storeMiddleware = $storeMiddlewareFactory($container, $resourceName);
-                return $storeMiddleware($request, $response, $next);
-        };
-
-        $middlewares[] = new Middleware\ResourceResolver();
-        $middlewares[] = new Middleware\RequestDecoder();  
-        $middlewares[] = new Middleware\RqlParser();        
-        $middlewares[] = $storeMiddlewareLazy;
-        $middlewares[] = new Middleware\ResponseEncoder();   
-      //$middlewares[] = new Middleware\$errorHandler();   
-        return new RestPipe($middlewares);
+        $resourceName = $requestedName;    
+        if (!$container->has($resourceName)) {
+            throw new RestException(
+                    'Can\'t make storeMiddleware witout resourceName' 
+                    . ' for resource: ' . $resourceName
+            );             
+        }  
+        
+        $resourceObject = $container->get($resourceName);
+        
+        switch (true) {
+            case is_a($resourceObject, 'Zend\Db\TableGateway\TableGateway'):
+                $tableGateway = $resourceObject;
+                $resourceObject = new DbTable($tableGateway);
+            case is_a($resourceObject, 'zaboy\res\DataStores\DataStoresAbstract'):
+                $dataStore = $resourceObject;
+                $resourceObject = new Middleware\StoreMiddleware($dataStore);
+            case $resourceObject instanceof \Zend\Stratigility\MiddlewareInterface:
+                $storeMiddleware = $resourceObject;
+            default:
+                if (!$storeMiddleware) {
+                    throw new RestException(
+                            'Can\'t make StoreMiddleware' 
+                            . ' for resource: ' . $resourceName
+                    );             
+                }  
+        }
+        return $storeMiddleware;
     }    
 
     /**
