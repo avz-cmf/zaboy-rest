@@ -48,13 +48,20 @@ class ResponseEncoder implements MiddlewareInterface
                 'detail' => 'This API can only provide JSON representations',
             ]));
              * 
-             */
+            
             $status = $response->getStatusCode();
             $headers = $response->getHeaders();
             $response = new JsonResponse($responseBody, $status, $headers);
-            
-            
-            //$response = $response->end(var_dump($responseBody));
+             */
+            $result = '';
+            foreach ($responseBody as $valueArray) {
+                $result = $result . ' - '; 
+                foreach ($valueArray as $key => $value) {
+                    $result = $result . $key . ' - ' . $value . '; _   _  ';
+                }
+                $result = $result .  '<br>' . PHP_EOL;
+            }
+            $response = $response->end($result);
         }
         
         if ($next) {
