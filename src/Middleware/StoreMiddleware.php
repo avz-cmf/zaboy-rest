@@ -31,9 +31,7 @@ class StoreMiddleware extends StoreMiddlewareAbstract
      */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next = null)
     {
-
         $isPrimaryKeyValue = null !== $request->getAttribute('Primary-Key-Value');
-        $rqlQueryObject = $request->getAttribute('Rql-Query-Object');
         $httpMethod = $request->getMethod();
         switch ($request->getMethod()) {
             case $httpMethod === 'GET' && $isPrimaryKeyValue:
@@ -95,6 +93,7 @@ class StoreMiddleware extends StoreMiddlewareAbstract
      */
     public function methodGetWithoutId(ServerRequestInterface $request, ResponseInterface $response, callable $next = null)
     {
+        $rqlQueryObject = $request->getAttribute('Rql-Query-Object');
         $rowset = $this->dataStore->query($rqlQueryObject);
         $request = $request->withAttribute('Response-Body', $rowset);
         $rowCount = count($request);                
