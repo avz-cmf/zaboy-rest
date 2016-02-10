@@ -27,6 +27,19 @@ use zaboy\res\DataStore\DbTable;
  */
 class RestPipeFactory  implements FactoryInterface
 {
+    /*
+     * var $middlewares array
+     */
+    protected $middlewares;
+            
+    /**
+     * 
+     * @param array $addMiddlewares  [10 => 'firstMiddleWare', 350 => afterRqlParser /* object * / ]
+     */
+    public function __construct($addMiddlewares = []) {
+        $this->middlewares = $addMiddlewares;
+    }
+
     /**
      * Create and return an instance of the PipeMiddleware for Rest.
      *<br>
@@ -63,13 +76,16 @@ class RestPipeFactory  implements FactoryInterface
                 return $storeMiddleware($request, $response, $next);
         };
 
-        $middlewares[] = new Middleware\ResourceResolver();
-        $middlewares[] = new Middleware\RequestDecoder();  
-        $middlewares[] = new Middleware\RqlParser();        
-        $middlewares[] = $storeMiddlewareLazy;
-        $middlewares[] = new Middleware\ResponseEncoder();   
-      //$middlewares[] = new Middleware\$errorHandler();   
-        return new RestPipe($middlewares);
+        
+        $this->middlewares[100] = new Middleware\ResourceResolver();
+        $this->middlewares[200] = new Middleware\RequestDecoder();  
+        $this->middlewares[300] = new Middleware\RqlParser();        
+        $this->middlewares[400] = $storeMiddlewareLazy;
+        $this->middlewares[500] = new Middleware\ResponseEncoder();  
+      //$middlewares[600] = new Middleware\$errorHandler();  
+        
+        ksort($this->middlewares);
+        return new RestPipe($this->middlewares);
     }    
 
     /**

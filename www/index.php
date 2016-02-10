@@ -16,7 +16,11 @@ $tableName = 'index_php_table';
 include 'createTable.php';
 
 $app = new MiddlewarePipe();
-$rest = (new RestPipeFactory())->__invoke($container, '');
+
+
+
+$restPipeFactory = new RestPipeFactory();
+$rest = $restPipeFactory($container, '');
 $app->pipe('/api/rest', $rest);
 
 $server = Server::createServer($app,
