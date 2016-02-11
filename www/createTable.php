@@ -6,7 +6,7 @@
     $adapter->query($deleteStatementStr, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
 
     $createStr = 
-        "CREATE TABLE  "  .
+        "CREATE TABLE IF NOT EXISTS "  .
         $quoteTableName .
         '(' .    
             ' id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, ' .

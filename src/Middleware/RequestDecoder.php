@@ -21,7 +21,7 @@ use Zend\Stratigility\MiddlewareInterface;
 class RequestDecoder implements MiddlewareInterface
 {
     
-    /**
+    /**                         Location: http://www.example.com/users/4/
      * 
      * @todo positionHeaders = 'beforeId'  'Put-Default-Position'  'Put-Default-Position'
      * @param ServerRequestInterface $request
