@@ -38,7 +38,7 @@ class StoreMiddleware extends StoreMiddlewareAbstract
                 return $this->methodGetWithId($request, $response, $next);
             case $httpMethod === 'GET' && !($isPrimaryKeyValue):
                 return $this->methodGetWithoutId($request, $response, $next);    
-            case 'POST':    
+            case $httpMethod === 'PUT' && $isPrimaryKeyValue:
                 try {
                     $body = $request->getParsedBody();
                     if (!$body || !is_array($body)) {
@@ -85,6 +85,7 @@ class StoreMiddleware extends StoreMiddlewareAbstract
         }
         return $response;
     }    
+    
     /**
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
@@ -107,4 +108,36 @@ class StoreMiddleware extends StoreMiddlewareAbstract
         }
         return $response;
     }
+    
+    /**
+     * @param ServerRequestInterface $request
+     * @param ResponseInterface $response
+     * @param callable|null $next
+     * @return ResponseInterface
+     */
+    public function methodPutWithId(ServerRequestInterface $request, ResponseInterface $response, callable $next = null)
+    {
+        $primaryKeyValue = $request->getAttribute('Primary-Key-Value');
+        $primaryKeyIdentifier =  $this->dataStore->getIdentifier();
+        $row = $request->getParsedBody();
+        if (!(isset($row) && is_array($body))) {
+            throw new MiddlewaresException('No body in PUT request');
+        }
+        $row[$primaryKeyIdentifier] = $primaryKeyValue;
+        
+        $overwriteMode = $request->getAttribute('Overwrite-Mode');
+        $isIdExist = !empty($this->dataStore->read($primaryKeyValue));
+        if ($overwriteMode && !$isIdExist) {
+            $response = $response->withStatus(201);
+        }else{
+            $response = $response->withStatus(200);
+        }
+        
+        $newRow = $this->dataStore->update($primaryKeyValue, $overwriteMode);
+        $request = $request->withAttribute('Response-Body', $newRow);
+        if ($next) {
+            return $next($request, $response);
+        }
+        return $response;
+    } 
 }

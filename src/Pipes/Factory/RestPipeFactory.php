@@ -101,4 +101,9 @@ class RestPipeFactory  implements FactoryInterface
                 . 'Call __invoke directly with resource name as parameter'
         ); 
     }
+    
+    public function getMiddlewares()
+    {
+        return $this->middlewares;
+    }
 }    
