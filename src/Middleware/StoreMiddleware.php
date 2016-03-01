@@ -23,12 +23,13 @@ use Zend\Diactoros\Response\JsonResponse;
  */
 class StoreMiddleware extends StoreMiddlewareAbstract 
 {
-    /*
-     * 
+    /**
+     *
+     * @var ServerRequestInterface 
      */
     protected $request;
     
-    /**                                                    204 No Content
+    /**                                             
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
      * @param callable|null $next
@@ -52,11 +53,13 @@ class StoreMiddleware extends StoreMiddlewareAbstract
                 case $httpMethod === 'PUT' && !$isPrimaryKeyValue:
                     throw new \zaboy\rest\RestException('PUT without Primary Key');
                 case $httpMethod === 'POST':
-                    $response = $this->methodPutWithId($request, $response);
+                    $response = $this->methodPost($request, $response);
                     break;
                 case $httpMethod === 'DELETE':
-                    $response = $this->methodPutWithId($request, $response);
+                    $response = $this->methodDelete($request, $response);
                     break;
+                case $httpMethod === 'DELETE' && !($isPrimaryKeyValue):
+                    throw new \zaboy\rest\RestException('DELETE without Primary Key');
                 default :    
                     throw new \zaboy\rest\RestException(
                        'Method must be GET, PUT, POST or DELETE. '
@@ -130,12 +133,14 @@ class StoreMiddleware extends StoreMiddlewareAbstract
         $row[$primaryKeyIdentifier] = $primaryKeyValue;
         $overwriteMode = $request->getAttribute('Overwrite-Mode');
         $isIdExist = !empty($this->dataStore->read($primaryKeyValue));
-        //Post only
+        
         if ($overwriteMode && !$isIdExist) {
             $response = $response->withStatus(201);
         }else{
             $response = $response->withStatus(200);
         }
+        $location = $request->getUri()->getPath();
+        $response = $response->withHeader('Location', $location);
         $newRow = $this->dataStore->update($row, $overwriteMode);
         $this->request  = $request->withAttribute('Response-Body', $newRow);
         return $response;
@@ -166,9 +171,10 @@ class StoreMiddleware extends StoreMiddlewareAbstract
         }else{
             $response = $response->withStatus(200);
         }
-        
-        $newRow = $this->dataStore->update($row, $overwriteMode);
-        $request = $request->withAttribute('Response-Body', $newRow);
+        $insertedPrimaryKeyValue = $this->dataStore->create($row, $overwriteMode);
+        $this->request = $request->withAttribute('Response-Body', $insertedPrimaryKeyValue);
+        $location = $request->getUri()->getPath();
+        $response = $response->withHeader('Location', $location . '/' . $insertedPrimaryKeyValue);   
         return $response;
     } 
     
@@ -183,22 +189,14 @@ class StoreMiddleware extends StoreMiddlewareAbstract
     public function methodDelete(ServerRequestInterface $request, ResponseInterface $response)
     {
         $primaryKeyValue = $request->getAttribute('Primary-Key-Value');
-        $primaryKeyIdentifier =  $this->dataStore->getIdentifier();
-        $row = $request->getParsedBody();
-        if (!(isset($row) && is_array($row))) {
-            throw new \zaboy\rest\RestException('No body in POST request');
-        }
-        $row[$primaryKeyIdentifier] = $primaryKeyValue;
-        $overwriteMode = $request->getAttribute('Overwrite-Mode');
-        $isIdExist = !empty($this->dataStore->read($primaryKeyValue));
-        if ($overwriteMode && !$isIdExist) {
-            $response = $response->withStatus(201);
+        $rowCount = $this->dataStore->delete($primaryKeyValue);        
+        if ( $rowCount == 0 ) {
+            $response = $response->withStatus(204);
+            $this->request  = $request->withAttribute('Response-Body', 0);            
         }else{
             $response = $response->withStatus(200);
+            $this->request  = $request->withAttribute('Response-Body', 1);  
         }
-        
-        $newRow = $this->dataStore->update($row, $overwriteMode);
-        $request = $request->withAttribute('Response-Body', $newRow);
         return $response;
     } 
 }

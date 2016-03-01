@@ -21,7 +21,7 @@ use Xiag\Rql\Parser\TokenParser\LimitTokenParser;
 use Xiag\Rql\Parser\TokenParser\SortTokenParser;
 use Xiag\Rql\Parser\Query;
 use Xiag\Rql\Parser\TokenParser\Query\Fiql;
-use Xiag\Rql\Parser\Node\Query\ScalarOperator\EqNode;
+use Xiag\Rql\Parser\TokenParser\Query\Basic;
 use Zend\Stratigility\MiddlewareInterface;
 
 
@@ -50,25 +50,30 @@ class RqlParser implements MiddlewareInterface
     public function __construct()
     {
         $this->lexer = new Lexer();
-
+ /* 
         $queryTokenParser = new TokenParserGroup();
-        /* @var $queryTokenParser Xiag\Rql\Parser\TokenParserGroup */
+        
+       @var $queryTokenParser Xiag\Rql\Parser\TokenParserGroup 
         $queryTokenParser
             ->addTokenParser(new GroupTokenParser($queryTokenParser))
-            ->addTokenParser(new Fiql\ArrayOperator\InTokenParser())
-            ->addTokenParser(new Fiql\ArrayOperator\OutTokenParser())
+            ->addTokenParser(new Basic\LogicOperator\AndTokenParser())
+            ->addTokenParser(new Basic\ArrayOperator\InTokenParser())
+            ->addTokenParser(new Basic\ArrayOperator\OutTokenParser())
             ->addTokenParser(new Fiql\ScalarOperator\EqTokenParser())
-            ->addTokenParser(new Fiql\ScalarOperator\NeTokenParser())
-            ->addTokenParser(new Fiql\ScalarOperator\LtTokenParser())
-            ->addTokenParser(new Fiql\ScalarOperator\GtTokenParser())
-            ->addTokenParser(new Fiql\ScalarOperator\LeTokenParser())
-            ->addTokenParser(new Fiql\ScalarOperator\GeTokenParser())
+            ->addTokenParser(new Basic\ScalarOperator\EqTokenParser())
+            ->addTokenParser(new Basic\ScalarOperator\NeTokenParser())
+            ->addTokenParser(new Basic\ScalarOperator\LtTokenParser())
+            ->addTokenParser(new Basic\ScalarOperator\GtTokenParser())
+            ->addTokenParser(new Basic\ScalarOperator\LeTokenParser())
+            ->addTokenParser(new Basic\ScalarOperator\GeTokenParser())
             ->addTokenParser(new LimitTokenParser())
             ->addTokenParser(new SortTokenParser())        
             ->addTokenParser(new SelectTokenParser());       
         
-        $this->parser = new Parser(new ExpressionParser());        
-        $this->parser->addTokenParser($queryTokenParser);
+        $this->parser = new Parser(new ExpressionParser());       
+        $this->parser->addTokenParser($queryTokenParser); */
+        
+        $this->parser  = Parser::createDefault();
     }
  
     /**

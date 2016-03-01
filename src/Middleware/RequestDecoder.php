@@ -9,8 +9,10 @@
 namespace zaboy\rest\Middleware;
 
 use Psr\Http\Message\ResponseInterface;
+use zaboy\rest\RestException;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Stratigility\MiddlewareInterface;
+use Zend\Json\Json;
 
 /**
  * Parse body fron JSON and add result array to $request->withParsedBody()
@@ -47,7 +49,7 @@ class RequestDecoder implements MiddlewareInterface
      
         $contenttype = $request->getHeader('Content-Type');
         if (false !== strpos($contenttype[0], 'json')) {
-            $body = json_decode($request->getBody(), true);
+            $body = $this->jsonDecode($request->getBody());
             $request = $request->withParsedBody($body);            
         } else {
             //todo XML?
@@ -56,5 +58,22 @@ class RequestDecoder implements MiddlewareInterface
             return $next($request, $response);
         }
         return $response;      
+    }
+    
+    protected function jsonDecode($data)
+    {
+        // Clear json_last_error()
+        json_encode(null);
+
+        $result = Json::decode($data, Json::TYPE_ARRAY);//json_decode($data);
+        json_encode(null);
+        if (JSON_ERROR_NONE !== json_last_error()) {
+            throw new RestException(
+                'Unable to decode data from JSON' .
+                json_last_error_msg()
+            );
+        }
+
+        return $result;
     }
 }
