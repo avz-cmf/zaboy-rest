@@ -59,16 +59,15 @@ class StoreMiddlewareFactoryTest extends \PHPUnit_Framework_TestCase {
         $tableName = 'table_with_name_same_as_resource_name';
         $createStatementStr = "CREATE TABLE IF NOT EXISTS $tableName (id INT)";
         $createStatement = $this->adapter->query($createStatementStr);
-        $createStatement->execute();
+        var_dump($createStatement->execute());
         $result = $this->object->__invoke($this->container, $tableName); 
-        var_dump($result);
         $this->assertSame(
                 true,
                 $result  instanceof \Zend\Stratigility\MiddlewareInterface
         );
         $deleteStatementStr = "DROP TABLE IF EXISTS " .  $tableName;
         $deleteStatement = $this->adapter->query($deleteStatementStr);
-        $deleteStatement->execute();
+        //$deleteStatement->execute();
         
     }
 
@@ -83,7 +82,6 @@ class StoreMiddlewareFactoryTest extends \PHPUnit_Framework_TestCase {
         $createStatement = $this->adapter->query($createStatementStr);
         $createStatement->execute();
         $result = $this->object->__invoke($this->container, 'test_DataStoreDbTableWithNameAsResourceName'); 
-        var_dump($result);
         $this->assertSame(
                 true,
                 $result  instanceof \Zend\Stratigility\MiddlewareInterface
@@ -98,7 +96,6 @@ class StoreMiddlewareFactoryTest extends \PHPUnit_Framework_TestCase {
      */
     public function testRestPipeFactoryAbstractFactory__canCreateIfMiddlewareInConfigExist() {
         $result = $this->object->__invoke($this->container, 'test_MiddlewareWithNameAsResourceName'); 
-        var_dump($result);
         $this->assertSame(
                 true,
                 $result  instanceof \Zend\Stratigility\MiddlewareInterface

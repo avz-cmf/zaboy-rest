@@ -3,7 +3,7 @@
 
 // Change to the project root, to simplify resolving paths
 chdir(dirname(__DIR__));
-
+//test_res_http
 // Setup autoloading
 require '/vendor/autoload.php';
 
@@ -16,8 +16,6 @@ $tableName = 'index_php_table';
 include 'createTable.php';
 
 $app = new MiddlewarePipe();
-
-
 
 $restPipeFactory = new RestPipeFactory();
 $rest = $restPipeFactory($container, '');

@@ -46,7 +46,6 @@ class RqlParserTest extends \PHPUnit_Framework_TestCase {
         $this->request = new ServerRequest([], [], '');        
         $returned = $this->object
                 ->__invoke($this->request, $this->response, $this->next); 
-        var_dump( $returned->getAttribute('Rql-Query-Object')->getQuery());
         $this->assertSame(
                 get_class($returned->getAttribute('Rql-Query-Object')),
                 'Xiag\Rql\Parser\Query'
@@ -65,7 +64,6 @@ class RqlParserTest extends \PHPUnit_Framework_TestCase {
         $this->request = new ServerRequest([], [], '/foo?b=4&A=2&select(A)&sort(-b,+A)&limit(3,2)');        
         $returned = $this->object
                 ->__invoke($this->request, $this->response, $this->next); 
-        var_dump( $returned->getAttribute('Rql-Query-Object')->getQuery());
         $this->assertSame(
                 get_class($returned->getAttribute('Rql-Query-Object')),
                 'Xiag\Rql\Parser\Query'

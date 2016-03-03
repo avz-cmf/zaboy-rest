@@ -4,8 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "c517f0bcb19825cd54eda546115e4c6e",
-    "content-hash": "47590f00ba01c0bb75f8709fa550ad33",
+    "hash": "f6e43fdc2f79cec44482e1d391fc58a1",
+    "content-hash": "0ca6399a837054199e9c3fe5a3df47b6",
     "packages": [
         {
             "name": "avz-cmf/zaboy-res",

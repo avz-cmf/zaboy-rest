@@ -66,7 +66,6 @@ class RestPipeFactoryTest extends \PHPUnit_Framework_TestCase {
         $createStatement = $this->adapter->query($createStatementStr);
         $createStatement->execute();
         $result = $this->object->__invoke($this->container, $tableName); 
-        var_dump($result);
         $this->assertSame(
                 true,
                 $result  instanceof \Zend\Stratigility\MiddlewareInterface

@@ -54,7 +54,6 @@ class ResponseEncoder implements MiddlewareInterface
             $response = new JsonResponse($responseBody, $status, $headers);
              */
             $result = '';
-            var_dump($responseBody);
             foreach ($responseBody as $valueArray) {
                 $result = $result . ' - '; 
                 foreach ($valueArray as $key => $value) {
