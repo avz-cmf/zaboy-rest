@@ -34,7 +34,7 @@ class RequestDecoder implements MiddlewareInterface
     {
         // @see https://github.com/SitePen/dstore/blob/21129125823a29c6c18533e7b5a31432cf6e5c56/src/Rest.js
         $overwriteModeHeader = $request->getHeader('If-Match');
-        $overwriteMode = $overwriteModeHeader[0] === '*' ? true : false;
+        $overwriteMode = isset($overwriteModeHeader[0]) && $overwriteModeHeader[0] === '*' ? true : false;
         $request = $request->withAttribute('Overwrite-Mode', $overwriteMode);
         
         $putDefaultPosition = $request->getHeader('Put-Default-Position'); //'start' : 'end'
@@ -47,7 +47,7 @@ class RequestDecoder implements MiddlewareInterface
         $request = $request->withAttribute('Put-Before', $putBefore);
      
         $contenttype = $request->getHeader('Content-Type');
-        if (false !== strpos($contenttype[0], 'json')) {
+        if (isset($contenttype[0]) && false !== strpos($contenttype[0], 'json')) {
             $body = $this->jsonDecode($request->getBody()->__toString());
             $request = $request->withParsedBody($body);    
         } else {
