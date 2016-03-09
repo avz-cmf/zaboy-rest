@@ -12,7 +12,7 @@ use Zend\Diactoros\Server;
 use zaboy\rest\Pipes\Factory\RestPipeFactory;
 
 $container = include 'config/container.php';
-$tableName = 'index_php_table';
+$tableName = 'test_res_http';//'index_php_table';
 include 'createTable.php';
 
 $app = new MiddlewarePipe();

@@ -12,6 +12,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Stratigility\MiddlewareInterface;
 use Zend\Diactoros\Response\JsonResponse;
+use zaboy\middleware\MiddlewaresException;
 
 /**
  * Check Accept Header and encode Response to JSON 
@@ -54,12 +55,28 @@ class ResponseEncoder implements MiddlewareInterface
             $response = new JsonResponse($responseBody, $status, $headers);
              */
             $result = '';
-            foreach ($responseBody as $valueArray) {
-                $result = $result . ' - '; 
-                foreach ($valueArray as $key => $value) {
-                    $result = $result . $key . ' - ' . $value . '; _   _  ';
-                }
-                $result = $result .  '<br>' . PHP_EOL;
+            switch (true) {
+                case gettype($responseBody) == 'array' :
+                    foreach ($responseBody as $valueArray) {
+                        $result = $result . ' - '; 
+                        foreach ($valueArray as $key => $value) {
+                            $result = $result . $key . ' - ' . $value . '; _   _  ';
+                        }
+                        $result = $result .  '<br>' . PHP_EOL;
+                    }  
+                    break;
+                case is_numeric($responseBody) or is_string($responseBody) :
+                    $result = $responseBody .  '<br>' . PHP_EOL;
+                    break;
+                case is_bool($responseBody) :
+                    $result = $responseBody ?  'TRUE' : 'FALSE';
+                    $result = $result .  '<br>' . PHP_EOL;                    
+                    break;                
+                default:
+                    throw new \zaboy\rest\RestException(
+                       '$responseBody must be array, numeric or bool. But'
+                       . gettype($responseBody) . ' given.'
+                    );
             }
             $response = $response->end($result);
         }
