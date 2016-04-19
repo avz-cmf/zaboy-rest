@@ -17,6 +17,7 @@ use zaboy\rest\RestException;
 use Interop\Container\ContainerInterface;
 use zaboy\rest\Middleware;
 use zaboy\res\DataStore\DbTable;
+use zaboy\res\DataStores\DataStoresInterface;
 
 /**
  * 
@@ -53,18 +54,17 @@ class StoreMiddlewareFactory  implements FactoryInterface
         $resourceName = $requestedName;    
         if (!$container->has($resourceName)) {
             throw new RestException(
-                    'Can\'t make storeMiddleware witout resourceName' 
-                    . ' for resource: ' . $resourceName
+                    'Can\'t make storeMiddleware for resource: ' . $resourceName
             );             
         }  
-        
+
         $resourceObject = $container->get($resourceName);
-        
+
         switch (true) {
             case is_a($resourceObject, 'Zend\Db\TableGateway\TableGateway'):
                 $tableGateway = $resourceObject;
                 $resourceObject = new DbTable($tableGateway);
-            case is_a($resourceObject, 'zaboy\res\DataStores\DataStoresAbstract'):
+            case ($resourceObject instanceof DataStoresInterface):
                 $dataStore = $resourceObject;
                 $resourceObject = new Middleware\StoreMiddleware($dataStore);
             case $resourceObject instanceof \Zend\Stratigility\MiddlewareInterface:
@@ -72,7 +72,7 @@ class StoreMiddlewareFactory  implements FactoryInterface
             default:
                 if (!$storeMiddleware) {
                     throw new RestException(
-                            'Can\'t make StoreMiddleware' 
+                            'Can\'t make StoreMiddleware'
                             . ' for resource: ' . $resourceName
                     );             
                 }  

@@ -87,11 +87,11 @@ class RqlParser implements MiddlewareInterface
      */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next = null)
     {
-        $rqlQueryString = $request->getUri()->getQuery(); 
-        $tokens = $this->lexer->tokenize($rqlQueryString);
+        $rqlQueryString = $request->getUri()->getQuery();
+        $rqlQueryString = rtrim($rqlQueryString, '&XDEBUG_SESSION_START=netbeans-xdebug');
+        $tokens = $this->lexer->tokenize($rqlQueryString);//$tokens = $this->lexer->tokenize($rqlQueryString);//
         /* @var $rqlQueryObject \Xiag\Rql\Parser\Query */
         $rqlQueryObject = $this->parser->parse($tokens);
-
         $request = $request->withAttribute('Rql-Query-Object', $rqlQueryObject);        
         if ($next) {
             return $next($request, $response);

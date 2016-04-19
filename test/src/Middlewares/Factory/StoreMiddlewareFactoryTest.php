@@ -59,7 +59,7 @@ class StoreMiddlewareFactoryTest extends \PHPUnit_Framework_TestCase {
         $tableName = 'table_with_name_same_as_resource_name';
         $createStatementStr = "CREATE TABLE IF NOT EXISTS $tableName (id INT)";
         $createStatement = $this->adapter->query($createStatementStr);
-        var_dump($createStatement->execute());
+        $createStatement->execute();
         $result = $this->object->__invoke($this->container, $tableName); 
         $this->assertSame(
                 true,

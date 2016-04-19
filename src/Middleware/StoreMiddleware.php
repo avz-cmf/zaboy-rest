@@ -181,8 +181,8 @@ class StoreMiddleware extends StoreMiddlewareAbstract
             $location = $request->getUri()->getPath();
             $response = $response->withHeader('Location', $location);  
         }
-        $insertedPrimaryKeyValue = $this->dataStore->create($row, $overwriteMode);
-        $this->request = $request->withAttribute('Response-Body', $insertedPrimaryKeyValue);
+        $newItem = $this->dataStore->create($row, $overwriteMode);
+        $this->request = $request->withAttribute('Response-Body', $newItem);
         return $response;
     } 
     
@@ -200,11 +200,13 @@ class StoreMiddleware extends StoreMiddlewareAbstract
         if (!(isset($row) && is_array($row))) {
             throw new \zaboy\rest\RestException('No body in POST request');
         }
+        $primaryKeyIdentifier =  $this->dataStore->getIdentifier();
         $response = $response->withStatus(201);
-        $insertedPrimaryKeyValue = $this->dataStore->create($row);
-        $this->request = $request->withAttribute('Response-Body', $insertedPrimaryKeyValue);
+        $newItem = $this->dataStore->create($row);
+        $insertedPrimaryKeyValue = $newItem[$primaryKeyIdentifier];
+        $this->request = $request->withAttribute('Response-Body', $newItem);
         $location = $request->getUri()->getPath();
-        $response = $response->withHeader('Location', $location . '/' . $insertedPrimaryKeyValue);   
+        $response = $response->withHeader('Location', rtrim($location, '/') . '/' . $insertedPrimaryKeyValue);   
         return $response;
     } 
     

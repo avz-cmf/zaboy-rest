@@ -13,7 +13,7 @@ use zaboy\rest\Pipes\Factory\RestPipeFactory;
 
 $container = include 'config/container.php';
 $tableName = 'test_res_http';//'index_php_table';
-include 'createTable.php';
+//include 'createTable.php';
 
 $app = new MiddlewarePipe();
 
@@ -30,6 +30,6 @@ $server = Server::createServer($app,
 );
 $server->listen();
 
-$deleteStatementStr = "DROP TABLE IF EXISTS " .  $quoteTableName;
-$deleteStatement = $adapter->query($deleteStatementStr);
-$deleteStatement->execute();
+//$deleteStatementStr = "DROP TABLE IF EXISTS " .  $quoteTableName;
+//$deleteStatement = $adapter->query($deleteStatementStr);
+//$deleteStatement->execute();

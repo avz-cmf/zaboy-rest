@@ -43,26 +43,20 @@ class ResponseEncoder implements MiddlewareInterface
             $headers = $response->getHeaders();
             $response = new JsonResponse($responseBody, $status, $headers);
         }else{
-            /**
-            $response->getBody()->write(json_encode([
-                'status' => 405,
-                'detail' => 'This API can only provide JSON representations',
-            ]));
-             * 
-            
-            $status = $response->getStatusCode();
-            $headers = $response->getHeaders();
-            $response = new JsonResponse($responseBody, $status, $headers);
-             */
-            $result = '';
+           $result = '';
             switch (true) {
                 case gettype($responseBody) == 'array' :
                     foreach ($responseBody as $valueArray) {
-                        $result = $result . ' - '; 
-                        foreach ($valueArray as $key => $value) {
-                            $result = $result . $key . ' - ' . $value . '; _   _  ';
+                        $result = $result . ' - ';
+                        if(is_array($valueArray)){
+                            foreach ($valueArray as $key => $value) {
+                                $result = $result . $key . ' - ' . $value . '; _   _  ';
+                            }
+                            $result = $result .  '<br>' . PHP_EOL;
+                        }else{
+                            $result = $valueArray .  '<br>' . PHP_EOL;
                         }
-                        $result = $result .  '<br>' . PHP_EOL;
+
                     }  
                     break;
                 case is_numeric($responseBody) or is_string($responseBody) :
@@ -78,12 +72,14 @@ class ResponseEncoder implements MiddlewareInterface
                        . gettype($responseBody) . ' given.'
                     );
             }
-            $response = $response->end($result);
+
+            $response->getBody()->write($result);
         }
-        
+
         if ($next) {
             return $next($request, $response);
         }
+
         return $response;      
     }
 }
