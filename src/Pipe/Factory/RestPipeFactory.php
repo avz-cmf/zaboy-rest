@@ -55,9 +55,9 @@ class RestPipeFactory implements FactoryInterface
      *  - it will use for create TableGateway for create DataStore for create StoreMiddleware
      * <br>
      * Add <br>
-     * zaboy\res\TableGateway\Factory\TableGatewayAbstractFactory <br>
-     * zaboy\res\DataStores\Factory\DbTableStoresAbstractFactory <br>
-     * zaboy\res\Middlewares\Factory\MiddlewareStoreAbstractFactory <br>
+     * zaboy\rest\TableGateway\Factory\TableGatewayAbstractFactory <br>
+     * zaboy\rest\DataStore\Factory\DbTableStoresAbstractFactory <br>
+     * zaboy\rest\Middleware\Factory\MiddlewareStoreAbstractFactory <br>
      * to config<br>
      *
      * @param  Interop\Container\ContainerInterface $container

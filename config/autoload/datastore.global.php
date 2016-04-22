@@ -3,7 +3,7 @@
 return [ 
     'dataStore' => [
         'allType' => [
-            'class' =>'zaboy\res\DataStore\DbTable',
+            'class' =>'zaboy\rest\DataStore\DbTable',
             'tableName' => 'all_type'
         ]    
     ]        

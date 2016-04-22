@@ -17,8 +17,8 @@ use Zend\ServiceManager\ServiceLocatorInterface;
 use zaboy\rest\RestException;
 use Interop\Container\ContainerInterface;
 use zaboy\rest\Middleware;
-use zaboy\res\DataStore\DbTable;
-use zaboy\res\DataStores\DataStoresInterface;
+use zaboy\rest\DataStore\DbTable;
+use zaboy\rest\DataStore\Interfaces\DataStoresInterface;
 
 /**
  *
@@ -41,9 +41,9 @@ class StoreMiddlewareDirectFactory implements FactoryInterface
      *  - it will use for create TableGateway for create DataStore for create StoreMiddleware
      * <br>
      * Add <br>
-     * zaboy\res\TableGateway\Factory\TableGatewayAbstractFactory <br>
-     * zaboy\res\DataStores\Factory\DbTableStoresAbstractFactory <br>
-     * zaboy\res\Middlewares\Factory\MiddlewareStoreAbstractFactory <br>
+     * zaboy\rest\TableGateway\Factory\TableGatewayAbstractFactory <br>
+     * zaboy\rest\DataStore\Factory\DbTableStoresAbstractFactory <br>
+     * zaboy\rest\Middleware\Factory\MiddlewareStoreAbstractFactory <br>
      * to config<br>
      *
      * @param  Interop\Container\ContainerInterface $container
@@ -59,9 +59,7 @@ class StoreMiddlewareDirectFactory implements FactoryInterface
             'Can\'t make storeMiddleware for resource: ' . $resourceName
             );
         }
-
         $resourceObject = $container->get($resourceName);
-
         switch (true) {
             case is_a($resourceObject, 'Zend\Db\TableGateway\TableGateway'):
                 $tableGateway = $resourceObject;
@@ -72,7 +70,7 @@ class StoreMiddlewareDirectFactory implements FactoryInterface
             case $resourceObject instanceof \Zend\Stratigility\MiddlewareInterface:
                 $storeMiddleware = $resourceObject;
             default:
-                if (!$storeMiddleware) {
+                if (!isset($storeMiddleware)) {
                     throw new RestException(
                     'Can\'t make StoreMiddleware'
                     . ' for resource: ' . $resourceName

@@ -10,7 +10,7 @@
 
 namespace zaboy\rest\Middleware;
 
-use zaboy\res\Middlewares\StoreMiddlewareAbstract;
+use zaboy\rest\Middleware\StoreMiddlewareAbstract;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Diactoros\Response\JsonResponse;
