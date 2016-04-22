@@ -1,16 +1,17 @@
 <?php
+
 /**
  * Zaboy lib (http://zaboy.org/lib/)
- * 
+ *
  * @copyright  Zaboychenko Andrey
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  */
 
-namespace zaboy\rest\Middlewares\Factory;
+namespace zaboy\rest\Middleware\Factory;
 
-//use Zend\ServiceManager\Factory\FactoryInterface; 
+//use Zend\ServiceManager\Factory\FactoryInterface;
 //uncomment it ^^ for Zend\ServiceManager V3
-use Zend\ServiceManager\FactoryInterface; 
+use Zend\ServiceManager\FactoryInterface;
 //comment it ^^ for Zend\ServiceManager V3
 use Zend\ServiceManager\ServiceLocatorInterface;
 use zaboy\rest\RestException;
@@ -20,22 +21,23 @@ use zaboy\res\DataStore\DbTable;
 use zaboy\res\DataStores\DataStoresInterface;
 
 /**
- * 
+ *
  * @category   Rest
  * @package    Rest
  */
-class StoreMiddlewareFactory  implements FactoryInterface
+class StoreMiddlewareDirectFactory implements FactoryInterface
 {
+
     /**
      * Create and return an instance of the PipeMiddleware for Rest.
-     *<br>
+     * <br>
      * If StoreMiddleware with same name as name of resource is discribed in config
      * in key 'middleware' - it will use
      * <br>
      * If DataStore with same name as name of resource is discribed in config
      * in key 'dataStore' - it will use for create StoreMiddleware
      * <br>
-     * If table in DB with same name as name of resource is exist 
+     * If table in DB with same name as name of resource is exist
      *  - it will use for create TableGateway for create DataStore for create StoreMiddleware
      * <br>
      * Add <br>
@@ -43,20 +45,20 @@ class StoreMiddlewareFactory  implements FactoryInterface
      * zaboy\res\DataStores\Factory\DbTableStoresAbstractFactory <br>
      * zaboy\res\Middlewares\Factory\MiddlewareStoreAbstractFactory <br>
      * to config<br>
-     * 
+     *
      * @param  Interop\Container\ContainerInterface $container
      * @param  string $requestedName
      * @param  array $options
      * @return MiddlewareInterface
      */
-    public function __invoke(ContainerInterface $container, $requestedName, array $options = null) 
+    public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
-        $resourceName = $requestedName;    
+        $resourceName = $requestedName;
         if (!$container->has($resourceName)) {
             throw new RestException(
-                    'Can\'t make storeMiddleware for resource: ' . $resourceName
-            );             
-        }  
+            'Can\'t make storeMiddleware for resource: ' . $resourceName
+            );
+        }
 
         $resourceObject = $container->get($resourceName);
 
@@ -72,13 +74,13 @@ class StoreMiddlewareFactory  implements FactoryInterface
             default:
                 if (!$storeMiddleware) {
                     throw new RestException(
-                            'Can\'t make StoreMiddleware'
-                            . ' for resource: ' . $resourceName
-                    );             
-                }  
+                    'Can\'t make StoreMiddleware'
+                    . ' for resource: ' . $resourceName
+                    );
+                }
         }
         return $storeMiddleware;
-    }    
+    }
 
     /**
      * Create service
@@ -89,8 +91,9 @@ class StoreMiddlewareFactory  implements FactoryInterface
     public function createService(ServiceLocatorInterface $serviceLocator)
     {
         throw new RestException(
-                'Don\'t use it as factory in config. ' . PHP_EOL
-                . 'Call __invoke directly with resource name as parameter'
-        ); 
+        'Don\'t use it as factory in config. ' . PHP_EOL
+        . 'Call __invoke directly with resource name as parameter'
+        );
     }
-}    
+
+}
