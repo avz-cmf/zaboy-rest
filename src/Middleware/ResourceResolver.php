@@ -1,7 +1,8 @@
 <?php
+
 /**
  * Zaboy lib (http://zaboy.org/lib/)
- * 
+ *
  * @copyright  Zaboychenko Andrey
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  */
@@ -13,24 +14,29 @@ use Psr\Http\Message\ServerRequestInterface;
 use Zend\Stratigility\MiddlewareInterface;
 
 /**
- * Extracts resource name and row id from URL
- * 
- * If URL is 'site,com/api/rest/RESOURCE-NAME/ROWS-ID'
- * request->getAttribute('Resource-Name') returns 'RESOURCE-NAME'
- * request->getAttribute('Primary-Key-Value') returns 'ROWS-ID'
- * 
- * If URL is 'site,com/restapi/RESOURCE-NAME?a=1&limit(2,5)'
- * request->getAttribute('Resource-Name') returns 'RESOURCE-NAME'
- * request->getAttribute('Primary-Key-Value') returns null
- * 
- * @category   Rest
- * @package    Rest
+ * Extracts resource name and row id from URL or from request attributes
+ *
+ * <b>Used request attributes: </b>
+ * <ul>
+ * <li>Resource-Name</li>
+ * <li>Primary-Key-Value</li>
+ * </ul>
+ * If URL is </br>'site,com/api/rest/RESOURCE-NAME/ROWS-ID'</br>
+ * request->getAttribute('Resource-Name') returns 'RESOURCE-NAME'</br>
+ * request->getAttribute('Primary-Key-Value') returns 'ROWS-ID'</br>
+ * </br>
+ * If URL is </br>'site,com/restapi/RESOURCE-NAME?a=1&limit(2,5)'
+ * request->getAttribute('Resource-Name') returns 'RESOURCE-NAME'</br>
+ * request->getAttribute('Primary-Key-Value') returns null</br>
+ *
+ * @category   rest
+ * @package    zaboy
  */
 class ResourceResolver implements MiddlewareInterface
 {
-    
+
     /**
-     * 
+     *
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
      * @param callable|null $next
@@ -38,22 +44,25 @@ class ResourceResolver implements MiddlewareInterface
      */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next = null)
     {
-        if(empty($request->getAttribute("resourceName"))){
+        if (null !== $request->getAttribute("resourceName")) {
+            //Router have set "resourceName". It work in expressive.
+            $id = empty($request->getAttribute("id")) ? null : $request->getAttribute("id");
+            $request = $request->withAttribute('Primary-Key-Value', $id);
+        } else {
+            //"resourceName" isn't set. It work in stratigility.
             $path = $request->getUri()->getPath();
-            preg_match("/^[\/]?([-_A-Za-z0-9]+)([\/]([-_A-Za-z0-9]+))?/",$path,$matches);
-            $resourceName = isset($matches[1])?$matches[1]:null;
-            $id = isset($matches[3])?$matches[3]:null;
-        }else{
-            $resourceName = $request->getAttribute("resourceName");
-            $id = empty($request->getAttribute("id"))?null:$request->getAttribute("id");
-        }
+            preg_match("/^[\/]?([-_A-Za-z0-9]+)([\/]([-_A-Za-z0-9]+))?/", $path, $matches);
+            $resourceName = isset($matches[1]) ? $matches[1] : null;
+            $request = $request->withAttribute('Resource-Name', $resourceName);
 
-        $request = $request->withAttribute('Resource-Name', $resourceName);
-        $request = $request->withAttribute('Primary-Key-Value', $id);
+            $id = isset($matches[3]) ? $matches[3] : null;
+            $request = $request->withAttribute('Primary-Key-Value', $id);
+        }
 
         if ($next) {
             return $next($request, $response);
         }
         return $response;
     }
+
 }

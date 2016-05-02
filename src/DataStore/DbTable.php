@@ -9,8 +9,8 @@
 
 namespace zaboy\rest\DataStore;
 
-use zaboy\rest\DataStore\DataStoresAbstract;
-use zaboy\rest\DataStore\DataStoresException;
+use zaboy\rest\DataStore\DataStoreAbstract;
+use zaboy\rest\DataStore\DataStoreException;
 use zaboy\rest\DataStore\ConditionBuilder\SqlConditionBuilder;
 use Zend\Db\TableGateway\TableGateway;
 use Zend\Db\Sql\Select;
@@ -20,13 +20,14 @@ use Xiag\Rql\Parser\Node\SortNode;
 /**
  * DataStores as Db Table
  *
- * @category   DataStores
- * @package    DataStores
+ * @todo rearrangement query. Use TableGateway method instead string manipulation for compatible
  * @uses zend-db
  * @see https://github.com/zendframework/zend-db
  * @see http://en.wikipedia.org/wiki/Create,_read,_update_and_delete
+ * @category   rest
+ * @package    zaboy
  */
-class DbTable extends DataStoresAbstract
+class DbTable extends DataStoreAbstract
 {
 
     /**
@@ -136,7 +137,7 @@ class DbTable extends DataStoresAbstract
             $adapter->getDriver()->getConnection()->commit();
         } catch (\Exception $e) {
             $adapter->getDriver()->getConnection()->rollback();
-            throw new DataStoresException($errorMsg, 0, $e);
+            throw new DataStoreException($errorMsg, 0, $e);
         }
 
         $id = $this->dbTable->getLastInsertValue();
@@ -153,7 +154,7 @@ class DbTable extends DataStoresAbstract
     {
         $identifier = $this->getIdentifier();
         if (!isset($itemData[$identifier])) {
-            throw new DataStoresException('Item must has primary key');
+            throw new DataStoreException('Item must has primary key');
         }
         $id = $itemData[$identifier];
         $this->checkIdentifierType($id);
@@ -170,7 +171,7 @@ class DbTable extends DataStoresAbstract
             $isExist = !is_null($rowset->current());
             switch (true) {
                 case!$isExist && !$createIfAbsent:
-                    throw new DataStoresException($errorMsg);
+                    throw new DataStoreException($errorMsg);
                 case!$isExist && $createIfAbsent:
                     $this->dbTable->insert($itemData);
                     $result = $itemData;
@@ -185,7 +186,7 @@ class DbTable extends DataStoresAbstract
             $adapter->getDriver()->getConnection()->commit();
         } catch (\Exception $e) {
             $adapter->getDriver()->getConnection()->rollback();
-            throw new DataStoresException($errorMsg, 0, $e);
+            throw new DataStoreException($errorMsg, 0, $e);
         }
         return $result;
     }

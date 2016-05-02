@@ -10,7 +10,7 @@
 namespace zaboy\test\res\DataStore;
 
 use zaboy\rest\DataStore\DbTable;
-use zaboy\rest\DataStore\DataStoresAbstract;
+use zaboy\rest\DataStore\DataStoreAbstract;
 use Xiag\Rql\Parser\Node\Query\ScalarOperator;
 use Xiag\Rql\Parser\Node\Query\LogicOperator;
 use Xiag\Rql\Parser\Query;
@@ -178,7 +178,7 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
     public function testCreate_withtIdRewriteException()
     {
         $this->_initObject();
-        $this->setExpectedException('\zaboy\rest\DataStore\DataStoresException');
+        $this->setExpectedException('\zaboy\rest\DataStore\DataStoreException');
         $this->object->create(
                 array(
             'id' => 2,
@@ -190,7 +190,7 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
     public function testUpdate_withoutId()
     {
         $this->_initObject();
-        $this->setExpectedException('\zaboy\rest\DataStore\DataStoresException');
+        $this->setExpectedException('\zaboy\rest\DataStore\DataStoreException');
         $id = $this->object->update(
                 array(
                     'fFloat' => 1000.01,
@@ -225,7 +225,7 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
     public function testUpdate_withtId_WhichAbsent()
     {
         $this->_initObject();
-        $this->setExpectedException('zaboy\rest\DataStore\DataStoresException');
+        $this->setExpectedException('zaboy\rest\DataStore\DataStoreException');
         $this->object->update(
                 array(
                     'id' => 1000,
@@ -282,7 +282,7 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
     public function testDelete_withtId_Null()
     {
         $this->_initObject();
-        $this->setExpectedException('zaboy\rest\DataStore\DataStoresException');
+        $this->setExpectedException('zaboy\rest\DataStore\DataStoreException');
         $count = $this->object->delete(null);
     }
 
@@ -600,7 +600,7 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
         $query->setSort($sortNode);
         $selectNode = new Node\SelectNode(['fFloat']);
         $query->setSelect($selectNode);
-        $limitNode = new Node\LimitNode(DataStoresAbstract::LIMIT_INFINITY, 1);
+        $limitNode = new Node\LimitNode(DataStoreAbstract::LIMIT_INFINITY, 1);
 
         $query->setLimit($limitNode);
         $queryArray = $this->object->query($query);

@@ -13,14 +13,15 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Zend\Stratigility\MiddlewareInterface;
 use Zend\Diactoros\Response\JsonResponse;
+use Zend\Escaper\Escaper;
 
 /**
  * Check Accept Header and encode Response to JSON
  *
  * Encode Response from $request->getAttribute('Response-Body')
  *
- * @category   Rest
- * @package    Rest
+ * @category   rest
+ * @package    zaboy
  */
 class ResponseEncoder implements MiddlewareInterface
 {
@@ -67,11 +68,12 @@ class ResponseEncoder implements MiddlewareInterface
                     break;
                 default:
                     throw new \zaboy\rest\RestException(
-                    '$responseBody must be array, numeric or bool. But'
+                    '$responseBody must be array, numeric or bool. But '
                     . gettype($responseBody) . ' given.'
                     );
             }
-
+            $escaper = new Escaper();
+            $result = $escaper->escapeHtml($result);
             $response->getBody()->write($result);
         }
 

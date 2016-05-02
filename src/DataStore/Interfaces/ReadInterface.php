@@ -14,9 +14,9 @@ use Xiag\Rql\Parser\Query;
 /**
  * Read Interface for DataStores
  *
- * @category   DataStores
- * @package    DataStores
  * @see http://en.wikipedia.org/wiki/Create,_read,_update_and_delete
+ * @category   rest
+ * @package    zaboy
  */
 interface ReadInterface extends \Countable, \IteratorAggregate
 {

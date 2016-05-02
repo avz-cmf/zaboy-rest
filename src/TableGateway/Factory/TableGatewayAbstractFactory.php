@@ -12,7 +12,7 @@ namespace zaboy\rest\TableGateway\Factory;
 use Zend\Db\TableGateway\TableGateway;
 use Zend\Db\Metadata\Metadata;
 use Interop\Container\ContainerInterface;
-use zaboy\rest\DataStore\Factory\DataStoresAbstractFactoryAbstract;
+use zaboy\rest\AbstractFactoryAbstract;
 
 /**
  * Create and return an instance of the TableGateway
@@ -22,12 +22,12 @@ use zaboy\rest\DataStore\Factory\DataStoresAbstractFactoryAbstract;
  *
  * Requre service with name 'db' - db adapter
  *
- * @category   DataStores
- * @package    DataStores
  * @uses zend-db
  * @see https://github.com/zendframework/zend-db
+ * @category   rest
+ * @package    zaboy
  */
-class TableGatewayAbstractFactory extends DataStoresAbstractFactoryAbstract
+class TableGatewayAbstractFactory extends AbstractFactoryAbstract
 {
     /*
      * @var array cache of tables names in db

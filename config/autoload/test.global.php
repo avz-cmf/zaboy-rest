@@ -2,6 +2,13 @@
 
 return [
     'dataStore' => [
+        'test_DataStoreDbTableWithNameAsResourceName' => [
+            'class' => 'zaboy\rest\DataStore\DbTable',
+            'tableName' => 'table_for_db_data_store'
+        ],
+        'test_StoreForMiddleware' => [
+            'class' => 'zaboy\rest\DataStore\Memory',
+        ],
         'testDbTable' => [
             'class' => 'zaboy\rest\DataStore\DbTable',
             'tableName' => 'test_res_tablle'
@@ -17,21 +24,13 @@ return [
         ]
     ],
     'middleware' => [
+        'test_MiddlewareWithNameAsResourceName' => [
+            'class' => 'zaboy\rest\Middleware\DataStoreRest',
+            'dataStore' => 'test_StoreForMiddleware'
+        ],
         'MiddlewareMemoryTest' => [
-            'class' => 'zaboy\rest\Middleware\MiddlewareMemoryStore',
+            'class' => 'zaboy\rest\Examples\Middleware\DataStoreMemory',
             'dataStore' => 'testMemory'
         ]
-    ]/*         * ,
-          'services' => [
-          'factories' => [
-          ],
-          'abstract_factories' => [
-          'zaboy\rest\DataStore\Factory\DbTableStoresAbstractFactory',
-          'zaboy\rest\DataStore\Factory\MemoryStoresAbstractFactory',
-          'zaboy\rest\DataStore\Factory\HttpClientStoresAbstractFactory',
-          'zaboy\rest\Middleware\Factory\MiddlewareStoreAbstractFactory',
-          'zaboy\rest\TableGateway\Factory\TableGatewayAbstractFactory',
-          'Zend\Db\Adapter\AdapterAbstractServiceFactory'
-          ]
-          ] */
+    ]
 ];

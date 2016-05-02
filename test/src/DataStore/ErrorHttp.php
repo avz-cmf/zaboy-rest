@@ -8,8 +8,8 @@
 
 namespace zaboy\test\res\DataStore;
 
-use zaboy\rest\DataStore\DataStoresAbstract;
-use zaboy\rest\DataStore\DataStoresException;
+use zaboy\rest\DataStore\DataStoreAbstract;
+use zaboy\rest\DataStore\DataStoreException;
 use Xiag\Rql\Parser\Node\Query\ScalarOperator;
 use Xiag\Rql\Parser\Node\Query\LogicOperator;
 use Xiag\Rql\Parser\Query;

@@ -9,7 +9,7 @@ require '/vendor/autoload.php';
 
 use Zend\Stratigility\MiddlewarePipe;
 use Zend\Diactoros\Server;
-use zaboy\rest\Pipe\Factory\RestPipeFactory;
+use zaboy\rest\Pipe\Factory\RestRqlFactory;
 
 $container = include 'config/container.php';
 $tableName = 'test_res_http'; //'index_php_table';
@@ -17,8 +17,8 @@ $tableName = 'test_res_http'; //'index_php_table';
 
 $app = new MiddlewarePipe();
 
-$restPipeFactory = new RestPipeFactory();
-$rest = $restPipeFactory($container, '');
+$RestRqlFactory = new RestRqlFactory();
+$rest = $RestRqlFactory($container, '');
 $app->pipe('/api/rest', $rest);
 
 $server = Server::createServer($app, $_SERVER, $_GET, $_POST, $_COOKIE, $_FILES

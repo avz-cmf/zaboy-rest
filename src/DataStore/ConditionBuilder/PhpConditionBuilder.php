@@ -66,7 +66,7 @@ class PhpConditionBuilder extends ConditionBuilderAbstract
             case is_string($fildValue):
                 return "'" . $fildValue . "'";
             default:
-                throw new DataStoresException(
+                throw new DataStoreException(
                 'Type ' . gettype($fildValue) . ' is not supported'
                 );
         }

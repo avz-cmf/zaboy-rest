@@ -9,18 +9,18 @@
 
 namespace zaboy\rest\DataStore;
 
-use zaboy\rest\DataStore\DataStoresAbstract;
-use zaboy\rest\DataStore\DataStoresException;
+use zaboy\rest\DataStore\DataStoreAbstract;
+use zaboy\rest\DataStore\DataStoreException;
 use zaboy\rest\DataStore\ConditionBuilder\PhpConditionBuilder;
 
 /**
  * DataStores as array
  *
- * @category   DataStores
- * @package    DataStores
  * @see http://en.wikipedia.org/wiki/Create,_read,_update_and_delete
+ * @category   rest
+ * @package    zaboy
  */
-class Memory extends DataStoresAbstract
+class Memory extends DataStoreAbstract
 {
 
     /**
@@ -69,7 +69,7 @@ class Memory extends DataStoresAbstract
             $itemsKeys = array_keys($this->items);
             $id = array_pop($itemsKeys);
         } elseif (!$rewriteIfExist && isset($this->items[$itemData[$identifier]])) {
-            throw new DataStoresException('Item is already exist with "id" =  ' . $itemData[$identifier]);
+            throw new DataStoreException('Item is already exist with "id" =  ' . $itemData[$identifier]);
         } else {
             $id = $itemData[$identifier];
             $this->checkIdentifierType($id);
@@ -88,7 +88,7 @@ class Memory extends DataStoresAbstract
     {
         $identifier = $this->getIdentifier();
         if (!isset($itemData[$identifier])) {
-            throw new DataStoresException('Item must has primary key');
+            throw new DataStoreException('Item must has primary key');
         }
         $id = $itemData[$identifier];
         $this->checkIdentifierType($id);
@@ -96,7 +96,7 @@ class Memory extends DataStoresAbstract
         switch (true) {
             case!isset($this->items[$id]) && !$createIfAbsent:
                 $errorMsg = 'Can\'t update item with "id" = ' . $id;
-                throw new DataStoresException($errorMsg);
+                throw new DataStoreException($errorMsg);
             case!isset($this->items[$id]) && $createIfAbsent:
                 $this->items[$id] = array_merge(array($identifier => $id), $itemData);
                 break;

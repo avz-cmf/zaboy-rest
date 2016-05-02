@@ -9,8 +9,8 @@
 
 namespace zaboy\rest\DataStore;
 
-use zaboy\rest\DataStore\DataStoresAbstract;
-use zaboy\rest\DataStore\DataStoresException;
+use zaboy\rest\DataStore\DataStoreAbstract;
+use zaboy\rest\DataStore\DataStoreException;
 use zaboy\rest\DataStore\ConditionBuilder\RqlConditionBuilder;
 use Xiag\Rql\Parser\Query;
 use Xiag\Rql\Parser\Node\SortNode;
@@ -21,13 +21,13 @@ use Zend\Json\Json;
 /**
  * DataStores as http Client
  *
- * @category   DataStores
- * @package    DataStores
  * @uses Zend\Http\Client
  * @see https://github.com/zendframework/zend-db
  * @see http://en.wikipedia.org/wiki/Create,_read,_update_and_delete
+ * @category   rest
+ * @package    zaboy
  */
-class HttpClient extends DataStoresAbstract
+class HttpClient extends DataStoreAbstract
 {
 
     /**
@@ -90,7 +90,7 @@ class HttpClient extends DataStoresAbstract
         if ($response->isOk()) {
             $result = $this->jsonDecode($response->getBody());
         } else {
-            throw new DataStoresException(
+            throw new DataStoreException(
             'Status: ' . $response->getStatusCode()
             . ' - ' . $response->getReasonPhrase()
             );
@@ -110,7 +110,7 @@ class HttpClient extends DataStoresAbstract
         if ($response->isOk()) {
             $result = $this->jsonDecode($response->getBody());
         } else {
-            throw new DataStoresException(
+            throw new DataStoreException(
             'Status: ' . $response->getStatusCode()
             . ' - ' . $response->getReasonPhrase()
             );
@@ -141,7 +141,7 @@ class HttpClient extends DataStoresAbstract
         if ($response->isSuccess()) {
             $result = $this->jsonDecode($response->getBody());
         } else {
-            throw new DataStoresException(
+            throw new DataStoreException(
             'Status: ' . $response->getStatusCode()
             . ' - ' . $response->getReasonPhrase()
             );
@@ -158,7 +158,7 @@ class HttpClient extends DataStoresAbstract
     {
         $identifier = $this->getIdentifier();
         if (!isset($itemData[$identifier])) {
-            throw new DataStoresException('Item must has primary key');
+            throw new DataStoreException('Item must has primary key');
         }
         $id = $itemData[$identifier];
         $this->checkIdentifierType($id);
@@ -168,7 +168,7 @@ class HttpClient extends DataStoresAbstract
         if ($response->isSuccess()) {
             $result = $this->jsonDecode($response->getBody());
         } else {
-            throw new DataStoresException(
+            throw new DataStoreException(
             'Status: ' . $response->getStatusCode()
             . ' - ' . $response->getReasonPhrase()
             );
@@ -189,7 +189,7 @@ class HttpClient extends DataStoresAbstract
         if ($response->isSuccess()) {
             $result = $this->jsonDecode($response->getBody());
         } else {
-            throw new DataStoresException(
+            throw new DataStoreException(
             'Status: ' . $response->getStatusCode()
             . ' - ' . $response->getReasonPhrase()
             );
@@ -222,9 +222,9 @@ class HttpClient extends DataStoresAbstract
     protected function makeLimit(Query $query)
     {
         $limitNode = $query->getLimit();
-        $limit = !$limitNode ? DataStoresAbstract::LIMIT_INFINITY : $limitNode->getLimit();
+        $limit = !$limitNode ? DataStoreAbstract::LIMIT_INFINITY : $limitNode->getLimit();
         $offset = !$limitNode ? 0 : $limitNode->getOffset();
-        if ($limit == DataStoresAbstract::LIMIT_INFINITY && $offset == 0) {
+        if ($limit == DataStoreAbstract::LIMIT_INFINITY && $offset == 0) {
             return '';
         } else {
             return sprintf('&limit(%s,%s)', $limit, $offset);
@@ -267,7 +267,7 @@ class HttpClient extends DataStoresAbstract
      * @param string  'GET' 'HEAD' 'POST' 'PUT' 'DELETE';
      * @param Query $query
      * @param int|string $id
-     * @param bool see $ifMatch $rewriteIfExist and $createIfAbsent in {@see DataStoresAbstract}
+     * @param bool see $ifMatch $rewriteIfExist and $createIfAbsent in {@see DataStoreAbstract}
      * @return Client
      */
     protected function initHttpClient($method, Query $query = null, $id = null, $ifMatch = false)
@@ -299,7 +299,7 @@ class HttpClient extends DataStoresAbstract
         if (JSON_ERROR_NONE !== json_last_error()) {
             $jsonErrorMsg = json_last_error_msg();
             json_encode(null);  // Clear json_last_error()
-            throw new DataStoresException(
+            throw new DataStoreException(
             'Unable to decode data from JSON - ' . $jsonErrorMsg
             );
         }
@@ -313,7 +313,7 @@ class HttpClient extends DataStoresAbstract
         if (JSON_ERROR_NONE !== json_last_error()) {
             $jsonErrorMsg = json_last_error_msg();
             json_encode(null);  // Clear json_last_error()
-            throw new DataStoresException(
+            throw new DataStoreException(
             'Unable to encode data to JSON - ' . $jsonErrorMsg
             );
         }

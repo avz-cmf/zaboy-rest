@@ -17,8 +17,8 @@ use Xiag\Rql\Parser\Node;
 /**
  * Outer iterator for zaboy\rest\DataStore\Read\ReadInterface objects
  *
- * @category   DataStores
- * @package    DataStores
+ * @category   rest
+ * @package    zaboy
  */
 class DataStoreIterator implements \Iterator
 {

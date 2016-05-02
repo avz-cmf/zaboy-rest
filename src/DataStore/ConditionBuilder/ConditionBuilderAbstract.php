@@ -9,7 +9,7 @@
 
 namespace zaboy\rest\DataStore\ConditionBuilder;
 
-use zaboy\rest\DataStore\DataStoresException;
+use zaboy\rest\DataStore\DataStoreException;
 use Xiag\Rql\Parser\Node\AbstractQueryNode;
 use Xiag\Rql\Parser\Node\Query\AbstractLogicOperatorNode;
 use Xiag\Rql\Parser\Node\Query\AbstractArrayOperatorNode;
@@ -25,6 +25,8 @@ use Xiag\Rql\Parser\DataType\Glob;
  * @see zaboy\rest\DataStore\ConditionBuilder\PhpConditionBuilder
  * @see zaboy\rest\DataStore\ConditionBuilder\PhpConditionBuilder
  * @see zaboy\rest\DataStore\ConditionBuilder\SqlConditionBuilder
+ * @category   rest
+ * @package    zaboy
  */
 abstract class ConditionBuilderAbstract
 {
@@ -97,7 +99,7 @@ abstract class ConditionBuilderAbstract
      *
      * @param AbstractQueryNode $queryNode
      * @return string
-     * @throws DataStoresException
+     * @throws DataStoreException
      */
     public function makeAbstractQueryOperator(AbstractQueryNode $queryNode)
     {
@@ -109,7 +111,7 @@ abstract class ConditionBuilderAbstract
             case is_a($queryNode, 'Xiag\Rql\Parser\Node\Query\AbstractArrayOperatorNode', true):
                 return $this->makeArrayOperator($queryNode);
             default:
-                throw new DataStoresException(
+                throw new DataStoreException(
                 'The Node type not suppoted: ' . $queryNode->getNodeName()
                 );
         }
@@ -125,7 +127,7 @@ abstract class ConditionBuilderAbstract
     {
         $nodeName = $node->getNodeName();
         if (!isset($this->literals['LogicOperator'][$nodeName])) {
-            throw new DataStoresException(
+            throw new DataStoreException(
             'The Logic Operator not suppoted: ' . $nodeName
             );
         }
@@ -152,7 +154,7 @@ abstract class ConditionBuilderAbstract
     {
         $nodeName = $node->getNodeName();
         if (!isset($this->literals['ScalarOperator'][$nodeName])) {
-            throw new DataStoresException(
+            throw new DataStoreException(
             'The Scalar Operator not suppoted: ' . $nodeName
             );
         }
@@ -175,7 +177,7 @@ abstract class ConditionBuilderAbstract
     {
         $nodeName = $node->getNodeName();
         if (!isset($this->literals['ArrayOperator'][$nodeName])) {
-            throw new DataStoresException(
+            throw new DataStoreException(
             'The Array Operator not suppoted: ' . $nodeName
             );
         }
