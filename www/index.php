@@ -11,6 +11,20 @@ use Zend\Stratigility\MiddlewarePipe;
 use Zend\Diactoros\Server;
 use zaboy\rest\Pipe\Factory\RestRqlFactory;
 
+/**
+  use ReputationVIP\QueueClient\QueueClient;
+  use ReputationVIP\QueueClient\Adapter\FileAdapter;
+
+  $adapter = new FileAdapter('/tmp');
+  $queueClient = new QueueClient($adapter);
+  //$queueClient->createQueue('testQueue');
+  $queueClient->addMessage('testQueue', 'testMessage');
+
+  $messages = $queueClient->getMessages('testQueue');
+  $message = $messages[0];
+  $queueClient->deleteMessage('testQueue', $message);
+  echo $message['Body'];
+ */
 $container = include 'config/container.php';
 $tableName = 'test_res_http'; //'index_php_table';
 //include 'createTable.php';

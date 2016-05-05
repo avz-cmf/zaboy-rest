@@ -1,7 +1,22 @@
 <?php
 
 return [
+    'queues' => [
+        'MainQueue' => [
+            'class' => 'zaboy\rest\Queue\DataStoreQueueClient',
+            'queuesDataStore' => 'QueuesDataStoreDbTable',
+            'messagesDataStore' => 'MessagesDataStoreMemory',
+        ],
+    ],
     'dataStore' => [
+        'QueuesDataStoreDbTable' => [
+            'class' => 'zaboy\rest\DataStore\Memory'
+        //'tableName' => 'test_queues_tablle'
+        ],
+        'MessagesDataStoreMemory' => [
+            'class' => 'zaboy\rest\DataStore\Memory',
+        //'tableName' => 'test_messages_tablle'
+        ],
         'test_DataStoreDbTableWithNameAsResourceName' => [
             'class' => 'zaboy\rest\DataStore\DbTable',
             'tableName' => 'table_for_db_data_store'
@@ -21,7 +36,7 @@ return [
         ],
         'testMemory' => [
             'class' => 'zaboy\rest\DataStore\Memory',
-        ]
+        ],
     ],
     'middleware' => [
         'test_MiddlewareWithNameAsResourceName' => [

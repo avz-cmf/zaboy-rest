@@ -16,6 +16,7 @@ use zaboy\rest\DataStore\ConditionBuilder\PhpConditionBuilder;
 /**
  * DataStores as array
  *
+ * @todo delete string 74
  * @see http://en.wikipedia.org/wiki/Create,_read,_update_and_delete
  * @category   rest
  * @package    zaboy
@@ -28,13 +29,9 @@ class Memory extends DataStoreAbstract
      */
     protected $items = array();
 
-    public function __construct(ConditionBuilderAbstract $conditionBuilder = null)
+    public function __construct()
     {
-        if (isset($conditionBuilder)) {
-            $this->conditionBuilder = $conditionBuilder;
-        } else {
-            $this->conditionBuilder = new PhpConditionBuilder;
-        }
+        $this->conditionBuilder = new PhpConditionBuilder;
     }
 
 //** Interface "zaboy\rest\DataStore\Interfaces\ReadInterface" **/
@@ -115,6 +112,7 @@ class Memory extends DataStoreAbstract
      */
     public function delete($id)
     {
+
         $this->checkIdentifierType($id);
         if (isset($this->items[$id])) {
             unset($this->items[$id]);
