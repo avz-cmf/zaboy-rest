@@ -1,3 +1,5 @@
 vendor/
 nbproject/
 phpunit.xml
+.idea
+/phpunit.phar
