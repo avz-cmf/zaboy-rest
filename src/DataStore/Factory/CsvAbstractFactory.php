@@ -6,10 +6,8 @@ use Interop\Container\ContainerInterface;
 use zaboy\rest\AbstractFactoryAbstract;
 use zaboy\rest\DataStore\DataStoreException;
 
-class CsvBaseAbstractFactory extends AbstractFactoryAbstract
+class CsvAbstractFactory extends AbstractFactoryAbstract
 {
-    protected $classOfEntity = 'zaboy\rest\DataStore\CsvBase';
-
     /**
      * {@inheritdoc}
      *
@@ -22,7 +20,7 @@ class CsvBaseAbstractFactory extends AbstractFactoryAbstract
             return false;
         }
         $requestedClassName = $config['dataStore'][$requestedName]['class'];
-        return is_a($requestedClassName, $this->classOfEntity, true);
+        return is_a($requestedClassName, 'zaboy\rest\DataStore\CsvBase', true);
     }
 
     /**
