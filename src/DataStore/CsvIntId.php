@@ -88,9 +88,9 @@ class CsvIntId extends CsvBase
      * @param $id
      * @throws \zaboy\rest\DataStore\DataStoreException
      */
-    protected function openFile($id = null)
+    protected function openFile($id = null, $nbTries = 0)
     {
-        parent::openFile($id);
+        parent::openFile($id, $nbTries);
         if ($id >= $this->offset && $this->offset) {
             fseek($this->fileHandler, $this->bOffset);
             // Sometimes some editors leave a blank line in the end of file

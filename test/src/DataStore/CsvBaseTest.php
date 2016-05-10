@@ -108,4 +108,20 @@ class CsvBaseTest extends AbstractTest
             $row['anotherId'], true
         );
     }
+
+    public function testWriteToEmptyFile()
+    {
+        $itemData[] = array(
+            'id' => 1000,
+            'anotherId' => true,
+            'fFloat' => 1000.01,
+            'fString' => 'TrueValue'
+        );
+        $this->_initObject($itemData);
+        $this->object->delete(1000);
+        $itemData = array_shift($itemData);
+        $this->object->create($itemData);
+        $row = $this->object->read(1000);
+        $this->assertEquals($row, $itemData);
+    }
 }

@@ -6,13 +6,18 @@ use zaboy\rest\DataStore\DataStoreAbstract;
 use zaboy\rest\DataStore\DataStoreException;
 use zaboy\rest\DataStore\Iterators\CsvIterator;
 use zaboy\rest\DataStore\ConditionBuilder\PhpConditionBuilder;
+use Symfony\Component\Filesystem\LockHandler;
 
 class CsvBase extends DataStoreAbstract
 {
 
+    const MAX_LOCK_TRIES = 30;
+
     protected $fileHandler;
 
     protected $filename;
+
+    protected $lockHandler;
 
     /**
      * Column headings
@@ -40,6 +45,7 @@ class CsvBase extends DataStoreAbstract
                 throw new DataStoreException('The specified source file does not exist');
             }
         }
+        $this->lockHandler = new LockHandler($this->filename);
         $this->csvDelimiter = $delimiter;
         // Sets the column headings
         $this->getHeaders();
@@ -58,7 +64,7 @@ class CsvBase extends DataStoreAbstract
         $this->openFile();
         // In the CSV-format first row always containts the column headings
         // That's why first row is passed during the file opening
-        // And then it reads the file while end of file won't found or won't found the indentifier
+        // And then it reads the file until end of file won't found or won't found the indentifier
         $row = null;
         while (!feof($this->fileHandler)) {
             $row = $this->getTrueRow(
@@ -234,8 +240,15 @@ class CsvBase extends DataStoreAbstract
      *     if it is need to pass it (row) after the opening the file.
      * @throws \zaboy\rest\DataStore\DataStoreException
      */
-    protected function openFile($seekFirstDataRow = true)
+    protected function openFile($seekFirstDataRow = true, $nbTries = 0)
     {
+        if (!$this->lockHandler->lock()) {
+            if ($nbTries >= static::MAX_LOCK_TRIES) {
+                throw new DataStoreException('Reach max retry for locking queue file ' . $this->filename);
+            }
+            usleep(10);
+            return $this->openFile($seekFirstDataRow, ($nbTries + 1));
+        }
         try {
             $this->fileHandler = fopen($this->filename, 'r');
             // Sometimes some editors leave a blank line in the end of file
@@ -252,6 +265,7 @@ class CsvBase extends DataStoreAbstract
                 fgets($this->fileHandler);
             }
         } catch (Exception $e) {
+            $this->lockHandler->release();
             throw new DataStoreException('Failed to open file. The specified file does not exist or one is closed for reading.');
         }
     }
@@ -259,9 +273,10 @@ class CsvBase extends DataStoreAbstract
     /**
      * Closes file
      */
-    protected function closeFile()
+    public function closeFile()
     {
         fclose($this->fileHandler);
+        $this->lockHandler->release();
     }
 
     /**
