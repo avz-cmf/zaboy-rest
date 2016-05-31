@@ -183,8 +183,6 @@ class DataStoresTest extends \PHPUnit_Framework_TestCase
         foreach ($this->_messageList as $message) {
             $this->object->addMessage('nextQueue21', $message);
         }
-        //$m = $this->object->getMessagesDataStore()->query(new query);
-        //var_dump($m);
         $number = $this->object->getNumberMessages('nextQueue21');
         $this->assertEquals(
                 5
@@ -300,7 +298,6 @@ class DataStoresTest extends \PHPUnit_Framework_TestCase
                 , $number2
         );
         $this->object->deleteMessage('nextQueue21', $messages[0]);
-        var_dump($this->object->getMessagesDataStore()->query(new query));
         sleep(6);
         $number4 = $this->object->getNumberMessages('nextQueue21');
         $this->assertEquals(

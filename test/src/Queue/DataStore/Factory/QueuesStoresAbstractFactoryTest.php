@@ -34,9 +34,9 @@ class QueuesStoresAbstractFactoryTest extends \PHPUnit_Framework_TestCase
     public function testDataStoreMemory__invoke()
     {
         $container = include 'config/container.php';
-        $this->object = $container->get('testQueues');
+        $this->object = $container->get('MainQueue');
         $this->assertSame(
-                get_class($returnedResponse = $this->object), 'zaboy\rest\Queue\DataStore\Queues'
+                get_class($returnedResponse = $this->object), 'zaboy\rest\Queue\DataStoreQueueClient'
         );
     }
 

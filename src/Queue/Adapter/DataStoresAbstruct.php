@@ -57,8 +57,6 @@ abstract class DataStoresAbstruct
     {
         $identifier = $this->messagesDataStore->getIdentifier();
         for ($attemptNumber = 1; $attemptNumber < 10; $attemptNumber++) {
-            var_dump('$attemptNumber');
-            var_dump($attemptNumber);
             $messages = $this->readMessageFifoButNewerFlightInFirst($queueName, $priority, $attemptNumber);
             if (empty($messages)) {
                 return null;
@@ -70,11 +68,7 @@ abstract class DataStoresAbstruct
                 $flyIdMessage = array_merge($message, array($identifier => $idInFly, self::TIME_IN_FLIGHT => time()));
                 try {
                     $this->messagesDataStore->create($flyIdMessage);
-                    var_dump('try');
-                    var_dump($flyIdMessage['id']);
                 } catch (DataStoreException $exc) {
-                    var_dump('catch');
-                    var_dump($flyIdMessage['id']);
                     continue;
                 }
                 $this->messagesDataStore->delete($id); /*

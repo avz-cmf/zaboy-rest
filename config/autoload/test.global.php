@@ -37,6 +37,16 @@ return [
         'testMemory' => [
             'class' => 'zaboy\rest\DataStore\Memory',
         ],
+        'testCsvBase' => [
+            'class' => 'zaboy\rest\DataStore\CsvBase',
+            'filename' => sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'testCsvBase.tmp',
+            'delimiter' => ';',
+        ],
+        'testCsvIntId' => [
+            'class' => 'zaboy\rest\DataStore\CsvIntId',
+            'filename' => sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'testCsvIntId.tmp',
+            'delimiter' => ';',
+        ]
     ],
     'middleware' => [
         'test_MiddlewareWithNameAsResourceName' => [

@@ -249,6 +249,7 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(
                 'withtIdwhichAbsent', $item['fString']
         );
+        unset($row['anotherId']);
         $this->assertEquals(
                 array(
             'id' => 1000,
