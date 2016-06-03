@@ -183,8 +183,6 @@ class DataStoresTest extends \PHPUnit_Framework_TestCase
         foreach ($this->_messageList as $message) {
             $this->object->addMessage('nextQueue21', $message);
         }
-        //$m = $this->object->getMessagesDataStore()->query(new query);
-        //var_dump($m);
         $number = $this->object->getNumberMessages('nextQueue21');
         $this->assertEquals(
                 5
@@ -226,12 +224,13 @@ class DataStoresTest extends \PHPUnit_Framework_TestCase
         $this->object->addMessage('nextQueue21', $this->_messageList[2], 'LOW');
         $this->object->addMessage('nextQueue21', $this->_messageList[3], 'MID');
         $this->object->addMessage('nextQueue21', $this->_messageList[4], 'MID');
+
         $m1 = $this->object->getMessages('nextQueue21', 1, 'LOW');
         $this->assertEquals(
                 1
                 , count($m1)
         );
-        $m2 = $this->object->getMessages('nextQueue21', 3, 'HIGH');
+        $m2 = $this->object->getMessages('nextQueue21', 10, 'HIGH');
         $this->assertEquals(
                 2
                 , count($m2)
@@ -308,4 +307,33 @@ class DataStoresTest extends \PHPUnit_Framework_TestCase
         $this->object->setMaxTimeInFlight();
     }
 
+    /*
+      public function test_getMessagesSort()
+      {
+      $this->object->createQueue('nextQueue21');
+      $this->object->addMessage('nextQueue21', $this->_messageList[0], 'HIGH');
+      $this->object->addMessage('nextQueue21', $this->_messageList[1], 'HIGH');
+      $this->object->addMessage('nextQueue21', $this->_messageList[2], 'LOW');
+      $this->object->addMessage('nextQueue21', $this->_messageList[3], 'HIGH');
+      $this->object->addMessage('nextQueue21', $this->_messageList[4], 'HIGH');
+      $this->object->addMessage('nextQueue21', $this->_messageList[0], 'HIGH');
+      $this->object->addMessage('nextQueue21', $this->_messageList[1], 'HIGH');
+      $this->object->addMessage('nextQueue21', $this->_messageList[2], 'HIGH');
+      $this->object->addMessage('nextQueue21', $this->_messageList[3], 'HIGH');
+      $this->object->addMessage('nextQueue21', $this->_messageList[4], 'MID');
+      $m1 = $this->object->getMessages('nextQueue21', 3);
+      $this->assertEquals(
+      'HIGH'
+      , $m1[0][DataStores::PRIORITY]
+      );
+      $this->assertEquals(
+      'MID'
+      , $m1[1][DataStores::PRIORITY]
+      );
+      $this->assertEquals(
+      'LOW'
+      , $m1[2][DataStores::PRIORITY]
+      );
+      }
+     */
 }

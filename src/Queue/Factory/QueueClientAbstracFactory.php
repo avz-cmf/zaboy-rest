@@ -38,6 +38,7 @@ use zaboy\rest\Queue\Adapter;
  * ]
  * </code>
  *
+ * @todo config key 'queues'
  * @category   rest
  * @package    zaboy
  */

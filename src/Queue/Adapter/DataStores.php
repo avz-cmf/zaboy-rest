@@ -2,6 +2,7 @@
 
 namespace zaboy\rest\Queue\Adapter;
 
+use zaboy\rest\Queue\Adapter\DataStoresAbstruct;
 use zaboy\rest\DataStore\Interfaces\DataStoresInterface;
 use zaboy\rest\Queue\PriorityHandler\PriorityHandler;
 use zaboy\rest\RestException;
@@ -12,33 +13,8 @@ use Xiag\Rql\Parser\Query;
 use Xiag\Rql\Parser\Node;
 use Xiag\Rql\Parser\DataType\Glob;
 
-class DataStores implements AdapterInterface
+class DataStores extends DataStoresAbstruct implements AdapterInterface
 {
-
-    const DEFAULT_MAX_TIME_IN_FLIGHT = 30; //http://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/AboutVT.html
-    const PRIORITY_SEPARATOR = '_';
-    //
-    //QUEUES_DATA_STORE
-    //'id' - queue name
-    const TIME_IN_FLIGHT = 'time_in_flight';
-    //
-    //MESSAGES_DATA_STORE
-    //'id' - unic id of message like: QueueName_LOW_jkkljnk;jn5kjh.95kj5ntk4
-    const QUEUE_NAME = 'queue_name';
-    const MESSAGE_BODY = 'message_body';
-    const PRIORITY = 'priority';
-
-    /** @var PriorityHandlerInterface $priorityHandler */
-    private $priorityHandler;
-
-    /** @var DataStoresInterface $queuesDataStore */
-    private $queuesDataStore;
-
-    /** @var DataStoresInterface $messagesDataStore */
-    private $messagesDataStore;
-
-    /** @var int $messagesDataStore */
-    private $maxTimeInFlight;
 
     /**
      *
@@ -66,14 +42,17 @@ class DataStores implements AdapterInterface
         if (empty($queueName)) {
             throw new RestException('Parameter queueName empty or not defined.');
         }
+        if (!in_array($queueName, $this->listQueues())) {
+            throw new RestException('Queue with name ' . $queueName . 'is not exist.');
+        }
         if (empty($message)) {
             throw new RestException('Parameter message empty or not defined.');
         }
         $identifier = $this->messagesDataStore->getIdentifier();
-        $id = uniqid($queueName
-                . self::PRIORITY_SEPARATOR
-                . $priority
-                . self::PRIORITY_SEPARATOR
+        $id = uniqid(
+                '0' . self::ID_SEPARATOR
+                . $queueName . self::ID_SEPARATOR
+                . $priority . self::ID_SEPARATOR
                 , true
         );
         $priorityIndex = $this->getPriorityIndex($priority);
@@ -83,6 +62,7 @@ class DataStores implements AdapterInterface
             self::MESSAGE_BODY => serialize($message),
             self::PRIORITY => $priorityIndex,
             self::TIME_IN_FLIGHT => 0,
+            self::CREATED_ON => time(),
         ];
         $this->messagesDataStore->create($new_message);
         return $this;
@@ -100,7 +80,6 @@ class DataStores implements AdapterInterface
         foreach ($messages as $message) {
             $this->addMessage($queueName, $message, $priority);
         }
-
         return $this;
     }
 
@@ -109,52 +88,14 @@ class DataStores implements AdapterInterface
      */
     public function getMessages($queueName, $numberMsg = 1, $priority = null)
     {
-        $query = new Query();
-        $scalarNodeQueue = new ScalarOperator\EqNode(
-                self::QUEUE_NAME, $queueName
-        );
-        $scalarNodeNotInFlihgt = new ScalarOperator\EqNode(
-                self::TIME_IN_FLIGHT, 0
-        );
-        $scalarNodeLongnInFlihgt = new ScalarOperator\LtNode(
-                self::TIME_IN_FLIGHT, time() - $this->getMaxTimeInFlight()
-        );
-        $orNodeInFlihgt = new LogicOperator\OrNode([
-            $scalarNodeNotInFlihgt,
-            $scalarNodeLongnInFlihgt
-        ]);
-        if (isset($priority)) {
-            $scalarNodePriority = new ScalarOperator\EqNode(
-                    self::PRIORITY, $this->getPriorityIndex($priority)
-            );
-            $andNode = new LogicOperator\AndNode([
-                $orNodeInFlihgt,
-                $scalarNodePriority,
-                $scalarNodeQueue
-            ]);
-        } else {
-            $andNode = new LogicOperator\AndNode([
-                $orNodeInFlihgt,
-                $scalarNodeQueue
-            ]);
-        }
-
-        $query->setQuery($andNode);
-        $limitNode = new Node\LimitNode($numberMsg, 0);
-        $query->setLimit($limitNode);
-        $sortNode = new Node\SortNode([self::PRIORITY => Node\SortNode::SORT_ASC]);
-        $query->setSort($sortNode);
-        $messages = $this->messagesDataStore->query($query);
-        $identifier = $this->messagesDataStore->getIdentifier();
-        foreach ($messages as $key => $message) {
-            $updateMassage[$identifier] = $message[$identifier];
-            $updateMassage[self::TIME_IN_FLIGHT] = time();
-            $this->messagesDataStore->update($updateMassage);
-
-            $message[self::MESSAGE_BODY] = unserialize($message[self::MESSAGE_BODY]);
-            $priorityIndex = $message[self::PRIORITY];
-            $message[self::PRIORITY] = $this->getPriority($priorityIndex);
-            $messages[$key] = $message;
+        $messages = [];
+        for ($i = 0; $i < $numberMsg; $i++) {
+            $message = $this->getMessage($queueName, $priority);
+            if (!is_null($message)) {
+                $messages[] = $message;
+            } else {
+                return $messages;
+            }
         }
         return $messages;
     }
@@ -164,15 +105,6 @@ class DataStores implements AdapterInterface
      */
     public function deleteMessage($queueName, $message)
     {
-        if (empty($queueName)) {
-            throw new RestException('Parameter queueName empty or not defined.');
-        }
-        if (empty($message)) {
-            throw new RestException('Parameter message empty or not defined.');
-        }
-        if (!is_array($message)) {
-            throw new RestException('message must be an array.');
-        }
         $identifier = $this->messagesDataStore->getIdentifier();
         if (!isset($message[$identifier])) {
             throw new RestException('Message identifier not found in message.');
@@ -254,8 +186,8 @@ class DataStores implements AdapterInterface
      */
     public function deleteQueue($queueName)
     {
-        $this->purgeQueue($queueName);
         $this->queuesDataStore->delete($queueName);
+        $this->purgeQueue($queueName);
         return $this;
     }
 
@@ -275,21 +207,18 @@ class DataStores implements AdapterInterface
      */
     public function renameQueue($sourceQueueName, $targetQueueName)
     {
-        $identifier = $this->messagesDataStore->getIdentifier();
-        $query = new Query();
-        $scalarNodeQueue = new ScalarOperator\EqNode(
-                self::QUEUE_NAME, $sourceQueueName
-        );
-        $query->setQuery($scalarNodeQueue);
-        $selectNode = new Node\SelectNode([$identifier]);
-        $query->setSelect($selectNode);
-        $messages = $this->messagesDataStore->query($query);
-        $this->createQueue($targetQueueName);
-        foreach ($messages as $message) {
-            $message[self::QUEUE_NAME] = $targetQueueName;
-            $this->messagesDataStore->update($message);
-        }
         $this->deleteQueue($sourceQueueName);
+        $this->createQueue($targetQueueName);
+        $priorities = $this->priorityHandler->getAll();
+        foreach ($priorities as $priority) {
+            while (count($messages = $this->getMessages($sourceQueueName, 1, $priority)) > 0) {
+                $this->deleteMessage($sourceQueueName, $messages[0]);
+                array_walk($messages, function (&$item) {
+                    $item = $item['Body'];
+                });
+                $this->addMessage($targetQueueName, $messages[0], $priority);
+            }
+        }
         return $this;
     }
 
@@ -299,26 +228,8 @@ class DataStores implements AdapterInterface
     public function purgeQueue($queueName, $priority = null)
     {
         $identifier = $this->messagesDataStore->getIdentifier();
-        $query = new Query();
-        $scalarNodeQueue = new ScalarOperator\EqNode(
-                self::QUEUE_NAME, $queueName
-        );
-        if (isset($priority)) {
-            $scalarNodePriority = new ScalarOperator\EqNode(
-                    self::PRIORITY, $this->getPriorityIndex($priority)
-            );
-            $node = new LogicOperator\AndNode([
-                $scalarNodePriority,
-                $scalarNodeQueue
-            ]);
-        } else {
-            $node = $scalarNodeQueue;
-        }
-        $query->setQuery($node);
-        $selectNode = new Node\SelectNode([$identifier]);
-        $query->setSelect($selectNode);
-        $messages = $this->messagesDataStore->query($query);
-        foreach ($messages as $message) {
+        $messagesWithIdOnly = $this->readAllMessagesIdFromQueue($queueName, $priority);
+        foreach ($messagesWithIdOnly as $message) {
             $id = $message[$identifier];
             $this->messagesDataStore->delete($id);
         }
@@ -355,65 +266,31 @@ class DataStores implements AdapterInterface
         return $this->priorityHandler;
     }
 
-    /**
-     * @inheritdoc
+    /*
+      //for last commented test
+      protected function readMessageFifoButNewerFlightInFirst($queueName, $priority = null, $attemptNumber = 1)
+      {
+      var_dump('start PRIORITY-' . $priority);
+      $messages = parent::readMessageFifoButNewerFlightInFirst($queueName, $priority, $attemptNumber);
+      if ($this->getMaxTimeInFlight() !== 5) {
+      var_dump('start m1');
+      $this->setMaxTimeInFlight(5);
+      $messages2 = $this->getMessages($queueName, 7, 'HIGH');
+
+      var_dump('$messages2');
+      foreach ($messages2 as $val) {
+      var_dump('PRIORITY');
+      var_dump($val[self::PRIORITY]);
+      }
+      } else {
+      var_dump('$messages1');
+      foreach ($messages as $val) {
+      var_dump('PRIORITY');
+      var_dump($val[self::PRIORITY]);
+      }
+      }
+
+      return $messages;
+      }
      */
-    public function getQueuesDataStore()
-    {
-        return $this->queuesDataStore;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function getMessagesDataStore()
-    {
-        return $this->messagesDataStore;
-    }
-
-    /**
-     *
-     * @param string $priority
-     * @return int
-     */
-    protected function getPriorityIndex($priority)
-    {
-        if (is_null($priority)) {
-            $priorityIndex = $this->getPriorityHandler()->getDefault();
-        }
-        $priorityArray = $this->getPriorityHandler()->getAll();
-        $priorityIndex = array_search($priority, $priorityArray);
-
-        return $priorityIndex;
-    }
-
-    /**
-     *
-     * @param int $priorityIndex
-     * @return string
-     */
-    protected function getPriority($priorityIndex)
-    {
-        $priority = $this->getPriorityHandler()->getName($priorityIndex);
-        return $priority;
-    }
-
-    /**
-     *
-     * @return int
-     */
-    public function getMaxTimeInFlight()
-    {
-        return $this->maxTimeInFlight;
-    }
-
-    /**
-     *
-     * @param int $time
-     */
-    public function setMaxTimeInFlight($time = null)
-    {
-        $this->maxTimeInFlight = !$time ? self::DEFAULT_MAX_TIME_IN_FLIGHT : $time;
-    }
-
 }
