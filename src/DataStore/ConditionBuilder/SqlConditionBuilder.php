@@ -9,7 +9,10 @@
 
 namespace zaboy\rest\DataStore\ConditionBuilder;
 
+use Xiag\Rql\Parser\Node\Query\AbstractArrayOperatorNode;
+use Xiag\Rql\Parser\Node\Query\AbstractScalarOperatorNode;
 use zaboy\rest\DataStore\ConditionBuilder\ConditionBuilderAbstract;
+use zaboy\rest\DataStore\DataStoreException;
 use Zend\Db\Adapter\AdapterInterface;
 use Xiag\Rql\Parser\DataType\Glob;
 
@@ -28,6 +31,7 @@ class SqlConditionBuilder extends ConditionBuilderAbstract
             'not' => ['before' => '( NOT (', 'between' => ' error ', 'after' => ') )'],
         ],
         'ArrayOperator' => [
+            'in' => ['before' => '(', 'between' => ' IN (', 'delimiter' => ',', 'after' => '))']
         ],
         'ScalarOperator' => [
             'eq' => ['before' => '(', 'between' => '=', 'after' => ')'],
@@ -96,6 +100,43 @@ class SqlConditionBuilder extends ConditionBuilderAbstract
         );
 
         return $regexSQL;
+    }
+
+    /**
+     * Make string with conditions for ScalarOperatorNode
+     *
+     * @param AbstractScalarOperatorNode $node
+     * @return string
+     * @throws DataStoreException
+     */
+    public function makeScalarOperator(AbstractScalarOperatorNode $node)
+    {
+        $nodeName = $node->getNodeName();
+        if (!isset($this->literals['ScalarOperator'][$nodeName])) {
+            throw new DataStoreException(
+                'The Scalar Operator not suppoted: ' . $nodeName
+            );
+        }
+        $value = $node->getValue() instanceof \DateTime ? $node->getValue()->format("Y-m-d") : $node->getValue();
+        $strQuery = $this->literals['ScalarOperator'][$nodeName]['before']
+            . $this->prepareFildName($node->getField());
+
+        if(is_null($value)){
+            if($nodeName === 'eq'){
+                $strQuery .= "IS NULL";
+            }else if ($nodeName === 'ne'){
+                $strQuery .= "IS NOT NULL";
+            }else{
+                throw new DataStoreException("Can't use `null` for ". $nodeName. ". Only for `eq` or `ne`");
+            }
+        }else{
+            $strQuery .= $this->literals['ScalarOperator'][$nodeName]['between']
+                . $this->prepareFildValue($value);
+        }
+
+        $strQuery .= $this->literals['ScalarOperator'][$nodeName]['after'];
+
+        return $strQuery;
     }
 
 }

@@ -9,6 +9,7 @@
 
 namespace zaboy\rest\Middleware\Factory;
 
+use zaboy\rest\DataStore\DataStoreException;
 use Zend\Stratigility\MiddlewareInterface;
 use Interop\Container\ContainerInterface;
 use zaboy\rest\AbstractFactoryAbstract;
@@ -39,7 +40,7 @@ class DataStoreAbstractFactory extends AbstractFactoryAbstract
     /**
      * Can the factory create an instance for the service?
      *
-     * @param  Interop\Container\ContainerInterface $container
+     * @param  ContainerInterface $container
      * @param  string $requestedName
      * @return bool
      */
@@ -58,10 +59,11 @@ class DataStoreAbstractFactory extends AbstractFactoryAbstract
     /**
      * Create and return an instance of the Middleware.
      *
-     * @param  Interop\Container\ContainerInterface $container
+     * @param  ContainerInterface $container
      * @param  string $requestedName
      * @param  array $options
      * @return MiddlewareInterface
+     * @throws DataStoreException
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {

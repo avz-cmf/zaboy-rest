@@ -163,10 +163,10 @@ class CsvBase extends DataStoreAbstract
         $item = $this->read($id);
         if (!is_null($item)) {
             $this->flush($item, true);
-            return 1;
+            return $item;
         }
         // Else do nothing
-        return 0;
+        return null;
     }
 
     /**

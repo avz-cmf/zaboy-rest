@@ -16,6 +16,7 @@ use Zend\Stratigility\MiddlewarePipe;
  *
  * @category   rest
  * @package    zaboy
+ *
  */
 class RestRql extends MiddlewarePipe
 {

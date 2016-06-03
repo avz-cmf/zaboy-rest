@@ -223,14 +223,16 @@ class DataStoreRest extends Middleware\DataStoreAbstract
     public function methodDelete(ServerRequestInterface $request, ResponseInterface $response)
     {
         $primaryKeyValue = $request->getAttribute('Primary-Key-Value');
-        $rowCount = $this->dataStore->delete($primaryKeyValue);
-        if ($rowCount == 0) {
+        $items = $this->dataStore->delete($primaryKeyValue);
+
+        if (isset($items)) {
             $response = $response->withStatus(204);
-            $this->request = $request->withAttribute('Response-Body', 0);
         } else {
             $response = $response->withStatus(200);
-            $this->request = $request->withAttribute('Response-Body', 1);
         }
+
+        $this->request = $request->withAttribute('Response-Body', $items);
+
         return $response;
     }
 

@@ -12,6 +12,7 @@ namespace zaboy\rest\Middleware;
 use zaboy\rest\DataStore;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use zaboy\rest\DataStore\Interfaces\DataStoresInterface;
 use Zend\Stratigility\MiddlewareInterface;
 
 /**
@@ -25,7 +26,7 @@ abstract class DataStoreAbstract implements MiddlewareInterface
 
     /**
      *
-     * @var \DataStores\Interfaces\DataStoresInterface
+     * @var DataStoresInterface
      */
     protected $dataStore;
 

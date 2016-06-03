@@ -19,6 +19,7 @@ use Interop\Container\ContainerInterface;
 use zaboy\rest\Middleware;
 use zaboy\rest\Middleware\Factory\DataStoreDirectFactory;
 use zaboy\rest\Pipe\RestRql;
+use Zend\Stratigility\MiddlewareInterface;
 
 /**
  *
@@ -60,7 +61,7 @@ class RestRqlFactory implements FactoryInterface
      * zaboy\rest\Middleware\Factory\DataStoreAbstractFactory <br>
      * to config<br>
      *
-     * @param  Interop\Container\ContainerInterface $container
+     * @param  ContainerInterface $container
      * @param  string $requestedName
      * @param  array $options
      * @return MiddlewareInterface
@@ -93,6 +94,7 @@ class RestRqlFactory implements FactoryInterface
      *
      * @param ServiceLocatorInterface $serviceLocator
      * @return mixed
+     * @throws RestException
      */
     public function createService(ServiceLocatorInterface $serviceLocator)
     {

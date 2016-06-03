@@ -9,9 +9,11 @@
 
 namespace zaboy\rest\DataStore;
 
+use Xiag\Rql\Parser\Node\Query\ScalarOperator\EqNode;
 use zaboy\rest\DataStore\DataStoreAbstract;
 use zaboy\rest\DataStore\DataStoreException;
 use zaboy\rest\DataStore\ConditionBuilder\SqlConditionBuilder;
+use Zend\Db\ResultSet\ResultSet;
 use Zend\Db\TableGateway\TableGateway;
 use Zend\Db\Sql\Select;
 use Xiag\Rql\Parser\Query;
@@ -32,7 +34,7 @@ class DbTable extends DataStoreAbstract
 
     /**
      *
-     * @var \Zend\Db\TableGateway\TableGateway
+     * @var TableGateway
      */
     protected $dbTable;
 
@@ -200,8 +202,12 @@ class DbTable extends DataStoreAbstract
     {
         $identifier = $this->getIdentifier();
         $this->checkIdentifierType($id);
+
+
+        $element = $this->read($id);
+
         $deletedItemsCount = $this->dbTable->delete(array($identifier => $id));
-        return $deletedItemsCount;
+        return $element;
     }
 
     /**
@@ -224,7 +230,7 @@ class DbTable extends DataStoreAbstract
     public function count()
     {
         $adapter = $this->dbTable->getAdapter();
-        /* @var $rowset Zend\Db\ResultSet\ResultSet */
+        /* @var $rowset ResultSet */
         $rowset = $adapter->query(
                 'SELECT COUNT(*) AS count FROM '
                 . $adapter->platform->quoteIdentifier($this->dbTable->getTable())
