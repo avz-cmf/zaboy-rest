@@ -226,9 +226,9 @@ class DataStoreRest extends Middleware\DataStoreAbstract
         $items = $this->dataStore->delete($primaryKeyValue);
 
         if (isset($items)) {
-            $response = $response->withStatus(204);
-        } else {
             $response = $response->withStatus(200);
+        } else {
+            $response = $response->withStatus(204);
         }
 
         $this->request = $request->withAttribute('Response-Body', $items);

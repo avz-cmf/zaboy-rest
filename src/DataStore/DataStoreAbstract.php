@@ -130,7 +130,7 @@ abstract class DataStoreAbstract implements DataStoresInterface
      */
     public function deleteAll()
     {
-        $keys = $this->getKeys();
+       /* $keys = $this->getKeys();
         $deletedItemsNumber = 0;
         foreach ($keys as $id) {
             $deletedNumber = $this->delete($id);
@@ -138,6 +138,17 @@ abstract class DataStoreAbstract implements DataStoresInterface
                 return null;
             }
             $deletedItemsNumber = $deletedItemsNumber + $deletedNumber;
+        }
+        return $deletedItemsNumber;*/
+
+        $keys = $this->getKeys();
+        $deletedItemsNumber = 0;
+        foreach ($keys as $id) {
+            $deletedItems = $this->delete($id);
+            if (is_null($deletedItems)) {
+                return null;
+            }
+            $deletedItemsNumber++;
         }
         return $deletedItemsNumber;
     }
