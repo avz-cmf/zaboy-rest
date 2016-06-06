@@ -202,8 +202,7 @@ class DbTable extends DataStoreAbstract
     {
         $identifier = $this->getIdentifier();
         $this->checkIdentifierType($id);
-
-
+        
         $element = $this->read($id);
 
         $deletedItemsCount = $this->dbTable->delete(array($identifier => $id));
