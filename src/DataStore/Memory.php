@@ -115,12 +115,11 @@ class Memory extends DataStoreAbstract
 
         $this->checkIdentifierType($id);
         if (isset($this->items[$id])) {
+            $item = $this->items[$id];
             unset($this->items[$id]);
-            $deletedItemsCount = 1;
-        } else {
-            $deletedItemsCount = 0;
+
         }
-        return $deletedItemsCount;
+        return isset($item) ? $item : null;
     }
 
     /**

@@ -5,7 +5,7 @@
 chdir(dirname(__DIR__));
 //test_res_http
 // Setup autoloading
-require '/vendor/autoload.php';
+require 'vendor/autoload.php';
 
 use Zend\Stratigility\MiddlewarePipe;
 use Zend\Diactoros\Server;

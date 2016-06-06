@@ -34,6 +34,7 @@ class ResponseEncoder implements MiddlewareInterface
      * @param ResponseInterface $response
      * @param callable|null $next
      * @return ResponseInterface
+     * @throws \zaboy\rest\RestException
      */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next = null)
     {

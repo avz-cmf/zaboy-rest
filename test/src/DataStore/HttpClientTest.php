@@ -19,12 +19,12 @@ class HttpClientTest extends AbstractTest
 {
 
     /**
-     * @var Zend\Db\TableGateway\TableGateway
+     * @var TableGateway
      */
     protected $object;
 
     /**
-     * @var Zend\Db\Adapter\Adapter
+     * @var Adapter
      */
     protected $adapter;
     protected $dbTableName;
@@ -32,7 +32,9 @@ class HttpClientTest extends AbstractTest
         'id' => 'INT NOT NULL AUTO_INCREMENT PRIMARY KEY',
         'anotherId' => 'INT NOT NULL',
         'fString' => 'CHAR(20)',
-        'fInt' => 'INT'
+        'fInt' => 'INT',
+        'isNull' => 'INT'
+
     );
 
     /**
@@ -84,6 +86,8 @@ class HttpClientTest extends AbstractTest
                 $fildType = ', `' . $key . '` INT';
             } elseif (is_float($value)) {
                 $fildType = ', `' . $key . '` DOUBLE PRECISION';
+            } elseif (is_null($value)){
+                $fildType = ', `' . $key . '` INT';
             } else {
                 trigger_error("Type of fild of array isn't supported.", E_USER_ERROR);
             }

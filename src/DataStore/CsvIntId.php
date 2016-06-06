@@ -3,7 +3,7 @@
 namespace zaboy\rest\DataStore;
 
 use zaboy\rest\DataStore\CsvBase;
-use zaboy\rest\DataStore\CsvIterator;
+use zaboy\rest\DataStore\Iterators\CsvIterator;
 use zaboy\rest\DataStore\DataStoreException;
 
 class CsvIntId extends CsvBase

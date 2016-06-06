@@ -63,7 +63,7 @@ interface DataStoresInterface extends ReadInterface
      * Delete Item by 'id'. Method do nothing if item with that id is absent.
      *
      * @param int|string $id PrimaryKey
-     * @return int number of deleted items: 0 , 1 or null if object doesn't support it
+     * @return array from elements or null is not support
      */
     public function delete($id);
 

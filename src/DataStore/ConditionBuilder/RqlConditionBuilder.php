@@ -24,9 +24,10 @@ class RqlConditionBuilder extends ConditionBuilderAbstract
         'LogicOperator' => [
             'and' => ['before' => 'and(', 'between' => ',', 'after' => ')'],
             'or' => ['before' => 'or(', 'between' => ',', 'after' => ')'],
-            'not' => ['before' => 'not', 'between' => ',', 'after' => ')'],
+            'not' => ['before' => 'not(', 'between' => ',', 'after' => ')'],
         ],
         'ArrayOperator' => [
+            'in' => ['before' => 'in(', 'between' => ',(', 'delimiter' => ',', 'after' => '))']
         ],
         'ScalarOperator' => [
             'eq' => ['before' => 'eq(', 'between' => ',', 'after' => ')'],
@@ -52,6 +53,7 @@ class RqlConditionBuilder extends ConditionBuilderAbstract
             '_' => '%5F',
             '.' => '%2E',
             '~' => '%7E',
+            '`' => '%60',
         ]);
     }
 
@@ -66,8 +68,13 @@ class RqlConditionBuilder extends ConditionBuilderAbstract
         $constQuestion = 'questionhjc7vjHg6jd8mv8hcy75GFt0c67cnbv74FegxtEDJkcucG64frblmkb';
 
         $regexRqlDecoded = parent::prepareFildValue($fildValue);
-        $regexRqlEnecoded = self::encodeString($regexRqlDecoded);
+        if(is_null($fildValue)){
+            $regexRqlEnecoded = 'null()';
+        }else{
+            $regexRqlEnecoded = self::encodeString($regexRqlDecoded);
+        }
         $regexRqlPrepared = strtr($regexRqlEnecoded, [$constStar => '*', $constQuestion => '?']);
+        
         return $regexRqlPrepared;
     }
 

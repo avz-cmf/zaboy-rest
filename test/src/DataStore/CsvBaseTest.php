@@ -60,7 +60,8 @@ class CsvBaseTest extends AbstractTest
             'id' => 1000,
             'anotherId' => null,
             'fFloat' => 1000.01,
-            'fString' => ''
+            'fString' => '',
+            'isNull' => null
         );
         $this->object->create(
             $itemData, true

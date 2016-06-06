@@ -11,6 +11,7 @@ namespace zaboy\rest\DataStore\ConditionBuilder;
 
 use zaboy\rest\DataStore\ConditionBuilder\ConditionBuilderAbstract;
 use Xiag\Rql\Parser\DataType\Glob;
+use zaboy\rest\DataStore\DataStoreException;
 
 /**
  * {@inheritdoc}
@@ -27,6 +28,7 @@ class PhpConditionBuilder extends ConditionBuilderAbstract
             'not' => ['before' => '( !(', 'between' => ' error ', 'after' => ') )'],
         ],
         'ArrayOperator' => [
+            'in' => ['before' => '(in_array(', 'between' => ',[', 'delimiter' => ',', 'after' => ']))']
         ],
         'ScalarOperator' => [
             'eq' => ['before' => '(', 'between' => '==', 'after' => ')'],
@@ -63,6 +65,8 @@ class PhpConditionBuilder extends ConditionBuilderAbstract
                 return $fildValue;
             case is_numeric($fildValue):
                 return $fildValue;
+            case is_null($fildValue):
+                return 'null';
             case is_string($fildValue):
                 return "'" . $fildValue . "'";
             default:

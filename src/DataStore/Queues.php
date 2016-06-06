@@ -105,11 +105,13 @@ class Queues extends DataStoreAbstract
         $this->checkIdentifierType($id);
         if ($this->has($id)) {
             $this->queueClient->deleteQueue($id);
+            $element = $this->read($id);
             $deletedItemsCount = 1;
         } else {
             $deletedItemsCount = 0;
+            $element = [];
         }
-        return $deletedItemsCount;
+        return $element;
     }
 
 // ** Interface "/Coutable"  **/
