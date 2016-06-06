@@ -31,7 +31,8 @@ class SqlConditionBuilder extends ConditionBuilderAbstract
             'not' => ['before' => '( NOT (', 'between' => ' error ', 'after' => ') )'],
         ],
         'ArrayOperator' => [
-            'in' => ['before' => '(', 'between' => ' IN (', 'delimiter' => ',', 'after' => '))']
+            'in' => ['before' => '(', 'between' => ' IN (', 'delimiter' => ',', 'after' => '))'],
+            'out' => ['before' => '(', 'between' => ' NOT IN (', 'delimiter' => ',', 'after' => '))']
         ],
         'ScalarOperator' => [
             'eq' => ['before' => '(', 'between' => '=', 'after' => ')'],

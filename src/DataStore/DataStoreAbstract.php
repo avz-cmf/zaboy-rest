@@ -9,12 +9,13 @@
 
 namespace zaboy\rest\DataStore;
 
-use zaboy\rest\DataStore\Interfaces\DataStoresInterface;
-use zaboy\rest\DataStore\DataStoreException;
-use zaboy\rest\DataStore\Iterators\DataStoreIterator;
-use Xiag\Rql\Parser\Query;
 use Xiag\Rql\Parser\Node;
+use Xiag\Rql\Parser\Node\Query\ScalarOperator\EqNode;
 use Xiag\Rql\Parser\Node\SortNode;
+use Xiag\Rql\Parser\Query;
+use zaboy\rest\DataStore\Interfaces\DataStoresInterface;
+use zaboy\rest\DataStore\Iterators\DataStoreIterator;
+use zaboy\rest\RqlParser\AggregateFunctionNode;
 
 /**
  * Abstract class for DataStores
@@ -44,9 +45,9 @@ abstract class DataStoreAbstract implements DataStoresInterface
      *
      * {@inheritdoc}
      */
-    public function getIdentifier()
+    public function has($id)
     {
-        return self::DEF_ID;
+        return !(empty($this->read($id)));
     }
 
     /**
@@ -74,10 +75,27 @@ abstract class DataStoreAbstract implements DataStoresInterface
      *
      * {@inheritdoc}
      */
-    public function has($id)
+    public function getIdentifier()
     {
-        return !(empty($this->read($id)));
+        return self::DEF_ID;
     }
+
+    /**
+     * Throw Exception if type of Identifier is wrong
+     *
+     * @param mix $id
+     */
+    protected function checkIdentifierType($id)
+    {
+        $idType = gettype($id);
+        if ($idType == 'integer' || $idType == 'double' || $idType == 'string') {
+            return;
+        } else {
+            throw new DataStoreException("Type of Identifier is wrong - " . $idType);
+        }
+    }
+
+// ** Interface "zaboy\rest\DataStore\Interfaces\DataStoresInterface"  **/
 
     /**
      * {@inheritdoc}
@@ -100,136 +118,14 @@ abstract class DataStoreAbstract implements DataStoresInterface
         return $this->querySelect($result, $query);
     }
 
-// ** Interface "zaboy\rest\DataStore\Interfaces\DataStoresInterface"  **/
-
-    /**
-     * {@inheritdoc}
-     *
-     * {@inheritdoc}
-     */
-    abstract public function create($itemData, $rewriteIfExist = false);
-
-    /**
-     * {@inheritdoc}
-     *
-     * {@inheritdoc}
-     */
-    abstract public function update($itemData, $createIfAbsent = false);
-
-    /**
-     * {@inheritdoc}
-     *
-     * {@inheritdoc}
-     */
-    abstract public function delete($id);
-
-    /**
-     * {@inheritdoc}
-     *
-     * {@inheritdoc}
-     */
-    public function deleteAll()
-    {
-       /* $keys = $this->getKeys();
-        $deletedItemsNumber = 0;
-        foreach ($keys as $id) {
-            $deletedNumber = $this->delete($id);
-            if (is_null($deletedNumber)) {
-                return null;
-            }
-            $deletedItemsNumber = $deletedItemsNumber + $deletedNumber;
-        }
-        return $deletedItemsNumber;*/
-
-        $keys = $this->getKeys();
-        $deletedItemsNumber = 0;
-        foreach ($keys as $id) {
-            $deletedItems = $this->delete($id);
-            if (is_null($deletedItems)) {
-                return null;
-            }
-            $deletedItemsNumber++;
-        }
-        return $deletedItemsNumber;
-    }
-
-// ** Interface "/Coutable"  **/
-
-    /**
-     * Interface "/Coutable"
-     *
-     * @see /coutable
-     * @return int
-     */
-    public function count()
-    {
-        $keys = $this->getKeys();
-        return count($keys);
-    }
-
-// ** Interface "/IteratorAggregate"  **/
-
-    /**
-     * Iterator for Interface IteratorAggregate
-     *
-     * @see IteratorAggregate
-     * @return Traversable
-     */
-    public function getIterator()
-    {
-        return new DataStoreIterator($this);
-    }
-
-// ** protected  **/
-
-    protected function querySort($data, Query $query)
-    {
-        if (empty($query->getSort())) {
-            return $data;
-        }
-        $nextCompareLevel = '';
-        $sortFilds = $query->getSort()->getFields();
-        foreach ($sortFilds as $ordKey => $ordVal) {
-            if ((int) $ordVal <> SortNode::SORT_ASC && (int) $ordVal <> SortNode::SORT_DESC) {
-                throw new DataStoreException('Invalid condition: ' . $ordVal);
-            }
-            $cond = $ordVal == SortNode::SORT_DESC ? '<' : '>';
-            $notCond = $ordVal == SortNode::SORT_ASC ? '<' : '>';
-
-            $prevCompareLevel = "if (\$a['$ordKey'] $cond \$b['$ordKey']) {return 1;};" . PHP_EOL
-                    . "if (\$a['$ordKey'] $notCond  \$b['$ordKey']) {return -1;};" . PHP_EOL
-            ;
-            $nextCompareLevel = $nextCompareLevel . $prevCompareLevel;
-        }
-        $sortFunctionBody = $nextCompareLevel . 'return 0;';
-        $sortFunction = create_function('$a,$b', $sortFunctionBody);
-        usort($data, $sortFunction);
-        return $data;
-    }
-
-    protected function querySelect($data, Query $query)
-    {
-        $selectNode = $query->getSelect();
-        if (empty($selectNode)) {
-            return $data;
-        } else {
-            $resultArray = array();
-            foreach ($data as $item) {
-                $resultArray[] = array_intersect_key($item, array_flip($selectNode->getFields()));
-            }
-            return $resultArray;
-        }
-    }
-
     protected function queryWhere(Query $query, $limit, $offset)
     {
         $conditionBuilder = $this->conditionBuilder;
         $conditioon = $conditionBuilder($query->getQuery());
         $whereFunctionBody = PHP_EOL .
-                '$result = ' . PHP_EOL
-                . rtrim($conditioon, PHP_EOL) . ';' . PHP_EOL
-                . 'return $result;'
-        ;
+            '$result = ' . PHP_EOL
+            . rtrim($conditioon, PHP_EOL) . ';' . PHP_EOL
+            . 'return $result;';
         $whereFunction = create_function('$item', $whereFunctionBody);
         $suitableItemsNumber = 0;
         $result = [];
@@ -248,6 +144,153 @@ abstract class DataStoreAbstract implements DataStoresInterface
             }
         }
         return $result;
+    }
+
+    protected function querySort($data, Query $query)
+    {
+        if (empty($query->getSort())) {
+            return $data;
+        }
+        $nextCompareLevel = '';
+        $sortFilds = $query->getSort()->getFields();
+        foreach ($sortFilds as $ordKey => $ordVal) {
+            if ((int)$ordVal <> SortNode::SORT_ASC && (int)$ordVal <> SortNode::SORT_DESC) {
+                throw new DataStoreException('Invalid condition: ' . $ordVal);
+            }
+            $cond = $ordVal == SortNode::SORT_DESC ? '<' : '>';
+            $notCond = $ordVal == SortNode::SORT_ASC ? '<' : '>';
+
+            $prevCompareLevel = "if (\$a['$ordKey'] $cond \$b['$ordKey']) {return 1;};" . PHP_EOL
+                . "if (\$a['$ordKey'] $notCond  \$b['$ordKey']) {return -1;};" . PHP_EOL;
+            $nextCompareLevel = $nextCompareLevel . $prevCompareLevel;
+        }
+        $sortFunctionBody = $nextCompareLevel . 'return 0;';
+        $sortFunction = create_function('$a,$b', $sortFunctionBody);
+        usort($data, $sortFunction);
+        return $data;
+    }
+
+    protected function querySelect($data, Query $query)
+    {
+        $selectNode = $query->getSelect();
+        if (empty($selectNode)) {
+            return $data;
+        } else {
+            $resultArray = array();
+            $compareArray = array();
+
+            foreach ($selectNode->getFields() as $field) {
+                if ($field instanceof AggregateFunctionNode) {
+                    switch ($field->getFunction()) {
+                        case 'count': {
+                            $arr = [];
+                            foreach ($data as $item) {
+                                if (isset($item[$field->getField()])) {
+                                    $arr[] = $item[$field->getField()];
+                                }
+                            }
+                            $compareArray[$field->getField() . '->' . $field->getFunction()] = [count($arr)];
+                            break;
+                        }
+                        case 'max': {
+                            $max = 0;
+                            foreach ($data as $item) {
+                                if ($max < $item[$field->getField()]) {
+                                    $max = $item[$field->getField()];
+                                }
+                            }
+                            $compareArray[$field->getField() . '->' . $field->getFunction()] = [$max];
+                            break;
+                        }
+                        case 'min': {
+                            $min = null;
+                            foreach ($data as $item) {
+                                if(!isset($min)){
+                                    $min = $item[$field->getField()];
+                                }
+                                if ($min > $item[$field->getField()]) {
+                                    $min = $item[$field->getField()];
+                                }
+                            }
+                            $compareArray[$field->getField() . '->' . $field->getFunction()] = [$min];
+                            break;
+                        }
+                    }
+                } else {
+                    $dataLine = [];
+                    foreach ($data as $item) {
+                        $dataLine[] = $item[$field];
+                    }
+                    $compareArray[$field] = $dataLine;
+                }
+            }
+            $min = null;
+            foreach ($compareArray as $column) {
+                if (!isset($min)) {
+                    $min = count($column);
+                } elseif (count($column) < $min) {
+                    $min = count($column);
+                }
+            }
+            for ($i = 0; $i < $min; ++$i) {
+                $item = [];
+                foreach ($compareArray as $fieldName => $column) {
+                    $item[$fieldName] = $column[$i];
+                }
+                $resultArray[] = $item;
+            }
+            return $resultArray;
+        }
+    }
+
+// ** Interface "/Coutable"  **/
+
+    /**
+     * {@inheritdoc}
+     *
+     * {@inheritdoc}
+     */
+    abstract public function create($itemData, $rewriteIfExist = false);
+
+// ** Interface "/IteratorAggregate"  **/
+
+    /**
+     * {@inheritdoc}
+     *
+     * {@inheritdoc}
+     */
+    abstract public function update($itemData, $createIfAbsent = false);
+
+// ** protected  **/
+
+    /**
+     * {@inheritdoc}
+     *
+     * {@inheritdoc}
+     */
+    public function deleteAll()
+    {
+        /* $keys = $this->getKeys();
+         $deletedItemsNumber = 0;
+         foreach ($keys as $id) {
+             $deletedNumber = $this->delete($id);
+             if (is_null($deletedNumber)) {
+                 return null;
+             }
+             $deletedItemsNumber = $deletedItemsNumber + $deletedNumber;
+         }
+         return $deletedItemsNumber;*/
+
+        $keys = $this->getKeys();
+        $deletedItemsNumber = 0;
+        foreach ($keys as $id) {
+            $deletedItems = $this->delete($id);
+            if (is_null($deletedItems)) {
+                return null;
+            }
+            $deletedItemsNumber++;
+        }
+        return $deletedItemsNumber;
     }
 
     /**
@@ -270,18 +313,33 @@ abstract class DataStoreAbstract implements DataStoresInterface
     }
 
     /**
-     * Throw Exception if type of Identifier is wrong
+     * {@inheritdoc}
      *
-     * @param mix $id
+     * {@inheritdoc}
      */
-    protected function checkIdentifierType($id)
+    abstract public function delete($id);
+
+    /**
+     * Interface "/Coutable"
+     *
+     * @see /coutable
+     * @return int
+     */
+    public function count()
     {
-        $idType = gettype($id);
-        if ($idType == 'integer' || $idType == 'double' || $idType == 'string') {
-            return;
-        } else {
-            throw new DataStoreException("Type of Identifier is wrong - " . $idType);
-        }
+        $keys = $this->getKeys();
+        return count($keys);
+    }
+
+    /**
+     * Iterator for Interface IteratorAggregate
+     *
+     * @see IteratorAggregate
+     * @return Traversable
+     */
+    public function getIterator()
+    {
+        return new DataStoreIterator($this);
     }
 
 }
