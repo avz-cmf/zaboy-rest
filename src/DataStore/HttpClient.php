@@ -14,6 +14,7 @@ use zaboy\rest\DataStore\DataStoreException;
 use zaboy\rest\DataStore\ConditionBuilder\RqlConditionBuilder;
 use Xiag\Rql\Parser\Query;
 use Xiag\Rql\Parser\Node\SortNode;
+use zaboy\rest\RqlParser\RqlParser;
 use Zend\Http\Client;
 use Zend\Http\Request;
 use Zend\Json\Json;
@@ -206,62 +207,7 @@ class HttpClient extends DataStoreAbstract
     {
         return parent::count();
     }
-
-// ** protected  **/
-
-    protected function rqlEncode(Query $query)
-    {
-        $conditionBuilder = $this->conditionBuilder;
-        $rqlQueryString = $conditionBuilder($query->getQuery());
-        $rqlQueryString = $rqlQueryString . $this->makeLimit($query);
-        $rqlQueryString = $rqlQueryString . $this->makeSort($query);
-        $rqlQueryString = $rqlQueryString . $this->makeSelect($query);
-        return ltrim($rqlQueryString, '&');
-    }
-
-    protected function makeLimit(Query $query)
-    {
-        $limitNode = $query->getLimit();
-        $limit = !$limitNode ? DataStoreAbstract::LIMIT_INFINITY : $limitNode->getLimit();
-        $offset = !$limitNode ? 0 : $limitNode->getOffset();
-        if ($limit == DataStoreAbstract::LIMIT_INFINITY && $offset == 0) {
-            return '';
-        } else {
-            return sprintf('&limit(%s,%s)', $limit, $offset);
-        }
-    }
-
-    protected function makeSort(Query $query)
-    {
-        $sortNode = $query->getSort();
-        $sortFilds = !$sortNode ? [] : $sortNode->getFields();
-        if (empty($sortFilds)) {
-            return '';
-        } else {
-            $strSort = '';
-            foreach ($sortFilds as $key => $value) {
-                $prefix = $value == SortNode::SORT_DESC ? '-' : '+';
-                $strSort = $strSort . $prefix . $key . ',';
-            }
-            return '&sort(' . rtrim($strSort, ',') . ')';
-        }
-    }
-
-    protected function makeSelect(Query $query)
-    {
-        $selectNode = $query->getSelect();  //What filds will be return
-        $selectFilds = !$selectNode ? [] : $selectNode->getFields();
-        if (empty($selectFilds)) {
-            return '';
-        } else {
-            $selectString = '&select(';
-            foreach ($selectFilds as $fild) {
-                $selectString = $selectString . $fild . ',';
-            }
-            return rtrim($selectString, ',') . ')';
-        }
-    }
-
+    
     /**
      *
      * @param string  'GET' 'HEAD' 'POST' 'PUT' 'DELETE';
@@ -275,7 +221,7 @@ class HttpClient extends DataStoreAbstract
 
         $url = !$id ? $this->url : $this->url . '/' . $id;
         if (isset($query)) {
-            $rqlString = $this->rqlEncode($query);
+            $rqlString = (new RqlParser())->rqlEncode($query);
             $url = $url . '?' . $rqlString;
         }
         $httpClient = new Client($url, $this->options);

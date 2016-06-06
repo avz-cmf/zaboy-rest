@@ -27,7 +27,8 @@ class RqlConditionBuilder extends ConditionBuilderAbstract
             'not' => ['before' => 'not(', 'between' => ',', 'after' => ')'],
         ],
         'ArrayOperator' => [
-            'in' => ['before' => 'in(', 'between' => ',(', 'delimiter' => ',', 'after' => '))']
+            'in' => ['before' => 'in(', 'between' => ',(', 'delimiter' => ',', 'after' => '))'],
+            'out' => ['before' => 'out(', 'between' => ',(', 'delimiter' => ',', 'after' => '))']
         ],
         'ScalarOperator' => [
             'eq' => ['before' => 'eq(', 'between' => ',', 'after' => ')'],

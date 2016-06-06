@@ -13,7 +13,9 @@ use Xiag\Rql\Parser\Node\Query\ScalarOperator\EqNode;
 use zaboy\rest\DataStore\DataStoreAbstract;
 use zaboy\rest\DataStore\DataStoreException;
 use zaboy\rest\DataStore\ConditionBuilder\SqlConditionBuilder;
+use zaboy\rest\RqlParser\AggregateFunctionNode;
 use Zend\Db\ResultSet\ResultSet;
+use Zend\Db\Sql\Predicate\Expression;
 use Zend\Db\TableGateway\TableGateway;
 use Zend\Db\Sql\Select;
 use Xiag\Rql\Parser\Query;
@@ -82,7 +84,9 @@ class DbTable extends DataStoreAbstract
         $sort = $query->getSort();
         $sortFilds = !$sort ? [$this->getIdentifier() => SortNode::SORT_ASC] : $sort->getFields();
         $select = $query->getSelect();  //What filds will return
+
         $selectFilds = !$select ? [] : $select->getFields();
+
         $selectSQL = $this->dbTable->getSql()->select();
         // ***********************   where   ***********************
         $conditionBuilder = $this->conditionBuilder;
@@ -105,8 +109,16 @@ class DbTable extends DataStoreAbstract
         }
         // *********************  filds  ***********************
         if (!empty($selectFilds)) {
+            $fields = [];
+            foreach ($selectFilds as $field){
+                if($field instanceof AggregateFunctionNode){
+                    $fields[$field->getField() . "->" . $field->getFunction()] = new Expression($field->__toString());
+                }else{
+                    $fields[] = $field;
+                }
+            }
+            $selectSQL->columns($fields);
 
-            $selectSQL->columns($selectFilds);
         }
         // ***********************   return   ***********************
 

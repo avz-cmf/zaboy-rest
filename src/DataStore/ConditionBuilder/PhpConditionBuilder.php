@@ -28,7 +28,8 @@ class PhpConditionBuilder extends ConditionBuilderAbstract
             'not' => ['before' => '( !(', 'between' => ' error ', 'after' => ') )'],
         ],
         'ArrayOperator' => [
-            'in' => ['before' => '(in_array(', 'between' => ',[', 'delimiter' => ',', 'after' => ']))']
+            'in' => ['before' => '(in_array(', 'between' => ',[', 'delimiter' => ',', 'after' => ']))'],
+            'out' => ['before' => '(!in_array(', 'between' => ',[', 'delimiter' => ',', 'after' => ']))']
         ],
         'ScalarOperator' => [
             'eq' => ['before' => '(', 'between' => '==', 'after' => ')'],

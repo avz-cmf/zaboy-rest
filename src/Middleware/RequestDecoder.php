@@ -19,6 +19,7 @@ use Xiag\Rql\Parser\TokenParserGroup;
 use Xiag\Rql\Parser\TokenParser;
 use Xiag\Rql\Parser\TypeCaster;
 use zaboy\rest\RestException;
+use zaboy\rest\RqlParser\RqlParser;
 use zaboy\rest\RqlParser\SelectTokenParser;
 use Zend\Stratigility\MiddlewareInterface;
 
@@ -40,7 +41,7 @@ use Zend\Stratigility\MiddlewareInterface;
 class RequestDecoder implements MiddlewareInterface
 {
 
-    private $allowedAggregateFunction = ['count', 'sum', 'avg', 'min', 'max'];
+    private $allowedAggregateFunction = ['count', 'max', 'min'];
 
 
     /**                         Location: http://www.example.com/users/4/
@@ -70,7 +71,7 @@ class RequestDecoder implements MiddlewareInterface
         $rqlQueryStringWithXdebug = $request->getUri()->getQuery();
         
         $rqlQueryString = rtrim($rqlQueryStringWithXdebug, '&XDEBUG_SESSION_START=netbeans-xdebug');
-        $rqlQueryObject = $this->parsRql($rqlQueryString);
+        $rqlQueryObject = (new RqlParser())->rqlDecoder($rqlQueryString);
         $request = $request->withAttribute('Rql-Query-Object', $rqlQueryObject);
 
         
@@ -81,9 +82,11 @@ class RequestDecoder implements MiddlewareInterface
         } else {
             //todo XML?
         }
+        
         if ($next) {
             return $next($request, $response);
         }
+        
         return $response;
     }
 
@@ -103,63 +106,5 @@ class RequestDecoder implements MiddlewareInterface
         return $result;
     }
 
-    /**
-     *
-     * @param string $rqlQueryString
-     * @return type
-     */
-    public function parsRql($rqlQueryString)
-    {
-        /*
-        $parser = Parser\Parser::createDefault();
-        $tokens = $lexer->tokenize($rqlQueryString);
-        * @var $rqlQueryObject \Xiag\Rql\Parser\Query *
-        $rqlQueryObject = $parser->parse($tokens);*/
-
-        $queryTokenParser = new TokenParserGroup();
-        $queryTokenParser
-            ->addTokenParser(new Query\GroupTokenParser($queryTokenParser))
-            ->addTokenParser(new Query\Basic\LogicOperator\AndTokenParser($queryTokenParser))
-            ->addTokenParser(new Query\Basic\LogicOperator\OrTokenParser($queryTokenParser))
-            ->addTokenParser(new Query\Basic\LogicOperator\NotTokenParser($queryTokenParser))
-
-            ->addTokenParser(new Query\Basic\ArrayOperator\InTokenParser())
-            ->addTokenParser(new Query\Basic\ArrayOperator\OutTokenParser())
-
-            ->addTokenParser(new Query\Basic\ScalarOperator\EqTokenParser())
-            ->addTokenParser(new Query\Basic\ScalarOperator\NeTokenParser())
-            ->addTokenParser(new Query\Basic\ScalarOperator\LtTokenParser())
-            ->addTokenParser(new Query\Basic\ScalarOperator\GtTokenParser())
-            ->addTokenParser(new Query\Basic\ScalarOperator\LeTokenParser())
-            ->addTokenParser(new Query\Basic\ScalarOperator\GeTokenParser())
-            ->addTokenParser(new Query\Basic\ScalarOperator\LikeTokenParser())
-
-            ->addTokenParser(new Query\Fiql\ArrayOperator\InTokenParser())
-            ->addTokenParser(new Query\Fiql\ArrayOperator\OutTokenParser())
-
-            ->addTokenParser(new Query\Fiql\ScalarOperator\EqTokenParser())
-            ->addTokenParser(new Query\Fiql\ScalarOperator\NeTokenParser())
-            ->addTokenParser(new Query\Fiql\ScalarOperator\LtTokenParser())
-            ->addTokenParser(new Query\Fiql\ScalarOperator\GtTokenParser())
-            ->addTokenParser(new Query\Fiql\ScalarOperator\LeTokenParser())
-            ->addTokenParser(new Query\Fiql\ScalarOperator\GeTokenParser())
-            ->addTokenParser(new Query\Fiql\ScalarOperator\LikeTokenParser());
-
-
-        $parser = (new Parser( (new ExpressionParser())
-            ->registerTypeCaster('string', new TypeCaster\StringTypeCaster())
-            ->registerTypeCaster('integer', new TypeCaster\IntegerTypeCaster())
-            ->registerTypeCaster('float', new TypeCaster\FloatTypeCaster())
-            ->registerTypeCaster('boolean', new TypeCaster\BooleanTypeCaster())
-        ))
-            ->addTokenParser(new SelectTokenParser($this->allowedAggregateFunction))
-            ->addTokenParser($queryTokenParser)
-            ->addTokenParser(new TokenParser\SortTokenParser())
-            ->addTokenParser(new TokenParser\LimitTokenParser());
-
-        $rqlQueryObject = $parser->parse((new Lexer())->tokenize($rqlQueryString));
-
-        return $rqlQueryObject;
-    }
 
 }
