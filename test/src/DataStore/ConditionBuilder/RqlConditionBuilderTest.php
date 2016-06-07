@@ -79,7 +79,7 @@ class RqlConditionBuilderTest extends ConditionBuilderTest
             array(
                 (new QueryBuilder())
                     ->addQuery(new Node\Query\LogicOperator\AndNode([
-                        new Node\Query\ScalarOperator\EqNode('a', 'NULL'),
+                        new Node\Query\ScalarOperator\EqNode('a', null),
                         new Node\Query\ScalarOperator\LtNode('c', 'd'),
                         new Node\Query\LogicOperator\OrNode([
                             new Node\Query\ScalarOperator\LtNode('g', 5),
@@ -90,7 +90,7 @@ class RqlConditionBuilderTest extends ConditionBuilderTest
                         new Node\Query\ScalarOperator\NeNode('h', 3),
                     ]))
                     ->getQuery()->getQuery(),
-                'and(eq(a,NULL()),lt(c,d),or(lt(g,5),gt(g,2)),not(ne(h,3)))'
+                'and(eq(a,null()),lt(c,d),or(lt(g,5),gt(g,2)),not(ne(h,3)))'
             ),
         );
     }

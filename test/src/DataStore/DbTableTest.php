@@ -29,8 +29,7 @@ class DbTableTest extends AbstractTest {
         'id' => 'INT NOT NULL AUTO_INCREMENT PRIMARY KEY',
         'anotherId' => 'INT NOT NULL',
         'fString' => 'CHAR(20)',
-        'fInt' => 'INT',
-        'isNull' => 'INT'
+        'fInt' => 'INT'
     );
     
     /**

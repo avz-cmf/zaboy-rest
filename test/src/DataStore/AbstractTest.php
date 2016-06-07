@@ -52,11 +52,19 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
      * @var array
      */
     protected $_itemsArrayDelault = array(
+        array('id' => 1, 'anotherId' => 10, 'fString' => 'val1', 'fFloat' => 400.0004),
+        array('id' => 2, 'anotherId' => 20, 'fString' => 'val2', 'fFloat' => 300.003),
+        array('id' => 3, 'anotherId' => 40, 'fString' => 'val2', 'fFloat' => 300.003),
+        array('id' => 4, 'anotherId' => 30, 'fString' => 'val2', 'fFloat' => 100.1)
+    );
+
+    protected $_itemsArrayWithIsNull = array(
         array('id' => 1, 'anotherId' => 10, 'fString' => 'val1', 'fFloat' => 400.0004, 'isNull' => null),
         array('id' => 2, 'anotherId' => 20, 'fString' => 'val2', 'fFloat' => 300.003, 'isNull' => null),
         array('id' => 3, 'anotherId' => 40, 'fString' => 'val2', 'fFloat' => 300.003, 'isNull' => null),
         array('id' => 4, 'anotherId' => 30, 'fString' => 'val2', 'fFloat' => 100.1, 'isNull' => null)
     );
+
     protected $_itemsArrayEnhanced = array(
         array('id' => 1, 'anotherId' => 10, 'fString' => 'val1', 'fFloat' => 400.0004, 'nll' => 1, 'abs' => 'val_abs'),
         array('id' => 2, 'anotherId' => 20, 'fString' => 'val2', 'fFloat' => 300.003, 'nll' => null),
@@ -201,7 +209,7 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
             'withtId_WhichPresent', $item['fString']
         );
         $this->assertEquals(
-            array('id' => 3, 'anotherId' => 40, 'fString' => 'withtId_WhichPresent', 'fFloat' => 300.003, 'isNull' => null), $row
+            array('id' => 3, 'anotherId' => 40, 'fString' => 'withtId_WhichPresent', 'fFloat' => 300.003), $row
         );
     }
 
@@ -233,7 +241,6 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
             'withtIdwhichAbsent', $item['fString']
         );
         unset($row['anotherId']);
-        unset($row['isNull']);
         $this->assertEquals(
             array(
                 'id' => 1000,
@@ -692,7 +699,7 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
 
     public function testQuery_Is_Null_True()
     {
-        $this->_initObject();
+        $this->_initObject($this->_itemsArrayWithIsNull);
         $query = new Query();
         $isNullNode = new ScalarOperator\EqNode('isNull', null);
         $query->setQuery($isNullNode);
@@ -702,7 +709,7 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
 
     public function testQuery_Is_not_Null_True()
     {
-        $this->_initObject();
+        $this->_initObject($this->_itemsArrayWithIsNull);
         $query = new Query();
         $isNotNullNode = new ScalarOperator\NeNode('anotherId', null);
         $query->setQuery($isNotNullNode);
@@ -712,7 +719,7 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
 
     public function testQuery_Is_Null_False()
     {
-        $this->_initObject();
+        $this->_initObject($this->_itemsArrayWithIsNull);
         $query = new Query();
         $isNullNode = new ScalarOperator\EqNode('anotherId', null);
         $query->setQuery($isNullNode);
@@ -722,7 +729,7 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
 
     public function testQuery_Is_not_Null_False()
     {
-        $this->_initObject();
+        $this->_initObject($this->_itemsArrayWithIsNull);
         $query = new Query();
         $isNotNullNode = new ScalarOperator\NeNode('isNull', null);
         $query->setQuery($isNotNullNode);
@@ -779,10 +786,7 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
             ),
             array(
                 'fFloat', [500.0004, 200.003, 1.1]
-            ),
-            array(
-                'isNull', [14, 123]
-            ),
+            )
         );
     }
 
