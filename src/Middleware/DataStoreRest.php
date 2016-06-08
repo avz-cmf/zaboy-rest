@@ -10,9 +10,12 @@
 
 namespace zaboy\rest\Middleware;
 
+use Xiag\Rql\Parser\Query;
 use zaboy\rest\Middleware;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use zaboy\rest\RqlParser\AggregateFunctionNode;
+use zaboy\rest\RqlParser\XSelectNode;
 use Zend\Diactoros\Response\JsonResponse;
 
 /**
@@ -87,16 +90,20 @@ class DataStoreRest extends Middleware\DataStoreAbstract
     /**
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
-     * @param callable|null $next
      * @return ResponseInterface
+     * @internal param callable|null $next
      */
     public function methodGetWithId(ServerRequestInterface $request, ResponseInterface $response)
     {
         $primaryKeyValue = $request->getAttribute('Primary-Key-Value');
         $row = $this->dataStore->read($primaryKeyValue);
         $this->request = $request->withAttribute('Response-Body', $row);
-        $rowCount = empty($request) ? 0 : 1;
-        $contentRange = 'items ' . $primaryKeyValue . '-' . $primaryKeyValue;
+
+        $rowCountQuery = new Query();
+        $rowCountQuery->setSelect(new XSelectNode([new AggregateFunctionNode('count', $this->dataStore->getIdentifier())]));
+        $rowCount = $this->dataStore->query($rowCountQuery);
+
+        $contentRange = 'items ' . $primaryKeyValue . '-' . $primaryKeyValue .'/'.$rowCount[0][$this->dataStore->getIdentifier().'->count'];
         $response = $response->withHeader('Content-Range', $contentRange);
         $response = $response->withStatus(200);
         return $response;
@@ -105,18 +112,23 @@ class DataStoreRest extends Middleware\DataStoreAbstract
     /**
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
-     * @param callable|null $next
      * @return ResponseInterface
+     * @internal param callable|null $next
      */
     public function methodGetWithoutId(ServerRequestInterface $request, ResponseInterface $response)
     {
         $rqlQueryObject = $request->getAttribute('Rql-Query-Object');
         $rowset = $this->dataStore->query($rqlQueryObject);
         $this->request = $request->withAttribute('Response-Body', $rowset);
-        $rowCount = count($rowset);
+        
+        $rowCountQuery = new Query();
+        $rowCountQuery->setSelect(new XSelectNode([new AggregateFunctionNode('count', $this->dataStore->getIdentifier())]));
+        $rowCount = $this->dataStore->query($rowCountQuery);
+        
         $limitObject = $rqlQueryObject->getLimit();
         $offset = !$limitObject ? 0 : $limitObject->getOffset();
-        $contentRange = 'items ' . $offset . '-' . $offset + $rowCount - 1 . '/' . $rowCount;
+        $contentRange = 'items ' . $offset . '-' . ($offset + count($rowset) - 1) . '/' . $rowCount[0][$this->dataStore->getIdentifier().'->count'];
+        
         $response = $response->withHeader('Content-Range', $contentRange);
         $response = $response->withStatus(200);
         return $response;
