@@ -15,7 +15,6 @@ return [
             'zaboy\rest\DataStore\Factory\MemoryAbstractFactory',
             'zaboy\rest\TableGateway\Factory\TableGatewayAbstractFactory',
             'Zend\Db\Adapter\AdapterAbstractServiceFactory',
-            'zaboy\rest\Queue\Factory\QueueClientAbstracFactory',
         ]
     ]
 ];
