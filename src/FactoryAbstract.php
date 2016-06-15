@@ -11,6 +11,7 @@ namespace zaboy\rest;
 
 use Zend\ServiceManager\FactoryInterface;
 use Zend\ServiceManager\ServiceLocatorInterface;
+use Interop\Container\ContainerInterface;
 
 abstract class FactoryAbstract implements FactoryInterface
 {
@@ -30,7 +31,7 @@ abstract class FactoryAbstract implements FactoryInterface
      */
     public function createService(ServiceLocatorInterface $serviceLocator)
     {
-        return $this->__invoke($serviceLocator);
+        return $this->__invoke($serviceLocator, null);
     }
 
 }
