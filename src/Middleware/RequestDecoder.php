@@ -71,9 +71,25 @@ class RequestDecoder implements MiddlewareInterface
         $rqlQueryStringWithXdebug = $request->getUri()->getQuery();
         
         $rqlQueryString = rtrim($rqlQueryStringWithXdebug, '&XDEBUG_SESSION_START=netbeans-xdebug');
+
         $rqlQueryObject = (new RqlParser())->rqlDecoder($rqlQueryString);
         $request = $request->withAttribute('Rql-Query-Object', $rqlQueryObject);
 
+        $headerLimit = $request->getHeader('Range');
+        if(isset($headerLimit) && is_array($headerLimit) && count($headerLimit) > 0){
+            $match = [];
+            preg_match("/^items=([0-9]+)\-?([0-9]+)?/", $headerLimit[0], $match);
+            if(count($match) > 0){
+                $limit = [];
+                if(isset($match[2])){
+                    $limit['offset'] = $match[1];
+                    $limit['limit'] = $match[2];
+                }else{
+                    $limit['limit'] = $match[1];
+                }
+                $request = $request->withAttribute("Limit", $limit);
+            }
+        }
         
         $contenttype = $request->getHeader('Content-Type');
         if (isset($contenttype[0]) && false !== strpos($contenttype[0], 'json')) {
