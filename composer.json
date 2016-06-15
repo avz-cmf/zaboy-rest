@@ -23,7 +23,6 @@
         "xiag/rql-parser": "*",
         "zendframework/zend-stdlib": "^2.5",
         "zendframework/zend-json": "^2.4",
-        "reputation-vip/queue-client": "*",
         "zendframework/zend-db": "^2.8",
         "zendframework/zend-http": "^2.5"
     },
