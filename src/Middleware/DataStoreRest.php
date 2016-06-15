@@ -10,10 +10,11 @@
 
 namespace zaboy\rest\Middleware;
 
-use Xiag\Rql\Parser\Query;
-use zaboy\rest\Middleware;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Xiag\Rql\Parser\Node\LimitNode;
+use Xiag\Rql\Parser\Query;
+use zaboy\rest\Middleware;
 use zaboy\rest\RqlParser\AggregateFunctionNode;
 use zaboy\rest\RqlParser\XSelectNode;
 use Zend\Diactoros\Response\JsonResponse;
@@ -71,14 +72,14 @@ class DataStoreRest extends Middleware\DataStoreAbstract
                     throw new \zaboy\rest\RestException('DELETE without Primary Key');
                 default :
                     throw new \zaboy\rest\RestException(
-                    'Method must be GET, PUT, POST or DELETE. '
-                    . $request->getMethod() . ' given'
+                        'Method must be GET, PUT, POST or DELETE. '
+                        . $request->getMethod() . ' given'
                     );
             }
         } catch (\zaboy\rest\RestException $ex) {
             return new JsonResponse([
                 $ex->getMessage()
-                    ], 500);
+            ], 500);
         }
 
         if ($next) {
@@ -103,7 +104,7 @@ class DataStoreRest extends Middleware\DataStoreAbstract
         $rowCountQuery->setSelect(new XSelectNode([new AggregateFunctionNode('count', $this->dataStore->getIdentifier())]));
         $rowCount = $this->dataStore->query($rowCountQuery);
 
-        $contentRange = 'items ' . $primaryKeyValue . '-' . $primaryKeyValue .'/'.$rowCount[0][$this->dataStore->getIdentifier().'->count'];
+        $contentRange = 'items ' . $primaryKeyValue . '-' . $primaryKeyValue . '/' . $rowCount[0][$this->dataStore->getIdentifier() . '->count'];
         $response = $response->withHeader('Content-Range', $contentRange);
         $response = $response->withStatus(200);
         return $response;
@@ -117,18 +118,63 @@ class DataStoreRest extends Middleware\DataStoreAbstract
      */
     public function methodGetWithoutId(ServerRequestInterface $request, ResponseInterface $response)
     {
+        /** @var Query $rqlQueryObject */
         $rqlQueryObject = $request->getAttribute('Rql-Query-Object');
+
+        $rqlLimitNode = $rqlQueryObject->getLimit();
+        $headerLimit = $request->getAttribute('Limit');
+
+        if (!is_null($rqlLimitNode)) {
+            if (isset($headerLimit)) {
+                $limit = $rqlLimitNode->getLimit() > $headerLimit['limit'] ?
+                    $headerLimit['limit'] : $rqlLimitNode->getLimit();
+                if (isset($headerLimit['offset'])) {
+                    $offset = $headerLimit['offset'];
+                    $rqlOffset = $rqlLimitNode->getOffset();
+                    if (!is_null($rqlOffset)) {
+                        $offset += $rqlOffset;
+                    }
+                    $newLimitNode = new LimitNode($limit, $offset);
+                } else {
+                    $newLimitNode = new LimitNode($limit);
+                }
+                $rqlQueryObject->setLimit($newLimitNode);
+            }
+        } else {
+            if ($headerLimit) {
+                $limit = (int)$headerLimit['limit'];
+                if (isset($headerLimit['offset'])) {
+                    $offset = (int)$headerLimit['offset'];
+                    $newLimitNode = new LimitNode($limit, $offset);
+                } else {
+                    $newLimitNode = new LimitNode($limit);
+                }
+                $rqlQueryObject->setLimit($newLimitNode);
+            }
+        }
+
+        $rowCountQuery = new Query();
+        $rowCountQuery->setSelect(new XSelectNode([
+            new AggregateFunctionNode('count', $this->dataStore->getIdentifier())]));
+
+        if ($rqlQueryObject->getQuery()) {
+            $rowCountQuery->setQuery($rqlQueryObject->getQuery());
+        }
+        if ($rqlLimitNode) {
+            $rowCountQuery->setLimit($rqlLimitNode);
+        }
+
         $rowset = $this->dataStore->query($rqlQueryObject);
         $this->request = $request->withAttribute('Response-Body', $rowset);
-        
-        $rowCountQuery = new Query();
-        $rowCountQuery->setSelect(new XSelectNode([new AggregateFunctionNode('count', $this->dataStore->getIdentifier())]));
+
         $rowCount = $this->dataStore->query($rowCountQuery);
-        
+
         $limitObject = $rqlQueryObject->getLimit();
+
         $offset = !$limitObject ? 0 : $limitObject->getOffset();
-        $contentRange = 'items ' . $offset . '-' . ($offset + count($rowset) - 1) . '/' . $rowCount[0][$this->dataStore->getIdentifier().'->count'];
-        
+        $contentRange = 'items ' . $offset . '-' . ($offset + count($rowset) - 1) . '/' .
+            $rowCount[0][$this->dataStore->getIdentifier() . '->count'];
+
         $response = $response->withHeader('Content-Range', $contentRange);
         $response = $response->withStatus(200);
         return $response;
