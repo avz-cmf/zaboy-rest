@@ -21,7 +21,7 @@ abstract class FactoryAbstract implements FactoryInterface
      * @param ServiceLocatorInterface $serviceLocator
      * @return mixed
      */
-    public function __invoke(ContainerInterface $container, $requestedName, array $options = null);
+    abstract public function __invoke(ContainerInterface $container, $requestedName, array $options = null);
 
     /**
      * {@inherit}
