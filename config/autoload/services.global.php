@@ -6,6 +6,7 @@ return [
         'invokables' => [
         ],
         'factories' => [
+            'TableManagerMysql' => 'zaboy\rest\TableGateway\Factory\TableManagerMysqlFactory'
         ],
         'abstract_factories' => [
             'zaboy\rest\Middleware\Factory\DataStoreAbstractFactory',
