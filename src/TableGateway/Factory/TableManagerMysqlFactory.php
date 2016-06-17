@@ -47,7 +47,10 @@ class TableManagerMysqlFactory extends FactoryAbstract
         $db = $container->get('db');
         if (!isset($config[TableManagerMysql::KEY_IN_CONFIG])) {
             //throw new RestException('There is not "tableManager" key in config');
-            $tableManagerConfig = [];
+            $tableManagerConfig = [
+                TableManagerMysql::KEY_AUTOCREATE_TABLES => [],
+                TableManagerMysql::KEY_TABLES_CONFIGS => []
+            ];
         } else {
             $tableManagerConfig = $config[TableManagerMysql::KEY_IN_CONFIG];
         }

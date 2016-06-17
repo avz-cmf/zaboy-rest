@@ -40,7 +40,7 @@ use Zend\Db\Metadata\Source;
  *          ]
  *      ]
  *  ];
- *  $tableManager->createTable($tableData);
+ *  $tableManager->createTable($tableName, $tableData);
  * </code>
  *
  * As you can see, array $tableData has 3 keys and next structure:
