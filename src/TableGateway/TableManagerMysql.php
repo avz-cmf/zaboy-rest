@@ -40,7 +40,7 @@ use Zend\Db\Metadata\Source;
  *          ]
  *      ]
  *  ];
- *  $tableManager->createTable($tableName, $tableData);
+ *  $tableManager->createTable($tableData);
  * </code>
  *
  * As you can see, array $tableData has 3 keys and next structure:
@@ -164,7 +164,7 @@ class TableManagerMysql
         if ($this->hasTable($tableName)) {
             $this->deleteTable($tableName);
         }
-        return $this->create($this->getTableConfig($tableName, $tableConfig));
+        return $this->create($tableName, $tableConfig);
     }
 
     /**
@@ -249,10 +249,17 @@ class TableManagerMysql
         return $this->config;
     }
 
-    public function getTableConfig($configName)
+    public function getTableConfig($tableConfig)
     {
-        $config = $this->getConfig();
-        return $config[self::KEY_TABLES_CONFIGS][$configName];
+        if (is_string($tableConfig)) {
+            $config = $this->getConfig();
+            if (isset($config[self::KEY_TABLES_CONFIGS][$tableConfig])) {
+                $tableConfig = $config[self::KEY_TABLES_CONFIGS][$tableConfig];
+            } else {
+                throw new RestException('$tableConfig mast be an array or key in config');
+            }
+        }
+        return $tableConfig;
     }
 
     /**
@@ -261,11 +268,9 @@ class TableManagerMysql
      */
     protected function create($tableName, $tableConfig)
     {
-        if (is_string($tableConfig)) {
-            $tableConfig = $this->config[self::KEY_TABLES_CONFIGS][$tableConfig];
-        }
+        $tableConfigArray = $this->getTableConfig($tableConfig);
         $table = new CreateTable($tableName);
-        foreach ($tableConfig as $fildName => $fildData) {
+        foreach ($tableConfigArray as $fildName => $fildData) {
             $fildType = $fildData[self::FILD_TYPE];
             switch (true) {
                 case in_array($fildType, $this->fildClasses['Colum']):

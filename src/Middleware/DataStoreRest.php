@@ -98,13 +98,15 @@ class DataStoreRest extends Middleware\DataStoreAbstract
         $primaryKeyValue = $request->getAttribute('Primary-Key-Value');
         $row = $this->dataStore->read($primaryKeyValue);
         $this->request = $request->withAttribute('Response-Body', $row);
-
-        $rowCountQuery = new Query();
-        $rowCountQuery->setSelect(new XSelectNode([new AggregateFunctionNode('count', $this->dataStore->getIdentifier())]));
-        $rowCount = $this->dataStore->query($rowCountQuery);
-
-        $contentRange = 'items ' . $primaryKeyValue . '-' . $primaryKeyValue .'/'.$rowCount[0][$this->dataStore->getIdentifier().'->count'];
-        $response = $response->withHeader('Content-Range', $contentRange);
+        /*
+         * It is need for query only. See  methodGetWithoutId()
+         *
+          $rowCountQuery = new Query();
+          $rowCountQuery->setSelect(new XSelectNode([new AggregateFunctionNode('count', $this->dataStore->getIdentifier())]));
+          $rowCount = $this->dataStore->query($rowCountQuery);
+          $contentRange = 'items ' . $primaryKeyValue . '-' . $primaryKeyValue .'/'.$rowCount[0][$this->dataStore->getIdentifier().'->count'];
+          $response = $response->withHeader('Content-Range', $contentRange);
+         */
         $response = $response->withStatus(200);
         return $response;
     }
@@ -120,15 +122,18 @@ class DataStoreRest extends Middleware\DataStoreAbstract
         $rqlQueryObject = $request->getAttribute('Rql-Query-Object');
         $rowset = $this->dataStore->query($rqlQueryObject);
         $this->request = $request->withAttribute('Response-Body', $rowset);
-        
+
         $rowCountQuery = new Query();
         $rowCountQuery->setSelect(new XSelectNode([new AggregateFunctionNode('count', $this->dataStore->getIdentifier())]));
         $rowCount = $this->dataStore->query($rowCountQuery);
-        
+        if (!isset($rowCount[0][$this->dataStore->getIdentifier() . '->count'])) {
+            throw new \zaboy\rest\RestException('Can not make Content-Range header in response');
+        }
+
         $limitObject = $rqlQueryObject->getLimit();
         $offset = !$limitObject ? 0 : $limitObject->getOffset();
-        $contentRange = 'items ' . $offset . '-' . ($offset + count($rowset) - 1) . '/' . $rowCount[0][$this->dataStore->getIdentifier().'->count'];
-        
+        $contentRange = 'items ' . $offset . '-' . ($offset + count($rowset) - 1) . '/' . $rowCount[0][$this->dataStore->getIdentifier() . '->count'];
+
         $response = $response->withHeader('Content-Range', $contentRange);
         $response = $response->withStatus(200);
         return $response;
