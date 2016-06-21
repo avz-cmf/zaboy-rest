@@ -26,6 +26,21 @@ class RqlParser
     private $allowedAggregateFunction;
     private $conditionBuilder;
 
+    public static function rqlDecode($rqlQueryString)
+    {
+        $parser = new self();
+        $rql = $parser->decode($rqlQueryString);
+        unset($parser);
+        return $rql;
+    }
+    public static function rqlEncode(Query $query)
+    {
+        $parser = new self();
+        $rql = $parser->encode($query);
+        unset($parser);
+        return $rql;
+    }
+
     public function __construct(array $allowedAggregateFunction = null, ConditionBuilderAbstract $conditionBuilder = null)
     {
         if (isset($allowedAggregateFunction)) {
@@ -41,7 +56,7 @@ class RqlParser
         }
     }
 
-    public function rqlDecoder($rqlQueryString)
+    public function decode($rqlQueryString)
     {
         $queryTokenParser = new TokenParserGroup();
         $queryTokenParser
@@ -85,7 +100,7 @@ class RqlParser
         return $rqlQueryObject;
     }
 
-    public function rqlEncode(Query $query)
+    public function encode(Query $query)
     {
         $conditionBuilder = $this->conditionBuilder;
         $rqlQueryString = $conditionBuilder($query->getQuery());

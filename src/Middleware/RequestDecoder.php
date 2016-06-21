@@ -72,7 +72,7 @@ class RequestDecoder implements MiddlewareInterface
         
         $rqlQueryString = rtrim($rqlQueryStringWithXdebug, '&XDEBUG_SESSION_START=netbeans-xdebug');
 
-        $rqlQueryObject = (new RqlParser())->rqlDecoder($rqlQueryString);
+        $rqlQueryObject = RqlParser::rqlDecode($rqlQueryString);
         $request = $request->withAttribute('Rql-Query-Object', $rqlQueryObject);
 
         $headerLimit = $request->getHeader('Range');

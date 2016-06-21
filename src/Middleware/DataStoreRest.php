@@ -154,8 +154,8 @@ class DataStoreRest extends Middleware\DataStoreAbstract
         }
 
         $rowCountQuery = new Query();
-        $rowCountQuery->setSelect(new XSelectNode([
-            new AggregateFunctionNode('count', $this->dataStore->getIdentifier())]));
+        $aggregate = new AggregateFunctionNode('count', $this->dataStore->getIdentifier());
+        $rowCountQuery->setSelect(new XSelectNode([$aggregate]));
 
         if ($rqlQueryObject->getQuery()) {
             $rowCountQuery->setQuery($rqlQueryObject->getQuery());
@@ -172,8 +172,11 @@ class DataStoreRest extends Middleware\DataStoreAbstract
         $limitObject = $rqlQueryObject->getLimit();
 
         $offset = !$limitObject ? 0 : $limitObject->getOffset();
-        $contentRange = 'items ' . $offset . '-' . ($offset + count($rowset) - 1) . '/' .
-            $rowCount[0][$this->dataStore->getIdentifier() . '->count'];
+        $contentRange = 'items ' . $offset . '-' . ($offset + count($rowset) - 1) . '/' . $rowCount[0][$this->dataStore->getIdentifier() . '->count'];
+        if(isset($rowCount[0])){
+        }else{
+            $contentRange = 'items ' . $offset . '-' . ($offset + count($rowset) - 1) . '/' . count($rowset);
+        }
 
         $response = $response->withHeader('Content-Range', $contentRange);
         $response = $response->withStatus(200);
