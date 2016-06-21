@@ -172,8 +172,8 @@ class DataStoreRest extends Middleware\DataStoreAbstract
         $limitObject = $rqlQueryObject->getLimit();
 
         $offset = !$limitObject ? 0 : $limitObject->getOffset();
-        $contentRange = 'items ' . $offset . '-' . ($offset + count($rowset) - 1) . '/' . $rowCount[0][$this->dataStore->getIdentifier() . '->count'];
         if(isset($rowCount[0])){
+            $contentRange = 'items ' . $offset . '-' . ($offset + count($rowset) - 1) . '/' . $rowCount[0][$this->dataStore->getIdentifier() . '->count'];
         }else{
             $contentRange = 'items ' . $offset . '-' . ($offset + count($rowset) - 1) . '/' . count($rowset);
         }
