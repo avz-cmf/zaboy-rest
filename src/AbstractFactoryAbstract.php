@@ -38,6 +38,8 @@ use Interop\Container\ContainerInterface;
 abstract class AbstractFactoryAbstract implements AbstractFactoryInterface
 {
 
+    const KEY_CLASS = 'class';
+
     /**
      * Can the factory create an instance for the service?
      *

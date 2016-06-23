@@ -20,6 +20,8 @@ use Xiag\Rql\Parser\DataType\Glob;
 class RqlConditionBuilder extends ConditionBuilderAbstract
 {
 
+    const TEXT_NULL = 'null()';
+
     protected $literals = [
         'LogicOperator' => [
             'and' => ['before' => 'and(', 'between' => ',', 'after' => ')'],
@@ -69,13 +71,13 @@ class RqlConditionBuilder extends ConditionBuilderAbstract
         $constQuestion = 'questionhjc7vjHg6jd8mv8hcy75GFt0c67cnbv74FegxtEDJkcucG64frblmkb';
 
         $regexRqlDecoded = parent::prepareFildValue($fildValue);
-        if(is_null($fildValue)){
+        if (is_null($fildValue)) {
             $regexRqlEnecoded = 'null()';
-        }else{
+        } else {
             $regexRqlEnecoded = self::encodeString($regexRqlDecoded);
         }
         $regexRqlPrepared = strtr($regexRqlEnecoded, [$constStar => '*', $constQuestion => '?']);
-        
+
         return $regexRqlPrepared;
     }
 

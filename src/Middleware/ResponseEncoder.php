@@ -40,11 +40,14 @@ class ResponseEncoder implements MiddlewareInterface
     {
         $responseBody = $request->getAttribute('Response-Body');
         $accept = $request->getHeaderLine('Accept');
+        /** $getStatusCode = '$getStatusCode ' . (($response->getStatusCode()));
+          var_dump($response->getHeaders()); */
         if (isset($accept) && preg_match('#^application/([^+\s]+\+)?json#', $accept)) {
             $status = $response->getStatusCode();
             $headers = $response->getHeaders();
             $response = new JsonResponse($responseBody, $status, $headers);
         } else {
+            $escaper = new Escaper();
             $result = '';
             switch (true) {
                 case gettype($responseBody) == 'array' :
@@ -52,11 +55,15 @@ class ResponseEncoder implements MiddlewareInterface
                         $result = $result . ' - ';
                         if (is_array($valueArray)) {
                             foreach ($valueArray as $key => $value) {
-                                $result = $result . $key . ' - ' . $value . '; _   _  ';
+                                $result = $result
+                                        . $escaper->escapeHtml($key)
+                                        . ' - '
+                                        . $escaper->escapeHtml($value)
+                                        . '; _   _  ';
                             }
                             $result = $result . '<br>' . PHP_EOL;
                         } else {
-                            $result = $valueArray . '<br>' . PHP_EOL;
+                            $result = $result . $escaper->escapeHtml($valueArray) . '<br>' . PHP_EOL;
                         }
                     }
                     break;
@@ -73,8 +80,6 @@ class ResponseEncoder implements MiddlewareInterface
                     . gettype($responseBody) . ' given.'
                     );
             }
-            $escaper = new Escaper();
-            $result = $escaper->escapeHtml($result);
             $response->getBody()->write($result);
         }
 

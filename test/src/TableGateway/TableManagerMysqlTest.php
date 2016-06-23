@@ -32,22 +32,45 @@ class TableManagerMysqlTest extends \PHPUnit_Framework_TestCase
     protected $tableName;
 
     /**
+     *
+     * @var array
+     */
+    protected $config = [
+        TableManagerMysql::KEY_TABLES_CONFIGS => [
+            'test_config_table' => [
+                'id' => [
+                    'fild_type' => 'Integer',
+                    'fild_params' => [
+                        'options' => ['autoincrement' => true]
+                    ]
+                ],
+                'name' => [
+                    'fild_type' => 'Varchar',
+                    'fild_params' => [
+                        'length' => 10,
+                        'nullable' => true,
+                        'default' => 'what?'
+                    ]
+                ]
+            ]
+        ]
+    ];
+
+    /**
      * Sets up the fixture, for example, opens a network connection.
      * This method is called before a test is executed.
      */
     protected function setUp()
     {
+
         $this->container = include './config/container.php';
         $this->adapter = $this->container->get('db');
         $this->tableName = 'test_create_table';
 
-        $deleteStatementStr = "DROP TABLE IF EXISTS "
-                . $this->adapter->platform->quoteIdentifier($this->tableName);
-        $deleteStatement = $this->adapter->query($deleteStatementStr);
-        $deleteStatement->execute();
-
-
-        $this->object = new TableManagerMysql($this->adapter, $this->tableName);
+        $this->object = new TableManagerMysql($this->adapter, $this->config);
+        if ($this->object->hasTable($this->tableName)) {
+            $this->object->deleteTable($this->tableName);
+        }
     }
 
     /**
@@ -56,28 +79,12 @@ class TableManagerMysqlTest extends \PHPUnit_Framework_TestCase
      */
     protected function tearDown()
     {
-        $this->object->deleteTable();
+
     }
 
     public function testTableManagerMysql_Create()
     {
-        $tableData = [
-            'id' => [
-                'fild_type' => 'Integer',
-                'fild_params' => [
-                    'options' => ['autoincrement' => true]
-                ]
-            ],
-            'name' => [
-                'fild_type' => 'Varchar',
-                'fild_params' => [
-                    'length' => 10,
-                    'nullable' => true,
-                    'default' => 'what?'
-                ]
-            ]
-        ];
-        $this->object->createTable($tableData);
+        $this->object->createTable($this->tableName, 'test_config_table');
 
         $this->assertSame(
                 '    With columns: ' . PHP_EOL .
@@ -86,7 +93,7 @@ class TableManagerMysqlTest extends \PHPUnit_Framework_TestCase
                 '    With constraints: ' . PHP_EOL .
                 '        _zf_test_create_table_PRIMARY -> PRIMARY KEY' . PHP_EOL .
                 '            column: id'
-                , $this->object->getTableInfoStr()
+                , $this->object->getTableInfoStr($this->tableName)
         );
     }
 

@@ -23,7 +23,7 @@ use Zend\Db\Metadata\Source;
  *
  * Uses:
  * <code>
- *  $tableManager = new TableManagerMysql($adapter, $tableName);
+ *  $tableManager = new TableManagerMysql($adapter);
  *  $tableData = [
  *      'id' => [
  *          'fild_type' => 'Integer',
@@ -81,6 +81,9 @@ class TableManagerMysql
 
     const FILD_TYPE = 'fild_type';
     const FILD_PARAMS = 'fild_params';
+    const KEY_IN_CONFIG = 'tableManagerMysql';
+    const KEY_TABLES_CONFIGS = 'tablesConfigs';
+    const KEY_AUTOCREATE_TABLES = 'autocreateTables';
 
     /**
      *
@@ -90,9 +93,9 @@ class TableManagerMysql
 
     /**
      *
-     * @var string
+     * @var arraay
      */
-    protected $tableName;
+    protected $config;
 
     /**
      *
@@ -116,60 +119,75 @@ class TableManagerMysql
 
     /**
      *
-     * @param TableGateway $dbTable
+     * @param \Zend\Db\Adapter\Adapter $db
      */
-    public function __construct(Adapter\Adapter $db, $tableName)
+    public function __construct(Adapter\Adapter $db, $config = null)
     {
         $this->db = $db;
-        $this->tableName = $tableName;
+        $this->config = $config;
+
+        if (!isset($this->config[self::KEY_AUTOCREATE_TABLES])) {
+            return;
+        }
+        $autocreateTables = $this->config[self::KEY_AUTOCREATE_TABLES];
+        foreach ($autocreateTables as $tableName => $tableConfig) {
+            if (!$this->hasTable($tableName)) {
+                $this->create($tableName, $tableConfig);
+            }
+        }
     }
 
     /**
      *
-     * @param type $tableData [tableName]
-     * @param type $rewriteIfExist
+     * @param string $tableName
+     * @param string $tableConfig
+     * @return mix
      */
-    public function createTable($tableData)
+    public function createTable($tableName, $tableConfig)
     {
-        if ($this->hasTable()) {
+        if ($this->hasTable($tableName)) {
             throw new DataStoreException(
-            "Table with name $this->tableName is exist. Use rewriteTable()"
+            "Table with name $tableName is exist. Use rewriteTable()"
             );
         }
-        return $this->create($tableData);
+        return $this->create($tableName, $tableConfig);
     }
 
     /**
      *
-     * @param type $tableData [tableName]
-     * @param type $rewriteIfExist
+     * @param string $tableName
+     * @param string $tableConfig
+     * @return mix
      */
-    public function rewriteTable($tableData)
+    public function rewriteTable($tableName, $tableConfig)
     {
-        if ($this->hasTable()) {
-            $this->deleteTable();
+        if ($this->hasTable($tableName)) {
+            $this->deleteTable($tableName);
         }
-        return $this->create($tableData);
+        return $this->create($tableName, $tableConfig);
     }
 
     /**
      * Delete Table
      *
+     * @todo use zend deleteTable
      */
-    public function deleteTable()
+    public function deleteTable($tableName)
     {
         $deleteStatementStr = "DROP TABLE IF EXISTS "
-                . $this->db->platform->quoteIdentifier($this->tableName);
+                . $this->db->platform->quoteIdentifier($tableName);
         $deleteStatement = $this->db->query($deleteStatementStr);
-        $deleteStatement->execute();
+        return $deleteStatement->execute();
     }
 
     /**
-     * Delete Table
+     *
      *
      * @see http://framework.zend.com/manual/current/en/modules/zend.db.metadata.html
+     * @param string $tableName
+     * @return string
      */
-    public function getTableInfoStr()
+    public function getTableInfoStr($tableName)
     {
         $result = '';
 
@@ -178,7 +196,7 @@ class TableManagerMysql
         // get the table names
         $tableNames = $metadata->getTableNames();
 
-        $table = $metadata->getTable($this->tableName);
+        $table = $metadata->getTable($tableName);
 
 
         $result .= '    With columns: ' . PHP_EOL;
@@ -191,7 +209,7 @@ class TableManagerMysql
         $result .= PHP_EOL;
         $result .= '    With constraints: ' . PHP_EOL;
 
-        foreach ($metadata->getConstraints($this->tableName) as $constraint) {
+        foreach ($metadata->getConstraints($tableName) as $constraint) {
 
             /** @var $constraint Zend\Db\Metadata\Object\ConstraintObject */
             $result .= '        ' . $constraint->getName()
@@ -219,22 +237,40 @@ class TableManagerMysql
      * @param string $tableName
      * @return bool
      */
-    public function hasTable()
+    public function hasTable($tableName)
     {
         $dbMetadata = Source\Factory::createSourceFromAdapter($this->db);
         $tableNames = $dbMetadata->getTableNames();
-        return in_array($this->tableName, $tableNames);
+        return in_array($tableName, $tableNames);
+    }
+
+    public function getConfig()
+    {
+        return $this->config;
+    }
+
+    public function getTableConfig($tableConfig)
+    {
+        if (is_string($tableConfig)) {
+            $config = $this->getConfig();
+            if (isset($config[self::KEY_TABLES_CONFIGS][$tableConfig])) {
+                $tableConfig = $config[self::KEY_TABLES_CONFIGS][$tableConfig];
+            } else {
+                throw new RestException('$tableConfig mast be an array or key in config');
+            }
+        }
+        return $tableConfig;
     }
 
     /**
      *
      * @param type $tableData [tableName]
-     * @param type $rewriteIfExist
      */
-    protected function create($tableData, $rewriteIfExist = false)
+    protected function create($tableName, $tableConfig)
     {
-        $table = new CreateTable($this->tableName);
-        foreach ($tableData as $fildName => $fildData) {
+        $tableConfigArray = $this->getTableConfig($tableConfig);
+        $table = new CreateTable($tableName);
+        foreach ($tableConfigArray as $fildName => $fildData) {
             $fildType = $fildData[self::FILD_TYPE];
             switch (true) {
                 case in_array($fildType, $this->fildClasses['Colum']):
@@ -272,13 +308,13 @@ class TableManagerMysql
         $mySqlPlatformDbAdapter->setDriver($this->db->getDriver());
         $sqlString = $ctdMysql->setSubject($table)->getSqlString($mySqlPlatformDbAdapter);
 
-        // this is  siplier version , but withot options[] support
+        // this is  simplier version, not MySQL only, but withot options[] support
         //$mySqlPlatformSql = new Sql\Platform\Mysql\Mysql();
         //$sql = new Sql\Sql($this->db, null, $mySqlPlatformSql);
         //$sqlString = $sql->buildSqlString($table);
 
-        $this->db->query(
-                $sqlString, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE
+        return $this->db->query(
+                        $sqlString, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE
         );
     }
 

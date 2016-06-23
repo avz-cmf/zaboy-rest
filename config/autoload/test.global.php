@@ -1,6 +1,14 @@
 <?php
 
 return [
+    'tableManagerMysql' => [
+        'tablesConfigs' => [
+            'test_table_config' => [],
+        ],
+        'autocreateTables' => [
+            'test_autocreate_table' => 'test_table_config'
+        ]
+    ],
     'dataStore' => [
         'test_DataStoreDbTableWithNameAsResourceName' => [
             'class' => 'zaboy\rest\DataStore\DbTable',
