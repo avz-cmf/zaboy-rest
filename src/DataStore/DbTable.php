@@ -9,17 +9,15 @@
 
 namespace zaboy\rest\DataStore;
 
-use Xiag\Rql\Parser\Node\Query\ScalarOperator\EqNode;
-use zaboy\rest\DataStore\DataStoreAbstract;
-use zaboy\rest\DataStore\DataStoreException;
+use Xiag\Rql\Parser\Node\SortNode;
+use Xiag\Rql\Parser\Query;
 use zaboy\rest\DataStore\ConditionBuilder\SqlConditionBuilder;
 use zaboy\rest\RqlParser\AggregateFunctionNode;
+use Zend\Db\Adapter\Adapter;
 use Zend\Db\ResultSet\ResultSet;
 use Zend\Db\Sql\Predicate\Expression;
-use Zend\Db\TableGateway\TableGateway;
 use Zend\Db\Sql\Select;
-use Xiag\Rql\Parser\Query;
-use Xiag\Rql\Parser\Node\SortNode;
+use Zend\Db\TableGateway\TableGateway;
 
 /**
  * DataStores as Db Table
@@ -58,24 +56,6 @@ class DbTable extends DataStoreAbstract
      *
      * {@inheritdoc}
      */
-    public function read($id)
-    {
-        $this->checkIdentifierType($id);
-        $identifier = $this->getIdentifier();
-        $rowset = $this->dbTable->select(array($identifier => $id));
-        $row = $rowset->current();
-        if (isset($row)) {
-            return $row->getArrayCopy();
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * {@inheritdoc}
-     */
     public function query(Query $query)
     {
         $limits = $query->getLimit();
@@ -94,7 +74,7 @@ class DbTable extends DataStoreAbstract
         $selectSQL->where($where);
         // ***********************   order   ***********************
         foreach ($sortFilds as $ordKey => $ordVal) {
-            if ((int) $ordVal === SortNode::SORT_DESC) {
+            if ((int)$ordVal === SortNode::SORT_DESC) {
                 $selectSQL->order($ordKey . ' ' . Select::ORDER_DESCENDING);
             } else {
                 $selectSQL->order($ordKey . ' ' . Select::ORDER_ASCENDING);
@@ -107,26 +87,62 @@ class DbTable extends DataStoreAbstract
         if ($offset <> 0) {
             $selectSQL->offset($offset);
         }
+        $isAggregate = false;
+
         // *********************  filds  ***********************
+
         if (!empty($selectFilds)) {
             $fields = [];
-            foreach ($selectFilds as $field){
-                if($field instanceof AggregateFunctionNode){
+
+            foreach ($selectFilds as $field) {
+                if ($field instanceof AggregateFunctionNode) {
+                    $isAggregate = true;
                     $fields[$field->getField() . "->" . $field->getFunction()] = new Expression($field->__toString());
-                }else{
+                } else {
                     $fields[] = $field;
                 }
             }
-            $selectSQL->columns($fields);
 
+            $selectSQL->columns($fields);
         }
+        // ***********************   Aggregate query   ***********************
+
+        if ($isAggregate) {
+            $externalSql = new Select();
+            $insertedSql = $this->dbTable->getSql()->select();
+
+            if (isset($fields)) {
+                $externalSql->columns($fields);
+            }
+
+            $insertedSql->where($where);
+
+            if ($limit <> self::LIMIT_INFINITY) {
+                $insertedSql->limit($limit);
+            }
+
+            if ($offset <> 0) {
+                $insertedSql->offset($offset);
+            }
+
+            $from = "(" . $this->dbTable->getSql()->buildSqlString($insertedSql) . ")";
+            $externalSql->from(array('Q' => $from));
+
+            $sql = $this->dbTable->getSql()->buildSqlString($externalSql);
+            $sql = str_replace(["`(", ")`", "``"], ['(', ')', "`"], $sql);
+
+            /** @var Adapter $adapter */
+            $adapter = $this->dbTable->getAdapter();
+            $rowset = $adapter->query($sql, $adapter::QUERY_MODE_EXECUTE);
+        } else {
+            $sql = $this->dbTable->getSql();
+            $rowset = $this->dbTable->selectWith($selectSQL);
+        }
+
         // ***********************   return   ***********************
 
-        $rowset = $this->dbTable->selectWith($selectSQL);
         return $rowset->toArray();
     }
-
-// ** Interface "zaboy\rest\DataStore\Interfaces\DataStoresInterface"  **/
 
     /**
      * {@inheritdoc}
@@ -159,6 +175,8 @@ class DbTable extends DataStoreAbstract
         return $newItem;
     }
 
+// ** Interface "zaboy\rest\DataStore\Interfaces\DataStoresInterface"  **/
+
     /**
      * {@inheritdoc}
      *
@@ -175,9 +193,9 @@ class DbTable extends DataStoreAbstract
         $adapter = $this->dbTable->getAdapter();
         $errorMsg = 'Can\'t update item with "id" = ' . $id;
         $queryStr = 'SELECT ' . Select::SQL_STAR
-                . ' FROM ' . $adapter->platform->quoteIdentifier($this->dbTable->getTable())
-                . ' WHERE ' . $adapter->platform->quoteIdentifier($identifier) . ' = ?'
-                . ' FOR UPDATE';
+            . ' FROM ' . $adapter->platform->quoteIdentifier($this->dbTable->getTable())
+            . ' WHERE ' . $adapter->platform->quoteIdentifier($identifier) . ' = ?'
+            . ' FOR UPDATE';
         $adapter->getDriver()->getConnection()->beginTransaction();
         try {
             //is row with this index exist?
@@ -214,11 +232,29 @@ class DbTable extends DataStoreAbstract
     {
         $identifier = $this->getIdentifier();
         $this->checkIdentifierType($id);
-        
+
         $element = $this->read($id);
 
         $deletedItemsCount = $this->dbTable->delete(array($identifier => $id));
         return $element;
+    }
+
+    /**
+     * {@inheritdoc}
+     *
+     * {@inheritdoc}
+     */
+    public function read($id)
+    {
+        $this->checkIdentifierType($id);
+        $identifier = $this->getIdentifier();
+        $rowset = $this->dbTable->select(array($identifier => $id));
+        $row = $rowset->current();
+        if (isset($row)) {
+            return $row->getArrayCopy();
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -243,9 +279,9 @@ class DbTable extends DataStoreAbstract
         $adapter = $this->dbTable->getAdapter();
         /* @var $rowset ResultSet */
         $rowset = $adapter->query(
-                'SELECT COUNT(*) AS count FROM '
-                . $adapter->platform->quoteIdentifier($this->dbTable->getTable())
-                , $adapter::QUERY_MODE_EXECUTE);
+            'SELECT COUNT(*) AS count FROM '
+            . $adapter->platform->quoteIdentifier($this->dbTable->getTable())
+            , $adapter::QUERY_MODE_EXECUTE);
         return $rowset->current()['count'];
     }
 

@@ -10,10 +10,12 @@
 
 namespace zaboy\rest\Middleware;
 
+use Xiag\Rql\Parser\Node\LimitNode;
 use Xiag\Rql\Parser\Query;
 use zaboy\rest\Middleware;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use zaboy\rest\RestException;
 use zaboy\rest\RqlParser\AggregateFunctionNode;
 use zaboy\rest\RqlParser\XSelectNode;
 use Zend\Diactoros\Response\JsonResponse;
@@ -98,15 +100,7 @@ class DataStoreRest extends Middleware\DataStoreAbstract
         $primaryKeyValue = $request->getAttribute('Primary-Key-Value');
         $row = $this->dataStore->read($primaryKeyValue);
         $this->request = $request->withAttribute('Response-Body', $row);
-        /*
-         * It is need for query only. See  methodGetWithoutId()
-         *
-          $rowCountQuery = new Query();
-          $rowCountQuery->setSelect(new XSelectNode([new AggregateFunctionNode('count', $this->dataStore->getIdentifier())]));
-          $rowCount = $this->dataStore->query($rowCountQuery);
-          $contentRange = 'items ' . $primaryKeyValue . '-' . $primaryKeyValue .'/'.$rowCount[0][$this->dataStore->getIdentifier().'->count'];
-          $response = $response->withHeader('Content-Range', $contentRange);
-         */
+
         $response = $response->withStatus(200);
         return $response;
     }
@@ -115,24 +109,75 @@ class DataStoreRest extends Middleware\DataStoreAbstract
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
      * @return ResponseInterface
+     * @throws \zaboy\rest\RestException
      * @internal param callable|null $next
      */
     public function methodGetWithoutId(ServerRequestInterface $request, ResponseInterface $response)
     {
+        /** @var Query $rqlQueryObject */
         $rqlQueryObject = $request->getAttribute('Rql-Query-Object');
+
+        $rqlLimitNode = $rqlQueryObject->getLimit();
+        $headerLimit = $request->getAttribute('Limit');
+
+        if (!is_null($rqlLimitNode)) {
+            if (isset($headerLimit)) {
+                $limit = $rqlLimitNode->getLimit() > $headerLimit['limit'] ?
+                    $headerLimit['limit'] : $rqlLimitNode->getLimit();
+                if (isset($headerLimit['offset'])) {
+                    $offset = $headerLimit['offset'];
+                    $rqlOffset = $rqlLimitNode->getOffset();
+                    if (!is_null($rqlOffset)) {
+                        $offset += $rqlOffset;
+                    }
+                    $newLimitNode = new LimitNode($limit, $offset);
+                } else {
+                    $newLimitNode = new LimitNode($limit);
+                }
+                $rqlQueryObject->setLimit($newLimitNode);
+            }
+        } else {
+            if ($headerLimit) {
+                $limit = (int)$headerLimit['limit'];
+                if (isset($headerLimit['offset'])) {
+                    $offset = (int)$headerLimit['offset'];
+                    $newLimitNode = new LimitNode($limit, $offset);
+                } else {
+                    $newLimitNode = new LimitNode($limit);
+                }
+                $rqlQueryObject->setLimit($newLimitNode);
+            }
+        }
+
+        $rowCountQuery = new Query();
+        $aggregate = new AggregateFunctionNode('count', $this->dataStore->getIdentifier());
+        $rowCountQuery->setSelect(new XSelectNode([$aggregate]));
+
+        if ($rqlQueryObject->getQuery()) {
+            $rowCountQuery->setQuery($rqlQueryObject->getQuery());
+        }
+        if ($rqlLimitNode) {
+            $rowCountQuery->setLimit($rqlLimitNode);
+        }
+
+        //TODO: count aggregate fn can't work with limit and offset. Bug!!!
         $rowset = $this->dataStore->query($rqlQueryObject);
         $this->request = $request->withAttribute('Response-Body', $rowset);
 
         $rowCountQuery = new Query();
-        $rowCountQuery->setSelect(new XSelectNode([new AggregateFunctionNode('count', $this->dataStore->getIdentifier())]));
+        $rowCountQuery
+            ->setSelect(new XSelectNode([new AggregateFunctionNode('count', $this->dataStore->getIdentifier())]));
         $rowCount = $this->dataStore->query($rowCountQuery);
         if (!isset($rowCount[0][$this->dataStore->getIdentifier() . '->count'])) {
-            throw new \zaboy\rest\RestException('Can not make Content-Range header in response');
+            throw new RestException('Can not make Content-Range header in response');
         }
 
         $limitObject = $rqlQueryObject->getLimit();
+
         $offset = !$limitObject ? 0 : $limitObject->getOffset();
-        $contentRange = 'items ' . $offset . '-' . ($offset + count($rowset) - 1) . '/' . $rowCount[0][$this->dataStore->getIdentifier() . '->count'];
+
+        $contentRange = 'items ' . $offset . '-' . ($offset + count($rowset) - 1) . '/' . $rowCount[0][$this->dataStore
+                ->getIdentifier() . '->count'];
 
         $response = $response->withHeader('Content-Range', $contentRange);
         $response = $response->withStatus(200);
@@ -142,8 +187,9 @@ class DataStoreRest extends Middleware\DataStoreAbstract
     /**
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
-     * @param callable|null $next
      * @return ResponseInterface
+     * @throws \zaboy\rest\RestException
+     * @internal param callable|null $next
      */
     public function methodPutWithId(ServerRequestInterface $request, ResponseInterface $response)
     {
@@ -172,8 +218,9 @@ class DataStoreRest extends Middleware\DataStoreAbstract
      *
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
-     * @param callable|null $next
      * @return ResponseInterface
+     * @throws \zaboy\rest\RestException
+     * @internal param callable|null $next
      */
     public function methodPostWithId(ServerRequestInterface $request, ResponseInterface $response)
     {
@@ -210,8 +257,9 @@ class DataStoreRest extends Middleware\DataStoreAbstract
      *
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
-     * @param callable|null $next
      * @return ResponseInterface
+     * @throws \zaboy\rest\RestException
+     * @internal param callable|null $next
      */
     public function methodPostWithoutId(ServerRequestInterface $request, ResponseInterface $response)
     {
@@ -234,8 +282,8 @@ class DataStoreRest extends Middleware\DataStoreAbstract
      *
      * @param ServerRequestInterface $request
      * @param ResponseInterface $response
-     * @param callable|null $next
      * @return ResponseInterface
+     * @internal param callable|null $next
      */
     public function methodDelete(ServerRequestInterface $request, ResponseInterface $response)
     {
