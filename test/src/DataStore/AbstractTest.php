@@ -883,7 +883,8 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
     //====================
 
 
-    public function testSelectAggregateFunction_Count_True(){
+    public function testSelectAggregateFunction_Count_True()
+    {
         $this->_initObject();
         $query = new Query();
         $aggregateCount = new AggregateFunctionNode('count', 'id');
@@ -891,10 +892,10 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
         $resp = $this->object->query($query);
         $this->assertEquals(1, count($resp));
         $this->assertEquals(4, $resp[0]['id->count']);
-
     }
 
-    public function testSelectAggregateFunction_Max_True(){
+    public function testSelectAggregateFunction_Max_True()
+    {
         $this->_initObject();
         $query = new Query();
         $aggregateCount = new AggregateFunctionNode('max', 'id');
@@ -902,10 +903,10 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
         $resp = $this->object->query($query);
         $this->assertEquals(1, count($resp));
         $this->assertEquals(4, $resp[0]['id->max']);
-
     }
 
-    public function testSelectAggregateFunction_Mix_True(){
+    public function testSelectAggregateFunction_Mix_True()
+    {
         $this->_initObject();
         $query = new Query();
         $aggregateCount = new AggregateFunctionNode('min', 'id');
@@ -913,8 +914,31 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
         $resp = $this->object->query($query);
         $this->assertEquals(1, count($resp));
         $this->assertEquals(1, $resp[0]['id->min']);
-
     }
+
+    public function testSelectAggregateFunction_Combo_True()
+    {
+        $this->_initObject();
+        $query = new Query();
+
+        $aggregateCount = new AggregateFunctionNode('count', 'id');
+        $aggregateMaxId = new AggregateFunctionNode('max', 'id');
+        $aggregateMinId = new AggregateFunctionNode('min', 'id');
+
+        $query->setLimit(new Node\LimitNode(2, 1));
+        $query->setQuery(new ScalarOperator\EqNode('fString', 'val2'));
+        $query->setSelect(new XSelectNode([$aggregateCount,$aggregateMaxId, $aggregateMinId, "anotherId"]));
+
+        $resp = $this->object->query($query);
+
+        $this->assertEquals(1, count($resp));
+
+        $this->assertEquals(2, $resp[0]['id->count']);
+        $this->assertEquals(4, $resp[0]['id->max']);
+        $this->assertEquals(3, $resp[0]['id->min']);
+        $this->assertEquals(40, $resp[0]['anotherId']);
+    }
+
 
     /**
      * Sets up the fixture, for example, opens a network connection.
