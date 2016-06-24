@@ -38,8 +38,6 @@ class RqlParserTest extends PHPUnit_Framework_TestCase
 
     public function setUp()
     {
-        $this->object = new RqlParser();
-
         $this->queryObject = new Query();
 
         $this->queryObject->setQuery(
@@ -77,14 +75,14 @@ class RqlParserTest extends PHPUnit_Framework_TestCase
 
     public function testRqlDecoder()
     {
-        $queryObject = $this->object->rqlDecoder($this->rqlString);
+        $queryObject = RqlParser::rqlDecode($this->rqlString);
         $this->assertTrue(isset($queryObject));
         $this->assertEquals($this->queryObject, $queryObject);
     }
 
     public function testRqlEncode()
     {
-        $rqlString = $this->object->rqlEncode($this->queryObject);
+        $rqlString = RqlParser::rqlEncode($this->queryObject);
         $this->assertEquals($rqlString, $this->rqlString);
     }
 }

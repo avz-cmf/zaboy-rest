@@ -71,7 +71,7 @@ class RequestDecoder implements MiddlewareInterface
         $rqlQueryStringWithXdebug = $request->getUri()->getQuery();
         
         $rqlQueryString = rtrim($rqlQueryStringWithXdebug, '&XDEBUG_SESSION_START=netbeans-xdebug');
-        $rqlQueryObject = (new RqlParser())->rqlDecoder($rqlQueryString);
+        $rqlQueryObject = RqlParser::rqlDecode($rqlQueryString);
         $request = $request->withAttribute('Rql-Query-Object', $rqlQueryObject);
 
         

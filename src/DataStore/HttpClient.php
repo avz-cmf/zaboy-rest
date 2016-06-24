@@ -221,7 +221,7 @@ class HttpClient extends DataStoreAbstract
 
         $url = !$id ? $this->url : $this->url . '/' . $id;
         if (isset($query)) {
-            $rqlString = (new RqlParser())->rqlEncode($query);
+            $rqlString = RqlParser::rqlEncode($query);
             $url = $url . '?' . $rqlString;
         }
         $httpClient = new Client($url, $this->options);
