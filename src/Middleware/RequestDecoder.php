@@ -11,16 +11,11 @@ namespace zaboy\rest\Middleware;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
-use Xiag\Rql\Parser\ExpressionParser;
-use Xiag\Rql\Parser\Parser;
-use Xiag\Rql\Parser\Lexer;
-use Xiag\Rql\Parser\TokenParser\Query;
-use Xiag\Rql\Parser\TokenParserGroup;
 use Xiag\Rql\Parser\TokenParser;
+use Xiag\Rql\Parser\TokenParser\Query;
 use Xiag\Rql\Parser\TypeCaster;
 use zaboy\rest\RestException;
 use zaboy\rest\RqlParser\RqlParser;
-use zaboy\rest\RqlParser\SelectTokenParser;
 use Zend\Stratigility\MiddlewareInterface;
 
 
@@ -69,12 +64,27 @@ class RequestDecoder implements MiddlewareInterface
         $request = $request->withAttribute('Put-Before', $putBefore);
 
         $rqlQueryStringWithXdebug = $request->getUri()->getQuery();
-        
-        $rqlQueryString = rtrim($rqlQueryStringWithXdebug, '&XDEBUG_SESSION_START=netbeans-xdebug');
-        $rqlQueryObject = (new RqlParser())->rqlDecoder($rqlQueryString);
-        $request = $request->withAttribute('Rql-Query-Object', $rqlQueryObject);
 
+        $rqlQueryString = rtrim($rqlQueryStringWithXdebug, '&XDEBUG_SESSION_START=netbeans-xdebug');
+        $rqlQueryObject = RqlParser::rqlDecode($rqlQueryString);
+        $request = $request->withAttribute('Rql-Query-Object', $rqlQueryObject);
         
+        $headerLimit = $request->getHeader('Range');
+        if (isset($headerLimit) && is_array($headerLimit) && count($headerLimit) > 0) {
+            $match = [];
+            preg_match("/^items=([0-9]+)\-?([0-9]+)?/", $headerLimit[0], $match);
+            if (count($match) > 0) {
+                $limit = [];
+                if (isset($match[2])) {
+                    $limit['offset'] = $match[1];
+                    $limit['limit'] = $match[2];
+                } else {
+                    $limit['limit'] = $match[1];
+                }
+                $request = $request->withAttribute("Limit", $limit);
+            }
+        }
+
         $contenttype = $request->getHeader('Content-Type');
         if (isset($contenttype[0]) && false !== strpos($contenttype[0], 'json')) {
             $body = $this->jsonDecode($request->getBody()->__toString());
@@ -82,11 +92,11 @@ class RequestDecoder implements MiddlewareInterface
         } else {
             //todo XML?
         }
-        
+
         if ($next) {
             return $next($request, $response);
         }
-        
+
         return $response;
     }
 
@@ -97,8 +107,8 @@ class RequestDecoder implements MiddlewareInterface
         $result = json_decode($data, true);
         if (JSON_ERROR_NONE !== json_last_error()) {
             throw new RestException(
-            'Unable to decode data from JSON' .
-            json_last_error_msg()
+                'Unable to decode data from JSON' .
+                json_last_error_msg()
             );
         }
         json_encode(null);
