@@ -14,8 +14,10 @@ use zaboy\rest\DataStore\DataStoreAbstract;
 use zaboy\rest\DataStore\DataStoreException;
 use zaboy\rest\DataStore\ConditionBuilder\SqlConditionBuilder;
 use zaboy\rest\RqlParser\AggregateFunctionNode;
+use Zend\Db\Adapter\Adapter;
 use Zend\Db\ResultSet\ResultSet;
 use Zend\Db\Sql\Predicate\Expression;
+use Zend\Db\Sql\Sql;
 use Zend\Db\TableGateway\TableGateway;
 use Zend\Db\Sql\Select;
 use Xiag\Rql\Parser\Query;
@@ -107,22 +109,65 @@ class DbTable extends DataStoreAbstract
         if ($offset <> 0) {
             $selectSQL->offset($offset);
         }
+
+        $isAggregate = false;
+
         // *********************  filds  ***********************
+
         if (!empty($selectFilds)) {
             $fields = [];
+
             foreach ($selectFilds as $field){
                 if($field instanceof AggregateFunctionNode){
+                    $isAggregate = true;
                     $fields[$field->getField() . "->" . $field->getFunction()] = new Expression($field->__toString());
                 }else{
                     $fields[] = $field;
                 }
             }
-            $selectSQL->columns($fields);
 
+            $selectSQL->columns($fields);
         }
+        // ***********************   Aggregate query   ***********************
+
+        if($isAggregate){
+            $externalSql = new Select();
+            $insertedSql = $this->dbTable->getSql()->select();
+
+            if(isset($fields)){
+                $externalSql->columns($fields);
+            }
+
+            $insertedSql->where($where);
+
+            if ($limit <> self::LIMIT_INFINITY) {
+                $insertedSql->limit($limit);
+            }
+
+            if ($offset <> 0) {
+                $insertedSql->offset($offset);
+            }
+
+            $from = "(" . $this->dbTable->getSql()->buildSqlString($insertedSql) . ")";
+            $externalSql->from(array('Q' => $from));
+
+            $sql = $this->dbTable->getSql()->buildSqlString($externalSql);
+            $sql = str_replace(["`(", ")`", "``"], ['(', ')', "`"], $sql);
+            /** @var Adapter $adapter */
+            $adapter = $this->dbTable->getAdapter();
+            $rowset = $adapter->query($sql, $adapter::QUERY_MODE_EXECUTE);
+        }else{
+
+            $sql = $this->dbTable->getSql();
+
+            $temp = $sql->buildSqlString($selectSQL);
+
+            $rowset = $this->dbTable->selectWith($selectSQL);
+            
+        }
+
         // ***********************   return   ***********************
 
-        $rowset = $this->dbTable->selectWith($selectSQL);
         return $rowset->toArray();
     }
 

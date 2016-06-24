@@ -33,7 +33,12 @@ class TableGatewayAbstractFactory extends AbstractFactoryAbstract
      * @var array cache of tables names in db
      */
 
-    protected $tableNames;
+    protected $tableNames = null;
+
+    /*
+     * @var Zend\Db\Adapter\AdapterInterface
+     */
+    protected $db;
 
     /**
      * Can the factory create an instance for the service?
@@ -50,23 +55,14 @@ class TableGatewayAbstractFactory extends AbstractFactoryAbstract
      */
     public function canCreate(ContainerInterface $container, $requestedName)
     {
-        if (!isset($this->tableNames)) {
-            $db = $container->has('db') ? $container->get('db') : null;
-            if (isset($db)) {
-                $dbMetadata = new Metadata($db);
-                $this->tableNames = $dbMetadata->getTableNames();
-            } else {
-                $this->tableNames = false;
-            }
+        //is there table with same name (for static tables set)?
+        //$tableNames = $this->getCachedTables($container);
+        //is there table with same name (for non static tables set)?
+        if ($this->setDbAdapter($container)) {
+            $dbMetadata = new Metadata($this->db);
+            $this->tableNames = $dbMetadata->getTableNames();
         }
-        //is there table with same name?
-        if (
-                is_array($this->tableNames) && in_array($requestedName, $this->tableNames, true)
-        ) {
-            return true;
-        } else {
-            return false;
-        }
+        return is_array($this->tableNames) && in_array($requestedName, $this->tableNames, true);
     }
 
     /**
@@ -82,9 +78,37 @@ class TableGatewayAbstractFactory extends AbstractFactoryAbstract
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
-        $db = $container->get('db');
-        $tableGateway = new TableGateway($requestedName, $db);
-        return $tableGateway;
+        return new TableGateway($requestedName, $this->db);
+    }
+
+    /**
+     * For static tables set
+     *
+     * @return array|false
+     */
+    protected function getCachedTables(ContainerInterface $container)
+    {
+        if (!isset($this->tableNames)) {
+            if ($this->setDbAdapter($container)) {
+                $dbMetadata = new Metadata($this->db);
+                $this->tableNames = $dbMetadata->getTableNames();
+            } else {
+                $this->tableNames = false;
+            }
+        }
+        return $this->tableNames;
+    }
+
+    /**
+     *
+     * @return bool
+     */
+    protected function setDbAdapter(ContainerInterface $container)
+    {
+        if (!isset($this->db)) {
+            $this->db = $container->has('db') ? $container->get('db') : false;
+        }
+        return (bool) $this->db;
     }
 
 }

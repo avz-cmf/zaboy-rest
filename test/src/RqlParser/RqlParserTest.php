@@ -20,7 +20,6 @@ use Xiag\Rql\Parser\Node\Query\ScalarOperator\GtNode;
 use Xiag\Rql\Parser\Node\Query\ScalarOperator\LeNode;
 use Xiag\Rql\Parser\Node\Query\ScalarOperator\LtNode;
 use Xiag\Rql\Parser\Node\Query\ScalarOperator\NeNode;
-use Xiag\Rql\Parser\Node\SelectNode;
 use Xiag\Rql\Parser\Node\SortNode;
 use Xiag\Rql\Parser\Query;
 use zaboy\rest\RqlParser\AggregateFunctionNode;
@@ -29,9 +28,6 @@ use zaboy\rest\RqlParser\XSelectNode;
 
 class RqlParserTest extends PHPUnit_Framework_TestCase
 {
-    /** @var  RqlParser */
-    private $object;
-
     /** @var  Query */
     private $queryObject;
     private $rqlString;
