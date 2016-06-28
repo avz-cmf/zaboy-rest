@@ -22,16 +22,16 @@ abstract class ConditionBuilderTest extends \PHPUnit_Framework_TestCase
 
     protected $object;
 
-    abstract public function providerPrepareFildName();
+    abstract public function providerPrepareFieldName();
 
     /**
-     * @dataProvider providerPrepareFildName
+     * @dataProvider providerPrepareFieldName
      */
-    public function testPrepareFildName($in, $out)
+    public function testPrepareFieldName($in, $out)
     {
-        $fildName = $this->object->prepareFildName($in);
+        $fieldName = $this->object->prepareFieldName($in);
         $this->assertEquals(
-                $out, $fildName
+                $out, $fieldName
         );
     }
 

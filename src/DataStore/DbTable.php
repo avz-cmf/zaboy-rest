@@ -62,10 +62,10 @@ class DbTable extends DataStoreAbstract
         $limit = !$limits ? self::LIMIT_INFINITY : $query->getLimit()->getLimit();
         $offset = !$limits ? 0 : $query->getLimit()->getOffset();
         $sort = $query->getSort();
-        $sortFilds = !$sort ? [$this->getIdentifier() => SortNode::SORT_ASC] : $sort->getFields();
-        $select = $query->getSelect();  //What filds will return
+        $sortFields = !$sort ? [$this->getIdentifier() => SortNode::SORT_ASC] : $sort->getFields();
+        $select = $query->getSelect();  //What fields will return
 
-        $selectFilds = !$select ? [] : $select->getFields();
+        $selectFields = !$select ? [] : $select->getFields();
 
         $selectSQL = $this->dbTable->getSql()->select();
         // ***********************   where   ***********************
@@ -73,7 +73,7 @@ class DbTable extends DataStoreAbstract
         $where = $conditionBuilder($query->getQuery());
         $selectSQL->where($where);
         // ***********************   order   ***********************
-        foreach ($sortFilds as $ordKey => $ordVal) {
+        foreach ($sortFields as $ordKey => $ordVal) {
             if ((int)$ordVal === SortNode::SORT_DESC) {
                 $selectSQL->order($ordKey . ' ' . Select::ORDER_DESCENDING);
             } else {
@@ -89,12 +89,12 @@ class DbTable extends DataStoreAbstract
         }
         $isAggregate = false;
 
-        // *********************  filds  ***********************
+        // *********************  fields  ***********************
 
-        if (!empty($selectFilds)) {
+        if (!empty($selectFields)) {
             $fields = [];
 
-            foreach ($selectFilds as $field) {
+            foreach ($selectFields as $field) {
                 if ($field instanceof AggregateFunctionNode) {
                     $isAggregate = true;
                     $fields[$field->getField() . "->" . $field->getFunction()] = new Expression($field->__toString());

@@ -50,7 +50,7 @@ interface ReadInterface extends \Countable, \IteratorAggregate
      * Return Item by 'id'
      *
      * Method return null if item with that id is absent.
-     * Format of Item - Array("id"=>123, "fild1"=value1, ...)
+     * Format of Item - Array("id"=>123, "field1"=value1, ...)
      *
      * @param int|string $id PrimaryKey
      * @return array|null

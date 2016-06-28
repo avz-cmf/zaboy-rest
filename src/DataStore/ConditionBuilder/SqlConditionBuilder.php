@@ -58,9 +58,9 @@ class SqlConditionBuilder extends ConditionBuilderAbstract
     public function __construct(AdapterInterface $dbAdapter)
     {
         $this->db = $dbAdapter;
-        $this->emptyCondition = $this->prepareFildValue(1)
+        $this->emptyCondition = $this->prepareFieldValue(1)
                 . ' = '
-                . $this->prepareFildValue(1);
+                . $this->prepareFieldValue(1);
     }
 
     /**
@@ -68,9 +68,9 @@ class SqlConditionBuilder extends ConditionBuilderAbstract
      *
      * {@inheritdoc}
      */
-    public function prepareFildName($fildName)
+    public function prepareFieldName($fieldName)
     {
-        return $this->db->platform->quoteIdentifier($fildName);
+        return $this->db->platform->quoteIdentifier($fieldName);
     }
 
     /**
@@ -78,10 +78,10 @@ class SqlConditionBuilder extends ConditionBuilderAbstract
      *
      * {@inheritdoc}
      */
-    public function prepareFildValue($fildValue)
+    public function prepareFieldValue($fieldValue)
     {
-        $fildValue = parent::prepareFildValue($fildValue);
-        return $this->db->platform->quoteValue($fildValue);
+        $fieldValue = parent::prepareFieldValue($fieldValue);
+        return $this->db->platform->quoteValue($fieldValue);
     }
 
     /**
@@ -120,7 +120,7 @@ class SqlConditionBuilder extends ConditionBuilderAbstract
         }
         $value = $node->getValue() instanceof \DateTime ? $node->getValue()->format("Y-m-d") : $node->getValue();
         $strQuery = $this->literals['ScalarOperator'][$nodeName]['before']
-            . $this->prepareFildName($node->getField());
+            . $this->prepareFieldName($node->getField());
 
         if(is_null($value)){
             if($nodeName === 'eq'){
@@ -132,7 +132,7 @@ class SqlConditionBuilder extends ConditionBuilderAbstract
             }
         }else{
             $strQuery .= $this->literals['ScalarOperator'][$nodeName]['between']
-                . $this->prepareFildValue($value);
+                . $this->prepareFieldValue($value);
         }
 
         $strQuery .= $this->literals['ScalarOperator'][$nodeName]['after'];

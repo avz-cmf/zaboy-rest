@@ -59,34 +59,34 @@ class DbTableTest extends AbstractTest {
      * @param array $data
      * @return string
      */
-    protected function _getDbTableFilds($data) {
+    protected function _getDbTableFields($data) {
         $record = array_shift($data);
         reset($record);
         $firstKey = key($record);
         $firstValue = array_shift($record);
-        $dbTableFilds = '';
+        $dbTableFields = '';
         if (is_string($firstValue)) {
-            $dbTableFilds = '`' . $firstKey . '` CHAR(80) PRIMARY KEY';
+            $dbTableFields = '`' . $firstKey . '` CHAR(80) PRIMARY KEY';
         } elseif (is_integer($firstValue)) {
-            $dbTableFilds = '`' . $firstKey . '` INT NOT NULL AUTO_INCREMENT PRIMARY KEY';
+            $dbTableFields = '`' . $firstKey . '` INT NOT NULL AUTO_INCREMENT PRIMARY KEY';
         } else {
             trigger_error("Type of primary key must be int or string", E_USER_ERROR);
         }
         foreach ($record as $key => $value) {
             if (is_string($value)) {
-                $fildType = ', `' . $key . '` CHAR(80)';
+                $fieldType = ', `' . $key . '` CHAR(80)';
             } elseif (is_integer($value)) {
-                $fildType = ', `' . $key . '` INT';
+                $fieldType = ', `' . $key . '` INT';
             } elseif (is_float($value)) {
-                $fildType = ', `' . $key . '` DOUBLE PRECISION';
+                $fieldType = ', `' . $key . '` DOUBLE PRECISION';
             } elseif (is_null($value)){
-                $fildType = ', `' . $key . '` INT';
+                $fieldType = ', `' . $key . '` INT';
             }else {
-                trigger_error("Type of fild of array isn't supported.", E_USER_ERROR);
+                trigger_error("Type of field of array isn't supported.", E_USER_ERROR);
             }
-            $dbTableFilds = $dbTableFilds . $fildType;
+            $dbTableFields = $dbTableFields . $fieldType;
         }
-        return $dbTableFilds;
+        return $dbTableFields;
     }
     /**
      * This method init $this->object
@@ -98,8 +98,8 @@ class DbTableTest extends AbstractTest {
         $deleteStatement = $this->adapter->query($deleteStatementStr);
         $deleteStatement->execute();
         $createStr = "CREATE TABLE  " . $quoteTableName;
-        $filds = $this->_getDbTableFilds($data);
-        $createStatementStr = $createStr . '(' . $filds . ') ENGINE = InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci;';
+        $fields = $this->_getDbTableFields($data);
+        $createStatementStr = $createStr . '(' . $fields . ') ENGINE = InnoDB CHARACTER SET utf8 COLLATE utf8_general_ci;';
         $createStatement = $this->adapter->query($createStatementStr);
         $createStatement->execute();
     }

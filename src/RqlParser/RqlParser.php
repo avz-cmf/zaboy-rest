@@ -126,12 +126,12 @@ class RqlParser
     protected function makeSort(Query $query)
     {
         $sortNode = $query->getSort();
-        $sortFilds = !$sortNode ? [] : $sortNode->getFields();
-        if (empty($sortFilds)) {
+        $sortFields = !$sortNode ? [] : $sortNode->getFields();
+        if (empty($sortFields)) {
             return '';
         } else {
             $strSort = '';
-            foreach ($sortFilds as $key => $value) {
+            foreach ($sortFields as $key => $value) {
                 $prefix = $value == SortNode::SORT_DESC ? '-' : '+';
                 $strSort = $strSort . $prefix . $key . ',';
             }
@@ -141,14 +141,14 @@ class RqlParser
 
     protected function makeSelect(Query $query)
     {
-        $selectNode = $query->getSelect();  //What filds will be return
-        $selectFilds = !$selectNode ? [] : $selectNode->getFields();
-        if (empty($selectFilds)) {
+        $selectNode = $query->getSelect();  //What fields will be return
+        $selectFields = !$selectNode ? [] : $selectNode->getFields();
+        if (empty($selectFields)) {
             return '';
         } else {
             $selectString = '&select(';
-            foreach ($selectFilds as $fild) {
-                $selectString = $selectString . $fild . ',';
+            foreach ($selectFields as $field) {
+                $selectString = $selectString . $field . ',';
             }
             return rtrim($selectString, ',') . ')';
         }

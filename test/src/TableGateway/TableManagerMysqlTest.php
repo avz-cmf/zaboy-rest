@@ -39,14 +39,14 @@ class TableManagerMysqlTest extends \PHPUnit_Framework_TestCase
         TableManagerMysql::KEY_TABLES_CONFIGS => [
             'test_config_table' => [
                 'id' => [
-                    'fild_type' => 'Integer',
-                    'fild_params' => [
+                    'field_type' => 'Integer',
+                    'field_params' => [
                         'options' => ['autoincrement' => true]
                     ]
                 ],
                 'name' => [
-                    'fild_type' => 'Varchar',
-                    'fild_params' => [
+                    'field_type' => 'Varchar',
+                    'field_params' => [
                         'length' => 10,
                         'nullable' => true,
                         'default' => 'what?'
