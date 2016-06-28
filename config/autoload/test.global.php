@@ -39,7 +39,11 @@ return [
             'class' => 'zaboy\rest\DataStore\CsvIntId',
             'filename' => sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'testCsvIntId.tmp',
             'delimiter' => ';',
-        ]
+        ],
+        'testAspectAbstract' => [
+            'class' => 'zaboy\rest\DataStore\Aspect\AspectAbstract',
+            'dataStore' => 'testMemory',
+        ],
     ],
     'middleware' => [
         'test_MiddlewareWithNameAsResourceName' => [
@@ -50,5 +54,5 @@ return [
             'class' => 'zaboy\rest\Examples\Middleware\DataStoreMemory',
             'dataStore' => 'testMemory'
         ]
-    ]
+    ],
 ];

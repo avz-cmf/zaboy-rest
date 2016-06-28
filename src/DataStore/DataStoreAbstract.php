@@ -334,8 +334,8 @@ abstract class DataStoreAbstract implements DataStoresInterface
     /**
      * Iterator for Interface IteratorAggregate
      *
-     * @see IteratorAggregate
-     * @return Traversable
+     * @see \IteratorAggregate
+     * @return \Iterator
      */
     public function getIterator()
     {
