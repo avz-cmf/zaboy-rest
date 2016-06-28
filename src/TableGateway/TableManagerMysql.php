@@ -102,7 +102,7 @@ class TableManagerMysql
      * @var array
      */
     protected $fieldClasses = [
-        'Colum' => [ 'BigInteger', 'Boolean', 'Date', 'Datetime', 'Integer', 'Time', 'Timestamp'],
+        'Column' => [ 'BigInteger', 'Boolean', 'Date', 'Datetime', 'Integer', 'Time', 'Timestamp'],
         'LengthColumn' => [ 'Binary', 'Blob', 'Char', 'Text', 'Varbinary', 'Varchar'],
         'PrecisionColumn' => [ 'Decimal', 'Float', 'Floating']
     ];
@@ -112,7 +112,7 @@ class TableManagerMysql
      * @var array
      */
     protected $parameters = [
-        'Colum' => [ 'nullable' => false, 'default' => null, 'options' => []],
+        'Column' => [ 'nullable' => false, 'default' => null, 'options' => []],
         'LengthColumn' => [ 'length' => null, 'nullable' => false, 'default' => null, 'options' => []],
         'PrecisionColumn' => [ 'digits' => null, 'decimal' => null, 'nullable' => false, 'default' => null, 'options' => []]
     ];
@@ -273,8 +273,8 @@ class TableManagerMysql
         foreach ($tableConfigArray as $fieldName => $fieldData) {
             $fieldType = $fieldData[self::FILD_TYPE];
             switch (true) {
-                case in_array($fieldType, $this->fieldClasses['Colum']):
-                    $fieldParamsDefault = $this->parameters['Colum'];
+                case in_array($fieldType, $this->fieldClasses['Column']):
+                    $fieldParamsDefault = $this->parameters['Column'];
                     break;
                 case in_array($fieldType, $this->fieldClasses['LengthColumn']):
                     $fieldParamsDefault = $this->parameters['LengthColumn'];
