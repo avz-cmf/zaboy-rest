@@ -5,7 +5,19 @@ namespace zaboy\rest\DataStore\Aspect;
 use Xiag\Rql\Parser\Query;
 use zaboy\rest\DataStore\Interfaces\DataStoresInterface;
 
-class AspectDataStore implements DataStoresInterface
+/**
+ * Class AspectAbstract
+ *
+ * This is wrapper for any type of datastore which allows to do 'pre' and 'post' actions
+ * for each method of the DataStoresInterface.
+ *
+ * The class is NOT abstract. It is so named because in this view it does nothing and have no difference at work
+ * with usual datastore any type.
+ *
+ * @see zaboy\rest\DataStore\Aspect\Factory\AspectAbstractFactory
+ * @package zaboy\rest\DataStore\Aspect
+ */
+class AspectAbstract implements DataStoresInterface
 {
     /** @var DataStoresInterface $dataStore */
     protected $dataStore;
@@ -74,7 +86,7 @@ class AspectDataStore implements DataStoresInterface
     {
         $this->preCreate($itemData, $rewriteIfExist);
         $result = $this->dataStore->create($itemData, $rewriteIfExist);
-        $this->postCreate($result);
+        $this->postCreate($result, $itemData, $rewriteIfExist);
         return $result;
     }
 
@@ -84,8 +96,10 @@ class AspectDataStore implements DataStoresInterface
      * By default does nothing
      *
      * @param $result
+     * @param $itemData
+     * @param $rewriteIfExist
      */
-    protected function postCreate(&$result)
+    protected function postCreate(&$result, $itemData, $rewriteIfExist)
     {
     }
 
@@ -110,7 +124,7 @@ class AspectDataStore implements DataStoresInterface
     {
         $this->preUpdate($itemData, $createIfAbsent);
         $result = $this->dataStore->update($itemData, $createIfAbsent);
-        $this->postUpdate($result);
+        $this->postUpdate($result, $itemData, $createIfAbsent);
         return $result;
     }
 
@@ -120,8 +134,10 @@ class AspectDataStore implements DataStoresInterface
      * By default does nothing
      *
      * @param mixed $result
+     * @param $itemData
+     * @param $createIfAbsent
      */
-    protected function postUpdate(&$result)
+    protected function postUpdate(&$result, $itemData, $createIfAbsent)
     {
     }
 
@@ -145,7 +161,7 @@ class AspectDataStore implements DataStoresInterface
     {
         $this->preDelete($id);
         $result = $this->dataStore->delete($id);
-        $this->postDelete($result);
+        $this->postDelete($result, $id);
         return $result;
     }
 
@@ -155,8 +171,9 @@ class AspectDataStore implements DataStoresInterface
      * By default does nothing
      *
      * @param mixed $result
+     * @param $id
      */
-    protected function postDelete(&$result)
+    protected function postDelete(&$result, $id)
     {
     }
 
@@ -246,7 +263,7 @@ class AspectDataStore implements DataStoresInterface
     {
         $this->preRead($id);
         $result = $this->dataStore->read($id);
-        $this->postRead($result);
+        $this->postRead($result, $id);
         return $result;
     }
 
@@ -256,8 +273,9 @@ class AspectDataStore implements DataStoresInterface
      * By default does nothing
      *
      * @param mixed $result
+     * @param $id
      */
-    protected function postRead(&$result)
+    protected function postRead(&$result, $id)
     {
     }
 
@@ -281,7 +299,7 @@ class AspectDataStore implements DataStoresInterface
     {
         $this->preHas($id);
         $result = $this->dataStore->has($id);
-        $this->postHas($result);
+        $this->postHas($result, $id);
         return $result;
     }
 
@@ -291,8 +309,9 @@ class AspectDataStore implements DataStoresInterface
      * By default does nothing
      *
      * @param mixed $result
+     * @param $id
      */
-    protected function postHas(&$result)
+    protected function postHas(&$result, $id)
     {
     }
 
@@ -316,7 +335,7 @@ class AspectDataStore implements DataStoresInterface
     {
         $this->preQuery($query);
         $result = $this->dataStore->query($query);
-        $this->postQuery($result);
+        $this->postQuery($result, $query);
         return $result;
     }
 
@@ -326,8 +345,9 @@ class AspectDataStore implements DataStoresInterface
      * By default does nothing
      *
      * @param mixed $result
+     * @param Query $query
      */
-    protected function postQuery(&$result)
+    protected function postQuery(&$result, Query $query)
     {
     }
 

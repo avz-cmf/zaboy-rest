@@ -8,7 +8,7 @@ class AspectTest extends AbstractTest
 {
     protected function setUp() {
         parent::setUp();
-        $this->object = $this->container->get('testBaseClassOfAspect');
+        $this->object = $this->container->get('testAspectAbstract');
     }
 
     /**
