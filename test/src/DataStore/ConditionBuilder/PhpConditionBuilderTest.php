@@ -17,12 +17,12 @@ use zaboy\rest\DataStore\ConditionBuilder\PhpConditionBuilder;
 class PhpConditionBuilderTest extends ConditionBuilderTest
 {
 
-    public function providerPrepareFildName()
+    public function providerPrepareFieldName()
     {
         return array(
-            array('fildName', '$item[\'fildName\']'),
-            array('FildName', '$item[\'FildName\']'),
-            array('Fild_Name', '$item[\'Fild_Name\']'),
+            array('fieldName', '$item[\'fieldName\']'),
+            array('FieldName', '$item[\'FieldName\']'),
+            array('Field_Name', '$item[\'Field_Name\']'),
         );
     }
 
@@ -59,7 +59,7 @@ class PhpConditionBuilderTest extends ConditionBuilderTest
                     ->addQuery(new Node\Query\ScalarOperator\GeNode('f', 6))
                     ->addQuery(new Node\Query\ScalarOperator\LikeNode('g', new Glob('*abc?')))
                     ->getQuery()->getQuery(),
-                '(($item[\'a\']==1) && ($item[\'b\']!=2) && ($item[\'c\']<3) && ($item[\'d\']>4) && ($item[\'e\']<=5) && ($item[\'f\']>=6) && ( ($_fild = $item[\'g\']) !==\'\' && preg_match(\'/abc.$/i\', $_fild) ))'
+                '(($item[\'a\']==1) && ($item[\'b\']!=2) && ($item[\'c\']<3) && ($item[\'d\']>4) && ($item[\'e\']<=5) && ($item[\'f\']>=6) && ( ($_field = $item[\'g\']) !==\'\' && preg_match(\'/abc.$/i\', $_field) ))'
             ),
             array(
                 (new QueryBuilder())

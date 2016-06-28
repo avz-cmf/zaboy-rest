@@ -34,7 +34,7 @@ interface DataStoresInterface extends ReadInterface
      * If $itemData["id"] is not set or $itemData["id"]===null,
      * item will be insert with autoincrement PrimryKey.<br>
      *
-     * @param array $itemData associated array with or without PrimaryKey ["id" => 1, "fild name" = "foo" ]
+     * @param array $itemData associated array with or without PrimaryKey ["id" => 1, "field name" = "foo" ]
      * @param bool $rewriteIfExist can item be rewrited if same 'id' exist
      * @return array created item or method will throw exception
      */
@@ -44,7 +44,7 @@ interface DataStoresInterface extends ReadInterface
      * By default, update existing Item.
      *
      * If item with PrimaryKey == $itemData["id"] is existing in the store, item will update.
-     * A filds wich don't present in $itemData will  not be changed in item in the store.<br>
+     * A fields wich don't present in $itemData will  not be changed in item in the store.<br>
      * This method return updated item<br>
      * <br>
      * If $item["id"] isn't set - the method will throw exception.<br>
@@ -53,7 +53,7 @@ interface DataStoresInterface extends ReadInterface
      * but if $createIfAbsent = true item will be created and this method return inserted item<br>
      * <br>
      *
-     * @param array $itemData associated array with PrimaryKey ["id" => 1, "fild name" = "foo" ]
+     * @param array $itemData associated array with PrimaryKey ["id" => 1, "field name" = "foo" ]
      * @param bool $createIfAbsent can item be created if same 'id' is absent in the store
      * @return array updated or inserted item.
      */

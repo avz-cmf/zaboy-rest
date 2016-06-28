@@ -38,7 +38,7 @@ class PhpConditionBuilder extends ConditionBuilderAbstract
             'gt' => ['before' => '(', 'between' => '>', 'after' => ')'],
             'le' => ['before' => '(', 'between' => '<=', 'after' => ')'],
             'lt' => ['before' => '(', 'between' => '<', 'after' => ')'],
-            'like' => ['before' => '( ($_fild = ', 'between' => ") !=='' && preg_match(", 'after' => ', $_fild) )'],
+            'like' => ['before' => '( ($_field = ', 'between' => ") !=='' && preg_match(", 'after' => ', $_field) )'],
         ]
     ];
 
@@ -47,9 +47,9 @@ class PhpConditionBuilder extends ConditionBuilderAbstract
      *
      * {@inheritdoc}
      */
-    public function prepareFildName($fildName)
+    public function prepareFieldName($fieldName)
     {
-        return '$item[\'' . $fildName . '\']';
+        return '$item[\'' . $fieldName . '\']';
     }
 
     /**
@@ -57,22 +57,22 @@ class PhpConditionBuilder extends ConditionBuilderAbstract
      *
      * {@inheritdoc}
      */
-    public function prepareFildValue($fildValue)
+    public function prepareFieldValue($fieldValue)
     {
-        $fildValue = parent::prepareFildValue($fildValue);
+        $fieldValue = parent::prepareFieldValue($fieldValue);
         switch (true) {
-            case is_bool($fildValue):
-                $fildValue = (bool) $fildValue ? TRUE : FALSE;
-                return $fildValue;
-            case is_numeric($fildValue):
-                return $fildValue;
-            case is_null($fildValue):
+            case is_bool($fieldValue):
+                $fieldValue = (bool) $fieldValue ? TRUE : FALSE;
+                return $fieldValue;
+            case is_numeric($fieldValue):
+                return $fieldValue;
+            case is_null($fieldValue):
                 return 'null';
-            case is_string($fildValue):
-                return "'" . $fildValue . "'";
+            case is_string($fieldValue):
+                return "'" . $fieldValue . "'";
             default:
                 throw new DataStoreException(
-                'Type ' . gettype($fildValue) . ' is not supported'
+                'Type ' . gettype($fieldValue) . ' is not supported'
                 );
         }
     }

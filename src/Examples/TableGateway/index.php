@@ -16,14 +16,14 @@ $adapter = $container->get('db');
 $tableManager = new TableManagerMySql($adapter, $tableName);
 $tableData = [
     'id' => [
-        'fild_type' => 'Integer',
-        'fild_params' => [
+        'field_type' => 'Integer',
+        'field_params' => [
             'options' => ['autoincrement' => true]
         ]
     ],
     'name' => [
-        'fild_type' => 'Varchar',
-        'fild_params' => [
+        'field_type' => 'Varchar',
+        'field_params' => [
             'length' => 10,
             'nullable' => true,
             'default' => 'what?'

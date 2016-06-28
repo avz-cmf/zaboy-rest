@@ -16,12 +16,12 @@ use zaboy\rest\DataStore\ConditionBuilder\RqlConditionBuilder;
 class RqlConditionBuilderTest extends ConditionBuilderTest
 {
 
-    public function providerPrepareFildName()
+    public function providerPrepareFieldName()
     {
         return array(
-            array('fildName', 'fildName'),
-            array('FildName', 'FildName'),
-            array('Fild_Name', 'Fild_Name'),
+            array('fieldName', 'fieldName'),
+            array('FieldName', 'FieldName'),
+            array('Field_Name', 'Field_Name'),
         );
     }
 

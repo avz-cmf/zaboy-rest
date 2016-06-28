@@ -523,7 +523,7 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
         );
     }
 
-    public function testQuery_fildsCombo()
+    public function testQuery_fieldsCombo()
     {
         $this->_initObject();
         $query = new Query();

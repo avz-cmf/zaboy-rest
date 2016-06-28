@@ -106,40 +106,40 @@ abstract class ConditionBuilderAbstract
         $value = $node->getValue() instanceof \DateTime ? $node->getValue()->format("Y-m-d") : $node->getValue();
 
         $strQuery = $this->literals['ScalarOperator'][$nodeName]['before']
-            . $this->prepareFildName($node->getField())
+            . $this->prepareFieldName($node->getField())
             . $this->literals['ScalarOperator'][$nodeName]['between']
-            . $this->prepareFildValue($value)
+            . $this->prepareFieldValue($value)
             . $this->literals['ScalarOperator'][$nodeName]['after'];
         return $strQuery;
     }
 
     /**
-     * Prepare fild name for using in condition
+     * Prepare field name for using in condition
      *
      * It may be quoting for example
      *
-     * @param string $fildName
+     * @param string $fieldName
      * @return string
      */
-    public function prepareFildName($fildName)
+    public function prepareFieldName($fieldName)
     {
-        return $fildName;
+        return $fieldName;
     }
 
     /**
-     * Prepare fild value for using in condition
+     * Prepare field value for using in condition
      *
      * It may be quoting for example
      *
-     * @param string $fildValue
+     * @param string $fieldValue
      * @return string
      */
-    public function prepareFildValue($fildValue)
+    public function prepareFieldValue($fieldValue)
     {
-        if (is_a($fildValue, 'Xiag\Rql\Parser\DataType\Glob', true)) {
-            return $this->getValueFromGlob($fildValue);
+        if (is_a($fieldValue, 'Xiag\Rql\Parser\DataType\Glob', true)) {
+            return $this->getValueFromGlob($fieldValue);
         } else {
-            return $fildValue;
+            return $fieldValue;
         }
     }
 
@@ -209,12 +209,12 @@ abstract class ConditionBuilderAbstract
         
         $arrayValues = $node->getValues();
         $strQuery = $this->literals['ArrayOperator'][$nodeName]['before']
-                    . $this->prepareFildName($node->getField())
+                    . $this->prepareFieldName($node->getField())
                     . $this->literals['ArrayOperator'][$nodeName]['between'];
         
         foreach ($arrayValues as $value) {
             $strQuery = $strQuery
-                . $this->prepareFildValue($value)
+                . $this->prepareFieldValue($value)
                 . $this->literals['ArrayOperator'][$nodeName]['delimiter'];
         }
         $strQuery = rtrim($strQuery, $this->literals['ArrayOperator'][$nodeName]['delimiter']);

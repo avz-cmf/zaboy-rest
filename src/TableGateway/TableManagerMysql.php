@@ -26,14 +26,14 @@ use Zend\Db\Metadata\Source;
  *  $tableManager = new TableManagerMysql($adapter);
  *  $tableData = [
  *      'id' => [
- *          'fild_type' => 'Integer',
- *          'fild_params' => [
+ *          'field_type' => 'Integer',
+ *          'field_params' => [
  *          'options' => ['autoincrement' => true]
  *          ]
  *      ],
  *      'name' => [
- *          'fild_type' => 'Varchar',
- *          'fild_params' => [
+ *          'field_type' => 'Varchar',
+ *          'field_params' => [
  *              'length' => 10,
  *              'nullable' => true,
  *              'default' => 'what?'
@@ -46,18 +46,18 @@ use Zend\Db\Metadata\Source;
  * As you can see, array $tableData has 3 keys and next structure:
  * <code>
  *  $tableData = [
- *      'FildName' => [
- *          'fild_type' => 'Integer',
- *          'fild_params' => [
+ *      'FieldName' => [
+ *          'field_type' => 'Integer',
+ *          'field_params' => [
  *          'options' => ['autoincrement' => true]
  *          ]
  *      ],
- *      'NextFildName' => [
+ *      'NextFieldName' => [
  *  ...
  * </code>
  *
- * About value of key <b>'fild_type'</b> - see {@link TableManagerMysql::$fildClasses}<br>
- * About value of key <b>'fild_params'</b> - see {@link TableManagerMysql::$parameters}<br>
+ * About value of key <b>'field_type'</b> - see {@link TableManagerMysql::$fieldClasses}<br>
+ * About value of key <b>'field_params'</b> - see {@link TableManagerMysql::$parameters}<br>
  *
  * The <b>'options'</b> may be:
  * <ul>
@@ -79,8 +79,8 @@ use Zend\Db\Metadata\Source;
 class TableManagerMysql
 {
 
-    const FILD_TYPE = 'fild_type';
-    const FILD_PARAMS = 'fild_params';
+    const FILD_TYPE = 'field_type';
+    const FILD_PARAMS = 'field_params';
     const KEY_IN_CONFIG = 'tableManagerMysql';
     const KEY_TABLES_CONFIGS = 'tablesConfigs';
     const KEY_AUTOCREATE_TABLES = 'autocreateTables';
@@ -101,7 +101,7 @@ class TableManagerMysql
      *
      * @var array
      */
-    protected $fildClasses = [
+    protected $fieldClasses = [
         'Colum' => [ 'BigInteger', 'Boolean', 'Date', 'Datetime', 'Integer', 'Time', 'Timestamp'],
         'LengthColumn' => [ 'Binary', 'Blob', 'Char', 'Text', 'Varbinary', 'Varchar'],
         'PrecisionColumn' => [ 'Decimal', 'Float', 'Floating']
@@ -270,34 +270,34 @@ class TableManagerMysql
     {
         $tableConfigArray = $this->getTableConfig($tableConfig);
         $table = new CreateTable($tableName);
-        foreach ($tableConfigArray as $fildName => $fildData) {
-            $fildType = $fildData[self::FILD_TYPE];
+        foreach ($tableConfigArray as $fieldName => $fieldData) {
+            $fieldType = $fieldData[self::FILD_TYPE];
             switch (true) {
-                case in_array($fildType, $this->fildClasses['Colum']):
-                    $fildParamsDefault = $this->parameters['Colum'];
+                case in_array($fieldType, $this->fieldClasses['Colum']):
+                    $fieldParamsDefault = $this->parameters['Colum'];
                     break;
-                case in_array($fildType, $this->fildClasses['LengthColumn']):
-                    $fildParamsDefault = $this->parameters['LengthColumn'];
+                case in_array($fieldType, $this->fieldClasses['LengthColumn']):
+                    $fieldParamsDefault = $this->parameters['LengthColumn'];
                     break;
-                case in_array($fildType, $this->fildClasses['PrecisionColumn']):
-                    $fildParamsDefault = $this->parameters['PrecisionColumn'];
+                case in_array($fieldType, $this->fieldClasses['PrecisionColumn']):
+                    $fieldParamsDefault = $this->parameters['PrecisionColumn'];
                     break;
                 default:
-                    throw new RestException('Unknown fild type:' . $fildType);
+                    throw new RestException('Unknown field type:' . $fieldType);
             }
-            $fildParams = [];
-            foreach ($fildParamsDefault as $key => $value) {
-                if (key_exists($key, $fildData[self::FILD_PARAMS])) {
-                    $fildParams[] = $fildData[self::FILD_PARAMS][$key];
+            $fieldParams = [];
+            foreach ($fieldParamsDefault as $key => $value) {
+                if (key_exists($key, $fieldData[self::FILD_PARAMS])) {
+                    $fieldParams[] = $fieldData[self::FILD_PARAMS][$key];
                 } else {
-                    $fildParams[] = $value;
+                    $fieldParams[] = $value;
                 }
             }
-            array_unshift($fildParams, $fildName);
-            $fildClass = '\\Zend\\Db\\Sql\\Ddl\\Column\\' . $fildType;
-            $reflectionObject = new \ReflectionClass($fildClass);
-            $fildInstance = $reflectionObject->newInstanceArgs($fildParams); // it' like new class($callParamsArray[1], $callParamsArray[2]...)
-            $table->addColumn($fildInstance);
+            array_unshift($fieldParams, $fieldName);
+            $fieldClass = '\\Zend\\Db\\Sql\\Ddl\\Column\\' . $fieldType;
+            $reflectionObject = new \ReflectionClass($fieldClass);
+            $fieldInstance = $reflectionObject->newInstanceArgs($fieldParams); // it' like new class($callParamsArray[1], $callParamsArray[2]...)
+            $table->addColumn($fieldInstance);
         }
 
         $table->addConstraint(new Constraint\PrimaryKey('id'));
