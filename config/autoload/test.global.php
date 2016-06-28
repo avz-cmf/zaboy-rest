@@ -50,5 +50,11 @@ return [
             'class' => 'zaboy\rest\Examples\Middleware\DataStoreMemory',
             'dataStore' => 'testMemory'
         ]
-    ]
+    ],
+    'aspects' => [
+        'testBaseClassOfAspect' => [
+            'class' => 'zaboy\rest\DataStore\Aspect\AspectDataStore',
+            'dataStore' => 'testMemory',
+        ],
+    ],
 ];
