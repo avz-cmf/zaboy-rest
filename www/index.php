@@ -7,7 +7,7 @@ chdir(dirname(__DIR__));
 // Setup autoloading
 require 'vendor/autoload.php';
 
-use Zend\Stratigility\MiddlewarePipe;
+use zaboy\rest\Pipe\MiddlewarePipeOptions;
 use Zend\Diactoros\Server;
 use zaboy\rest\Pipe\Factory\RestRqlFactory;
 
@@ -29,7 +29,7 @@ $container = include 'config/container.php';
 $tableName = 'test_res_http'; //'index_php_table';
 //include 'createTable.php';
 
-$app = new MiddlewarePipe();
+$app = new MiddlewarePipeOptions([]); //'env' => 'develop'
 
 $RestRqlFactory = new RestRqlFactory();
 $rest = $RestRqlFactory($container, '');
