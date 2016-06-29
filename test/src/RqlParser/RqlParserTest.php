@@ -7,7 +7,7 @@
  * Time: 17:01
  */
 
-namespace zaboy\test\res\RqlParser;
+namespace zaboy\test\rest\RqlParser;
 
 use PHPUnit_Framework_TestCase;
 use Xiag\Rql\Parser\Node\LimitNode;

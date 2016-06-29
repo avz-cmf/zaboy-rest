@@ -5,7 +5,7 @@
  * @copyright  Zaboychenko Andrey
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  */
-namespace zaboy\test\res\DataStore;
+namespace zaboy\test\rest\DataStore;
 
 use Zend\Db\Adapter\Adapter;
 use  Zend\Db\TableGateway\TableGateway;

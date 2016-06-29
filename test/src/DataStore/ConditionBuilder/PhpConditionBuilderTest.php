@@ -7,7 +7,7 @@
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  */
 
-namespace zaboy\test\res\DataStore\ConditionBuilder;
+namespace zaboy\test\rest\DataStore\ConditionBuilder;
 
 use Xiag\Rql\Parser\DataType\Glob;
 use Xiag\Rql\Parser\Node;

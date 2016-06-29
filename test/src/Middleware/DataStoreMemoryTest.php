@@ -1,6 +1,6 @@
 <?php
 
-namespace zaboy\test\res\Middleware;
+namespace zaboy\test\rest\Middleware;
 
 use zaboy\rest\Examples\Middleware\DataStoreMemory;
 use Zend\Diactoros\Response;

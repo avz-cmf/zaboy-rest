@@ -7,9 +7,9 @@
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  */
 
-namespace zaboy\test\res\DataStore;
+namespace zaboy\test\rest\DataStore;
 
-use zaboy\test\res\DataStore\AbstractTest;
+use zaboy\test\rest\DataStore\AbstractTest;
 use Zend\Db\TableGateway\TableGateway;
 
 /**

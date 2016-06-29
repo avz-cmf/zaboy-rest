@@ -2,7 +2,7 @@
 
 namespace zaboy\test\rest\DataStore\Aspect;
 
-use zaboy\test\res\DataStore\AbstractTest;
+use zaboy\test\rest\DataStore\AbstractTest;
 
 class AspectTest extends AbstractTest
 {

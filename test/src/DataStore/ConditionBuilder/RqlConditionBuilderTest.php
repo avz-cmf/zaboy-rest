@@ -6,7 +6,7 @@
  * Time: 12:59
  */
 
-namespace zaboy\test\res\DataStore\ConditionBuilder;
+namespace zaboy\test\rest\DataStore\ConditionBuilder;
 
 use Xiag\Rql\Parser\DataType\Glob;
 use Xiag\Rql\Parser\Node;
