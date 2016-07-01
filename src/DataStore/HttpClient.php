@@ -207,7 +207,7 @@ class HttpClient extends DataStoreAbstract
     {
         return parent::count();
     }
-    
+
     /**
      *
      * @param string  'GET' 'HEAD' 'POST' 'PUT' 'DELETE';
@@ -219,7 +219,7 @@ class HttpClient extends DataStoreAbstract
     protected function initHttpClient($method, Query $query = null, $id = null, $ifMatch = false)
     {
 
-        $url = !$id ? $this->url : $this->url . '/' . $id;
+        $url = !$id ? $this->url : $this->url . '/' . $this->encodeString($id);
         if (isset($query)) {
             $rqlString = RqlParser::rqlEncode($query);
             $url = $url . '?' . $rqlString;
@@ -264,6 +264,16 @@ class HttpClient extends DataStoreAbstract
             );
         }
         return $result;
+    }
+
+    protected function encodeString($value)
+    {
+        return strtr(rawurlencode($value), [
+            '-' => '%2D',
+            '_' => '%5F',
+            '.' => '%2E',
+            '~' => '%7E',
+        ]);
     }
 
 }

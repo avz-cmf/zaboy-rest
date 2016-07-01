@@ -11,6 +11,10 @@ use zaboy\rest\Pipe\MiddlewarePipeOptions;
 use Zend\Diactoros\Server;
 use zaboy\rest\Pipe\Factory\RestRqlFactory;
 
+//echo urlencode('.');
+//echo '!*****************';
+
+
 /**
   use ReputationVIP\QueueClient\QueueClient;
   use ReputationVIP\QueueClient\Adapter\FileAdapter;
