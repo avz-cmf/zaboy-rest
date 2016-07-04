@@ -27,7 +27,7 @@ class DataStoreIterator implements \Iterator
      * pointer for current item in iteration
      *
      * @see Iterator
-     * @var mix $index
+     * @var mixed $index
      */
     protected $index = null;
 

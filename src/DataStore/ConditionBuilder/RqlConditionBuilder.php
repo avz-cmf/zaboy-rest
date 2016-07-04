@@ -65,13 +65,13 @@ class RqlConditionBuilder extends ConditionBuilderAbstract
      *
      * {@inheritdoc}
      */
-    public function prepareFildValue($fildValue)
+    public function prepareFieldValue($fieldValue)
     {
         $constStar = 'starhjc7vjHg6jd8mv8hcy75GFt0c67cnbv74FegxtEDJkcucG64frblmkb';
         $constQuestion = 'questionhjc7vjHg6jd8mv8hcy75GFt0c67cnbv74FegxtEDJkcucG64frblmkb';
 
-        $regexRqlDecoded = parent::prepareFildValue($fildValue);
-        if (is_null($fildValue)) {
+        $regexRqlDecoded = parent::prepareFieldValue($fieldValue);
+        if (is_null($fieldValue)) {
             $regexRqlEnecoded = 'null()';
         } else {
             $regexRqlEnecoded = self::encodeString($regexRqlDecoded);

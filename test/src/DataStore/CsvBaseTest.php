@@ -1,8 +1,8 @@
 <?php
 
-namespace zaboy\test\res\DataStore;
+namespace zaboy\test\rest\DataStore;
 
-use zaboy\test\res\DataStore\AbstractTest;
+use zaboy\test\rest\DataStore\AbstractTest;
 
 class CsvBaseTest extends AbstractTest
 {

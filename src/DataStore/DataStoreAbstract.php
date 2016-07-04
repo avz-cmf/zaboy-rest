@@ -20,7 +20,7 @@ use zaboy\rest\RqlParser\AggregateFunctionNode;
 /**
  * Abstract class for DataStores
  *
- * @todo make support null in eq(fildname, null) and ne(fildname, null)
+ * @todo make support null in eq(fieldname, null) and ne(fieldname, null)
  * @todo JsonSerializable https://github.com/zendframework/zend-diactoros/blob/master/doc/book/custom-responses.md#json-responses
  * @todo Adapter paras to config for tests
  * @todo Excel client
@@ -152,8 +152,8 @@ abstract class DataStoreAbstract implements DataStoresInterface
             return $data;
         }
         $nextCompareLevel = '';
-        $sortFilds = $query->getSort()->getFields();
-        foreach ($sortFilds as $ordKey => $ordVal) {
+        $sortFields = $query->getSort()->getFields();
+        foreach ($sortFields as $ordKey => $ordVal) {
             if ((int)$ordVal <> SortNode::SORT_ASC && (int)$ordVal <> SortNode::SORT_DESC) {
                 throw new DataStoreException('Invalid condition: ' . $ordVal);
             }
@@ -334,8 +334,8 @@ abstract class DataStoreAbstract implements DataStoresInterface
     /**
      * Iterator for Interface IteratorAggregate
      *
-     * @see IteratorAggregate
-     * @return Traversable
+     * @see \IteratorAggregate
+     * @return \Iterator
      */
     public function getIterator()
     {

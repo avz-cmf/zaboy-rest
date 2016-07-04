@@ -46,16 +46,16 @@ class ResourceResolver implements MiddlewareInterface
     {
         if (null !== $request->getAttribute("resourceName")) {
             //Router have set "resourceName". It work in expressive.
-            $id = empty($request->getAttribute("id")) ? null : $request->getAttribute("id");
+            $id = empty($request->getAttribute("id")) ? null : $this->decodeString($request->getAttribute("id"));
             $request = $request->withAttribute('Primary-Key-Value', $id);
         } else {
             //"resourceName" isn't set. It work in stratigility.
             $path = $request->getUri()->getPath();
-            preg_match("/^[\/]?([-_A-Za-z0-9]+)([\/]([-_A-Za-z0-9]+))?/", $path, $matches);
+            preg_match("/^[\/]?([-_A-Za-z0-9]+)([\/]([-%_A-Za-z0-9]+))?/", $path, $matches);
             $resourceName = isset($matches[1]) ? $matches[1] : null;
             $request = $request->withAttribute('Resource-Name', $resourceName);
 
-            $id = isset($matches[3]) ? $matches[3] : null;
+            $id = isset($matches[3]) ? $this->decodeString($matches[3]) : null;
             $request = $request->withAttribute('Primary-Key-Value', $id);
         }
 
@@ -63,6 +63,16 @@ class ResourceResolver implements MiddlewareInterface
             return $next($request, $response);
         }
         return $response;
+    }
+
+    private function decodeString($value)
+    {
+        return rawurldecode(strtr($value, [
+            '%2D' => '-',
+            '%5F' => '_',
+            '%2E' => '.',
+            '%7E' => '~',
+        ]));
     }
 
 }
