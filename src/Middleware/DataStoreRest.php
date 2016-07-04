@@ -10,11 +10,13 @@
 
 namespace zaboy\rest\Middleware;
 
-use Xiag\Rql\Parser\Node\LimitNode;
-use Xiag\Rql\Parser\Query;
-use zaboy\rest\Middleware;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Xiag\Rql\Parser\Node\LimitNode;
+use Xiag\Rql\Parser\Query;
+use zaboy\rest\DataStore\DataStoreException;
+use zaboy\rest\DataStore\Interfaces\RefreshableInterface;
+use zaboy\rest\Middleware;
 use zaboy\rest\RestException;
 use zaboy\rest\RqlParser\AggregateFunctionNode;
 use zaboy\rest\RqlParser\XSelectNode;
@@ -71,16 +73,19 @@ class DataStoreRest extends Middleware\DataStoreAbstract
                     break;
                 case $httpMethod === 'DELETE' && !($isPrimaryKeyValue):
                     throw new \zaboy\rest\RestException('DELETE without Primary Key');
-                default :
+                case $httpMethod === "PATCH":
+                    $response = $this->methodRefresh();
+                    break;
+                default:
                     throw new \zaboy\rest\RestException(
-                    'Method must be GET, PUT, POST or DELETE. '
-                    . $request->getMethod() . ' given'
+                        'Method must be GET, PUT, POST or DELETE. '
+                        . $request->getMethod() . ' given'
                     );
             }
         } catch (\zaboy\rest\RestException $ex) {
             return new JsonResponse([
                 $ex->getMessage()
-                    ], 500);
+            ], 500);
         }
 
         if ($next) {
@@ -299,6 +304,16 @@ class DataStoreRest extends Middleware\DataStoreAbstract
         $this->request = $request->withAttribute('Response-Body', $items);
 
         return $response;
+    }
+
+    public function methodRefresh(ServerRequestInterface $request, ResponseInterface $response)
+    {
+        if ($this->dataStore instanceof RefreshableInterface) {
+            $this->dataStore->refresh();
+            return $response->withStatus(200);
+        } else {
+            throw new DataStoreException("DataStore is not implement RefreshableInterface");
+        }
     }
 
 }

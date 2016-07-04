@@ -24,7 +24,7 @@ return [
         'testHttpClient' => [
             'class' => 'zaboy\rest\DataStore\HttpClient',
             'tableName' => 'test_res_http',
-            'url' => 'http://localhost:8080/api/rest/test_res_http',
+            'url' => 'http://localhost:9090/api/rest/test_res_http',
             'options' => ['timeout' => 30]
         ],
         'testMemory' => [
