@@ -24,7 +24,7 @@ return [
         'testHttpClient' => [
             'class' => 'zaboy\rest\DataStore\HttpClient',
             'tableName' => 'test_res_http',
-            'url' => 'http://zaboy-rest.loc/api/rest/test_res_http',
+            'url' => 'http://localhost:8080/api/rest/test_res_http',
             'options' => ['timeout' => 30]
         ],
         'testMemory' => [
@@ -44,6 +44,18 @@ return [
             'class' => 'zaboy\rest\DataStore\Aspect\AspectAbstract',
             'dataStore' => 'testMemory',
         ],
+        
+        'testDataSourceDb' => [
+            'class' => 'zaboy\rest\DataSource\DbTableDataSource',
+            //'class' => 'zaboy\rest\DataStore\DbTable',
+            'tableName' => 'test_res_http'
+        ],
+        
+        'testCacheable' => [
+            'class' => 'zaboy\rest\DataStore\Cacheable',
+            'dataSource' => 'testDataSourceDb',
+            'cacheable' => 'testDbTable'
+        ]
     ],
     'middleware' => [
         'test_MiddlewareWithNameAsResourceName' => [

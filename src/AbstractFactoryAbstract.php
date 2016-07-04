@@ -11,6 +11,7 @@ namespace zaboy\rest;
 
 //use Zend\ServiceManager\Factory\AbstractFactoryInterface;
 //uncomment it ^^ for Zend\ServiceManager V3
+use zaboy\rest\DataStore\Interfaces\DataStoresInterface;
 use Zend\ServiceManager\AbstractFactoryInterface;
 //comment it ^^ for Zend\ServiceManager V3
 use Zend\ServiceManager\ServiceLocatorInterface;
@@ -49,7 +50,7 @@ abstract class AbstractFactoryAbstract implements AbstractFactoryInterface
      * 'use Zend\ServiceManager\AbstractFactoryInterface;' for V2 to
      * 'use Zend\ServiceManager\Factory\AbstractFactoryInterface;' for V3
      *
-     * @param  Interop\Container\ContainerInterface $container
+     * @param  ContainerInterface $container
      * @param  string $requestedName
      * @return bool
      */
@@ -61,10 +62,10 @@ abstract class AbstractFactoryAbstract implements AbstractFactoryInterface
      * 'use Zend\ServiceManager\AbstractFactoryInterface;' for V2 to
      * 'use Zend\ServiceManager\Factory\AbstractFactoryInterface;' for V3
      *
-     * @param  Interop\Container\ContainerInterface $container
+     * @param  ContainerInterface $container
      * @param  string $requestedName
      * @param  array $options
-     * @return \DataStores\Interfaces\DataStoresInterface
+     * @return DataStoresInterface
      */
     abstract public function __invoke(ContainerInterface $container, $requestedName, array $options = null);
 

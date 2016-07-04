@@ -1,10 +1,10 @@
 <phpunit
         bootstrap="./test/bootstrap.php"
-        testsuite="res"
+        testsuite="rest"
 >
 
     <testsuites>
-        <testsuite name="res">
+        <testsuite name="rest">
             <directory>./test</directory>
         </testsuite>
     </testsuites>
