@@ -74,7 +74,7 @@ class DataStoreRest extends Middleware\DataStoreAbstract
                 case $httpMethod === 'DELETE' && !($isPrimaryKeyValue):
                     throw new \zaboy\rest\RestException('DELETE without Primary Key');
                 case $httpMethod === "PATCH":
-                    $response = $this->methodRefresh();
+                    $response = $this->methodRefresh($request, $response);
                     break;
                 default:
                     throw new \zaboy\rest\RestException(
