@@ -17,10 +17,10 @@ class Cacheable implements DataStoresInterface, RefreshableInterface
 {
 
     /** @var  DataStoresInterface */
-    private $cashStore;
+    protected $cashStore;
 
     /** @var  DataSourceInterface */
-    private $dataSource;
+    protected $dataSource;
 
     public function __construct(DataSourceInterface $dataSource, DataStoresInterface $cashStore = null)
     {
@@ -102,7 +102,7 @@ class Cacheable implements DataStoresInterface, RefreshableInterface
                 $this->cashStore->create($item, true);
             }
         } else {
-            throw new \Exception("Not return data by DataSource");
+            throw new DataStoreException("Not return data by DataSource");
         }
 
     }
@@ -138,14 +138,14 @@ class Cacheable implements DataStoresInterface, RefreshableInterface
      * @param array $itemData associated array with or without PrimaryKey
      * @param bool $rewriteIfExist
      * @return int|null|string "id" for created item or null if item wasn't created
-     * @throws \Exception
+     * @throws DataStoreException
      */
     public function create($itemData, $rewriteIfExist = false)
     {
         if (method_exists($this->dataSource, "create")) {
             return $this->dataSource->create($itemData, $rewriteIfExist);
         } else {
-            throw new \Exception("Refreshable don't haw method create");
+            throw new DataStoreException("Refreshable don't haw method create");
         }
     }
 
@@ -165,14 +165,14 @@ class Cacheable implements DataStoresInterface, RefreshableInterface
      * @param array $itemData associated array with PrimaryKey
      * @param bool $createIfAbsent
      * @return array updated item or inserted item
-     * @throws \Exception
+     * @throws DataStoreException
      */
     public function update($itemData, $createIfAbsent = false)
     {
         if (method_exists($this->dataSource, "update")) {
             return $this->dataSource->update($itemData, $createIfAbsent);
         } else {
-            throw new \Exception("Refreshable don't haw method delete");
+            throw new DataStoreException("Refreshable don't haw method delete");
         }
     }
 
@@ -181,29 +181,44 @@ class Cacheable implements DataStoresInterface, RefreshableInterface
      *
      * @param int|string $id PrimaryKey
      * @return int number of deleted items: 0 , 1 or null if object doesn't support it
-     * @throws \Exception
+     * @throws DataStoreException
      */
-    public function delete($id)
+    public function publicdelete($id)
     {
         if (method_exists($this->dataSource, "delete")) {
             return $this->dataSource->delete($id);
         } else {
-            throw new \Exception("Refreshable don't haw method delete");
+            throw new DataStoreException("Refreshable don't haw method delete");
         }
     }
 
     /**
      * Delete all Items.
      * @return int number of deleted items or null if object doesn't support it
-     * @throws \Exception
+     * @throws DataStoreException
      */
     public function deleteAll()
     {
         if (method_exists($this->dataSource, "deleteAll")) {
             return $this->dataSource->deleteAll();
         } else {
-            throw new \Exception("Refreshable don't haw method deleteAll");
+            throw new DataStoreException("Refreshable don't haw method deleteAll");
         }
     }
 
+    /**
+     * Delete Item by 'id'. Method do nothing if item with that id is absent.
+     *
+     * @param int|string $id PrimaryKey
+     * @return array from elements or null is not support
+     * @throws DataStoreException
+     */
+    public function delete($id)
+    {
+        if (method_exists($this->dataSource, "delete")) {
+            return $this->dataSource->delete($id);
+        } else {
+            throw new DataStoreException("Refreshable don't haw method deleteAll");
+        }
+    }
 }
