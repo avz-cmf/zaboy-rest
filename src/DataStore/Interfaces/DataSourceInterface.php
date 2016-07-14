@@ -14,5 +14,5 @@ interface DataSourceInterface
     /**
      * @return array Return data of DataSource
      */
-    public function getData();
+    public function getAll();
 }

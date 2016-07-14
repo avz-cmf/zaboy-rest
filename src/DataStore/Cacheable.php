@@ -95,7 +95,7 @@ class Cacheable implements DataStoresInterface, RefreshableInterface
     public function refresh()
     {
         $this->cashStore->deleteAll();
-        $all = $this->dataSource->getData();
+        $all = $this->dataSource->getAll();
 
         if ($all instanceof \Traversable or is_array($all)) {
             foreach ($all as $item) {

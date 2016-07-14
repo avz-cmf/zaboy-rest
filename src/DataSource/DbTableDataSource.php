@@ -18,7 +18,7 @@ class DbTableDataSource extends DbTable implements DataSourceInterface
     /**
      * @return array Return data of DataSource
      */
-    public function getData()
+    public function getAll()
     {
         return $this->query(new Query());
     }
