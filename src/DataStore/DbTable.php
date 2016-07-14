@@ -202,9 +202,9 @@ class DbTable extends DataStoreAbstract
             $rowset = $adapter->query($queryStr, array($id));
             $isExist = !is_null($rowset->current());
             switch (true) {
-                case!$isExist && !$createIfAbsent:
+                case !$isExist && !$createIfAbsent:
                     throw new DataStoreException($errorMsg);
-                case!$isExist && $createIfAbsent:
+                case !$isExist && $createIfAbsent:
                     $this->dbTable->insert($itemData);
                     $result = $itemData;
                     break;
@@ -309,5 +309,4 @@ class DbTable extends DataStoreAbstract
         }
         return $keys;
     }
-
 }

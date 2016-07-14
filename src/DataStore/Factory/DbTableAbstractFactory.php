@@ -9,9 +9,11 @@
 
 namespace zaboy\rest\DataStore\Factory;
 
-use zaboy\rest\AbstractFactoryAbstract;
-use Zend\Db\TableGateway\TableGateway;
 use Interop\Container\ContainerInterface;
+use zaboy\rest\AbstractFactoryAbstract;
+use zaboy\rest\DataStore\DataStoreException;
+use zaboy\rest\DataStore\Interfaces\DataStoresInterface;
+use Zend\Db\TableGateway\TableGateway;
 
 /**
  * Create and return an instance of the DataStore which based on DbTable
@@ -20,11 +22,11 @@ use Interop\Container\ContainerInterface;
  *
  * The configuration can contain:
  * <code>
- * 	'db' => [
- * 		'driver' => 'Pdo_Mysql',
- * 		'host' => 'localhost',
- * 		'database' => '',
- * 	]
+ *    'db' => [
+ *        'driver' => 'Pdo_Mysql',
+ *        'host' => 'localhost',
+ *        'database' => '',
+ *    ]
  * 'DataStore' => [
  *
  *     'DbTable' => [
@@ -52,7 +54,7 @@ class DbTableAbstractFactory extends AbstractFactoryAbstract
      * 'use Zend\ServiceManager\AbstractFactoryInterface;' for V2 to
      * 'use Zend\ServiceManager\Factory\AbstractFactoryInterface;' for V3
      *
-     * @param  Interop\Container\ContainerInterface $container
+     * @param  ContainerInterface $container
      * @param  string $requestedName
      * @return bool
      */
@@ -63,7 +65,9 @@ class DbTableAbstractFactory extends AbstractFactoryAbstract
             return false;
         }
         $requestedClassName = $config['dataStore'][$requestedName]['class'];
-        return is_a($requestedClassName, 'zaboy\rest\DataStore\DbTable', true);
+        $result = is_a($requestedClassName, 'zaboy\rest\DataStore\DbTable', true);
+
+        return $result;
     }
 
     /**
@@ -72,10 +76,11 @@ class DbTableAbstractFactory extends AbstractFactoryAbstract
      * 'use Zend\ServiceManager\AbstractFactoryInterface;' for V2 to
      * 'use Zend\ServiceManager\Factory\AbstractFactoryInterface;' for V3
      *
-     * @param  Interop\Container\ContainerInterface $container
+     * @param  ContainerInterface $container
      * @param  string $requestedName
      * @param  array $options
-     * @return \DataStores\Interfaces\DataStoresInterface
+     * @return DataStoresInterface
+     * @throws DataStoreException
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
@@ -86,7 +91,7 @@ class DbTableAbstractFactory extends AbstractFactoryAbstract
             $tableName = $serviceConfig['tableName'];
         } else {
             throw new DataStoreException(
-            'There is not table name for ' . $requestedName . 'in config \'dataStore\''
+                'There is not table name for ' . $requestedName . 'in config \'dataStore\''
             );
         }
         $dbServiceName = isset($serviceConfig['dbAdapter']) ? $serviceConfig['dbAdapter'] : 'db';
@@ -95,10 +100,9 @@ class DbTableAbstractFactory extends AbstractFactoryAbstract
             $tableGateway = new TableGateway($tableName, $db);
         } else {
             throw new DataStoreException(
-            'Can\'t create Zend\Db\TableGateway\TableGateway for ' . $tableName
+                'Can\'t create Zend\Db\TableGateway\TableGateway for ' . $tableName
             );
         }
         return new $requestedClassName($tableGateway);
     }
-
 }

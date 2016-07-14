@@ -20,7 +20,7 @@
         "zendframework/zend-diactoros": "^1.1",
         "zendframework/zend-config": "^2.5",
         "zendframework/zend-servicemanager": "^2.7",
-        "xiag/rql-parser": "*",
+        "xiag/rql-parser": "^1.0",
         "zendframework/zend-stdlib": "^2.5",
         "zendframework/zend-json": "^2.4",
         "zendframework/zend-db": "^2.8",

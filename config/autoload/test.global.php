@@ -44,6 +44,18 @@ return [
             'class' => 'zaboy\rest\DataStore\Aspect\AspectAbstract',
             'dataStore' => 'testMemory',
         ],
+        
+        'testDataSourceDb' => [
+            'class' => 'zaboy\rest\DataSource\DbTableDataSource',
+            //'class' => 'zaboy\rest\DataStore\DbTable',
+            'tableName' => 'test_res_http'
+        ],
+        
+        'testCacheable' => [
+            'class' => 'zaboy\rest\DataStore\Cacheable',
+            'dataSource' => 'testDataSourceDb',
+            'cacheable' => 'testDbTable'
+        ]
     ],
     'middleware' => [
         'test_MiddlewareWithNameAsResourceName' => [

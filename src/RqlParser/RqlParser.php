@@ -82,7 +82,9 @@ class RqlParser
             ->addTokenParser(new TokenParser\Query\Fiql\ScalarOperator\GtTokenParser())
             ->addTokenParser(new TokenParser\Query\Fiql\ScalarOperator\LeTokenParser())
             ->addTokenParser(new TokenParser\Query\Fiql\ScalarOperator\GeTokenParser())
-            ->addTokenParser(new TokenParser\Query\Fiql\ScalarOperator\LikeTokenParser());
+            ->addTokenParser(new TokenParser\Query\Fiql\ScalarOperator\LikeTokenParser())
+            ->addTokenParser(new Fiql\ScalarOperator\MatchTokenParser())
+            ->addTokenParser(new Basic\ScalarOperator\MatchTokenParser());
 
 
         $parser = (new Parser((new ExpressionParser())

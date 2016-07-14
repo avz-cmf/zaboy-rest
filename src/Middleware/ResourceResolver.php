@@ -44,7 +44,7 @@ class ResourceResolver implements MiddlewareInterface
      */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next = null)
     {
-        if (null !== $request->getAttribute("resourceName")) {
+        if (null !== $request->getAttribute("Resource-Name")) {
             //Router have set "resourceName". It work in expressive.
             $id = empty($request->getAttribute("id")) ? null : $this->decodeString($request->getAttribute("id"));
             $request = $request->withAttribute('Primary-Key-Value', $id);
