@@ -2,31 +2,41 @@
 
 namespace zaboy\rest\DataStore\Iterators;
 
+use Symfony\Component\Filesystem\LockHandler;
+use zaboy\rest\DataStore\CsvBase;
 use zaboy\rest\DataStore\DataStoreException;
-use zaboy\rest\DataStore\Iterators\DataStoreIterator;
 use zaboy\rest\DataStore\Interfaces\ReadInterface;
 
 class CsvIterator extends DataStoreIterator
 {
-
     /**
      * File handler.
      * @var resource
      */
     protected $fileHandler;
 
+    /** @var LockHandler $lockHandler */
+    protected $lockHandler;
+
     /**
      * CsvIterator constructor.
+     *
      * After the creation an object it opens the file (by filename) and locks one.
+     *
+     * @param ReadInterface $dataStore
+     * @param $filename
+     * @param LockHandler $lockHandler
+     * @throws DataStoreException
      */
-    public function __construct(ReadInterface $dataStore, $filename)
+    public function __construct(ReadInterface $dataStore, $filename, LockHandler $lockHandler)
     {
         parent::__construct($dataStore);
         if (!is_file($filename)) {
             throw new DataStoreException(sprintf('The specified file path "%s" does not exist', $filename));
         }
+        $this->lockHandler = $lockHandler;
+        $this->lockFile($filename);
         $this->fileHandler = fopen($filename, 'r');
-        flock($this->fileHandler, LOCK_SH);
         // We always pass the first row because it contains the column headings.
         fgets($this->fileHandler);
     }
@@ -36,8 +46,19 @@ class CsvIterator extends DataStoreIterator
      */
     function __destruct()
     {
-        flock($this->fileHandler, LOCK_UN);
         fclose($this->fileHandler);
+        $this->lockHandler->release();
+    }
+
+    protected function lockFile($filename, $nbTries = 0)
+    {
+        if (!$this->lockHandler->lock()) {
+            if ($nbTries >= CsvBase::MAX_LOCK_TRIES) {
+                throw new DataStoreException('Reach max retry for locking queue file ' . $filename);
+            }
+            usleep(10);
+            return $this->lockFile($filename, ($nbTries + 1));
+        }
     }
 
 

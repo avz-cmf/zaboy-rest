@@ -2,6 +2,8 @@
 
 namespace zaboy\test\rest\DataStore;
 
+use Symfony\Component\Filesystem\LockHandler;
+use zaboy\rest\DataStore\CsvBase;
 use zaboy\test\rest\DataStore\AbstractTest;
 
 class CsvBaseTest extends AbstractTest
@@ -51,7 +53,6 @@ class CsvBaseTest extends AbstractTest
         // Set real column heading because at first created file was empty
         $this->object->getHeaders();
     }
-
 
     public function testWriteAndReadNullValueAndEmptyString()
     {
@@ -123,5 +124,35 @@ class CsvBaseTest extends AbstractTest
         $this->object->create($itemData);
         $row = $this->object->read(1000);
         $this->assertEquals($row, $itemData);
+    }
+
+    public function test_getAllExpectArray()
+    {
+        $this->_initObject();
+        clearstatcache();
+        $content = $this->object->getAll();
+        $this->assertTrue(
+            is_array($content)
+        );
+    }
+
+    public function test_getAllExpectIterator()
+    {
+        $this->_initObject();
+        clearstatcache();
+        $count = $this->object->count();
+        $fp = fopen($this->filename, 'a+');
+        $itemData = $this->_itemsArrayDelault[$count - 1];
+        while (filesize($this->filename) <= CsvBase::MAX_FILE_SIZE_FOR_CACHE + 100) {
+            $count++;
+            $itemData['id'] = $count;
+            fputcsv($fp, $itemData, $this->delimiter);
+            clearstatcache();
+        }
+        fclose($fp);
+        $content = $this->object->getAll();
+        $this->assertTrue(
+            $content instanceof \Traversable
+        );
     }
 }
