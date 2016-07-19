@@ -1,1 +1,1 @@
-# zaboy-rest 3.8.5
+# zaboy-rest 3.8.6
