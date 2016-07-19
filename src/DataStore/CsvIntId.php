@@ -2,32 +2,18 @@
 
 namespace zaboy\rest\DataStore;
 
-use zaboy\rest\DataStore\CsvBase;
-use zaboy\rest\DataStore\Iterators\CsvIterator;
-use zaboy\rest\DataStore\DataStoreException;
+use Symfony\Component\Filesystem\LockHandler;
 
 class CsvIntId extends CsvBase
 {
-    /**
-     * index offset from begining of file
-     * @var int
-     */
-    protected $offset = 0;
-
-    /**
-     * offset from begining of file in bytes
-     * @var int
-     */
-    protected $bOffset = 0;
-
     /**
      * {@inheritdoc}
      *
      * {@inheritdoc}
      */
-    public function __construct($filename, $delimiter)
+    public function __construct($filename, $delimiter, LockHandler $lockHandler)
     {
-        parent::__construct($filename, $delimiter);
+        parent::__construct($filename, $delimiter, $lockHandler);
         if (!$this->checkIntegrityData()) {
             throw new DataStoreException('The source file contains wrong data');
         }
@@ -47,7 +33,7 @@ class CsvIntId extends CsvBase
         fputcsv($tempHandler, $this->columns, $this->csvDelimiter);
         $identifier = $this->getIdentifier();
         $inserted = false;
-        $prevId = $this->offset;
+        $prevId = -1;
         foreach ($this as $index => $row) {
             // Check an identifier; if equals and it doesn't need to delete - inserts new item
             if ($item[$identifier] == $row[$identifier]) {
@@ -68,7 +54,7 @@ class CsvIntId extends CsvBase
             }
             $prevId = min($item[$identifier], $row[$identifier]);
         }
-        // If the same item was not found and changed inserts the new item as the last row in the file
+        // If the same item was not found and changed it inserts the new item as the last row in the file
         if (!$inserted) {
             $this->writeRow($tempHandler, $item);
         }
@@ -79,48 +65,6 @@ class CsvIntId extends CsvBase
             throw new DataStoreException("Failed to write the results to a file.");
         }
         unlink($tmpFile);
-    }
-
-
-    /**
-     * Opens file for reading.
-     * If sepicified id is greater than offset after the last reading sets file pointer to this row
-     * @param $id
-     * @throws \zaboy\rest\DataStore\DataStoreException
-     */
-    protected function openFile($id = null, $nbTries = 0)
-    {
-        parent::openFile($id, $nbTries);
-        if ($id >= $this->offset && $this->offset) {
-            fseek($this->fileHandler, $this->bOffset);
-            // Sometimes some editors leave a blank line in the end of file
-            // That's why it reads the first symbol which points the file handler;
-            // if it is EOF moves the pointer to begin of file
-            // else moves one byte back (to start position before checking)
-            $ch = fgetc($this->fileHandler);
-            if (feof($this->fileHandler)) {
-                $this->fixOffset();
-                fseek($this->fileHandler, $this->bOffset);
-            } else {
-                fseek($this->fileHandler, -1, SEEK_CUR);
-            }
-        } else {
-            $this->fixOffset();
-        }
-    }
-
-    /**
-     * Fixes index and byte offset after the last reading
-     * @param int $id
-     */
-    public function fixOffset($id = 0)
-    {
-        $this->offset = $id;
-        if ($id) {
-            $this->bOffset = ftell($this->fileHandler);
-        } else {
-            $this->bOffset = 0;
-        }
     }
 
     /**

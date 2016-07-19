@@ -3,6 +3,7 @@
 namespace zaboy\rest\DataStore\Factory;
 
 use Interop\Container\ContainerInterface;
+use Symfony\Component\Filesystem\LockHandler;
 use zaboy\rest\AbstractFactoryAbstract;
 use zaboy\rest\DataStore\DataStoreException;
 
@@ -38,7 +39,9 @@ class CsvAbstractFactory extends AbstractFactoryAbstract
         }
         $filename = $serviceConfig['filename'];
         $delimiter = (isset($serviceConfig['delimiter']) ? $serviceConfig['delimiter'] : null);
-        return new $requestedClassName($filename, $delimiter);
+        $lockHandler = new LockHandler($filename);
+
+        return new $requestedClassName($filename, $delimiter, $lockHandler);
     }
 
 }
