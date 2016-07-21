@@ -9,6 +9,13 @@ return [
             'test_autocreate_table' => 'test_table_config'
         ]
     ],
+
+    'tableGateway' =>[
+            'test_res_tablle' => [
+                'sql' => 'zaboy\rest\DbSql\MultiInsertSql'
+            ]
+    ],
+
     'dataStore' => [
         'test_DataStoreDbTableWithNameAsResourceName' => [
             'class' => 'zaboy\rest\DataStore\DbTable',
@@ -21,6 +28,12 @@ return [
             'class' => 'zaboy\rest\DataStore\DbTable',
             'tableName' => 'test_res_tablle'
         ],
+
+        'testDbTableMultiInsert' => [
+            'class' => 'zaboy\rest\DataStore\DbTable',
+            'tableGateway' => 'test_res_tablle',
+        ],
+
         'testHttpClient' => [
             'class' => 'zaboy\rest\DataStore\HttpClient',
             'tableName' => 'test_res_http',
