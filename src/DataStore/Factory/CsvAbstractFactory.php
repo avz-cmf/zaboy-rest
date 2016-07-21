@@ -7,22 +7,13 @@ use Symfony\Component\Filesystem\LockHandler;
 use zaboy\rest\AbstractFactoryAbstract;
 use zaboy\rest\DataStore\DataStoreException;
 
-class CsvAbstractFactory extends AbstractFactoryAbstract
+class CsvAbstractFactory extends AbstractDataStoreFactory
 {
-    /**
-     * {@inheritdoc}
-     *
-     * {@inheritdoc}
-     */
-    public function canCreate(ContainerInterface $container, $requestedName)
-    {
-        $config = $container->get('config');
-        if (!isset($config['dataStore'][$requestedName]['class'])) {
-            return false;
-        }
-        $requestedClassName = $config['dataStore'][$requestedName]['class'];
-        return is_a($requestedClassName, 'zaboy\rest\DataStore\CsvBase', true);
-    }
+
+    static $KEY_DATASTORE_CLASS = 'zaboy\rest\DataStore\CsvBase';
+    const KEY_FILENAME = 'filename';
+    const KEY_DELIMITER = 'delimiter';
+
 
     /**
      * {@inheritdoc}
@@ -32,13 +23,13 @@ class CsvAbstractFactory extends AbstractFactoryAbstract
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
         $config = $container->get('config');
-        $serviceConfig = $config['dataStore'][$requestedName];
-        $requestedClassName = $serviceConfig['class'];
-        if (!isset($serviceConfig['filename'])) {
+        $serviceConfig = $config[self::KEY_DATASTORE][$requestedName];
+        $requestedClassName = $serviceConfig[self::KEY_CLASS];
+        if (!isset($serviceConfig[self::KEY_FILENAME])) {
             throw new DataStoreException(sprintf('The file name for "%s" is not specified in the config \'dataStore\'', $requestedName));
         }
-        $filename = $serviceConfig['filename'];
-        $delimiter = (isset($serviceConfig['delimiter']) ? $serviceConfig['delimiter'] : null);
+        $filename = $serviceConfig[self::KEY_FILENAME];
+        $delimiter = (isset($serviceConfig[self::KEY_DELIMITER]) ? $serviceConfig[self::KEY_DELIMITER] : null);
         $lockHandler = new LockHandler($filename);
 
         return new $requestedClassName($filename, $delimiter, $lockHandler);

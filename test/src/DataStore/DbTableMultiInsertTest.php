@@ -14,10 +14,18 @@ use Zend\Db\TableGateway\TableGateway;
 
 class DbTableMultiInsertTest extends DbTableTest
 {
+    /** @var  TableGateway */
+    protected $dbTable;
+
     protected function setUp()
     {
         parent::setUp();
-        $this->dbTableName = $this->config['testDbTableMultiInsert']['tableName'];
+        $tableGateway = $this->config['testDbTableMultiInsert']['tableGateway'];
+
+        $this->dbTable = $this->container->get($tableGateway);
+
+        $this->dbTableName = $this->dbTable->getTable();
+
         $this->adapter = $this->container->get('db');
         $this->object = $this->container->get('testDbTableMultiInsert');
     }
@@ -76,9 +84,7 @@ class DbTableMultiInsertTest extends DbTableTest
         }
 
         $this->_prepareTable($data);
-        $sql = new MultiInsertSql($this->adapter, $this->dbTableName);
-        $dbTable = new TableGateway($this->dbTableName, $this->adapter, null, null, $sql);
 
-        $dbTable->insert($data);
+        $this->dbTable->insert($data);
     }
 }

@@ -11,6 +11,7 @@ namespace zaboy\rest\DataStore\Factory;
 
 use Interop\Container\ContainerInterface;
 use zaboy\rest\AbstractFactoryAbstract;
+use zaboy\rest\DataStore\Interfaces\DataStoresInterface;
 
 /**
  * Create and return an instance of the array in Memory
@@ -29,8 +30,10 @@ use zaboy\rest\AbstractFactoryAbstract;
  * @category   rest
  * @package    zaboy
  */
-class MemoryAbstractFactory extends AbstractFactoryAbstract
+class MemoryAbstractFactory extends AbstractDataStoreFactory
 {
+
+    static $KEY_DATASTORE_CLASS = 'zaboy\rest\DataStore\Memory';
 
     /**
      * Create and return an instance of the DataStore.
@@ -38,32 +41,17 @@ class MemoryAbstractFactory extends AbstractFactoryAbstract
      * 'use Zend\ServiceManager\AbstractFactoryInterface;' for V2 to
      * 'use Zend\ServiceManager\Factory\AbstractFactoryInterface;' for V3
      *
-     * @param  Interop\Container\ContainerInterface $container
+     * @param  ContainerInterface $container
      * @param  string $requestedName
      * @param  array $options
-     * @return \DataStores\Interfaces\DataStoresInterface
+     * @return DataStoresInterface
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
         $config = $container->get('config');
-        $serviceConfig = $config['dataStore'][$requestedName];
-        $requestedClassName = $serviceConfig['class'];
+        $serviceConfig = $config[self::KEY_DATASTORE][$requestedName];
+        $requestedClassName = $serviceConfig[self::KEY_CLASS];
         return new $requestedClassName();
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * {@inheritdoc}
-     */
-    public function canCreate(ContainerInterface $container, $requestedName)
-    {
-        $config = $container->get('config');
-        if (!isset($config['dataStore'][$requestedName]['class'])) {
-            return false;
-        }
-        $requestedClassName = $config['dataStore'][$requestedName]['class'];
-        return is_a($requestedClassName, 'zaboy\rest\DataStore\Memory', true);
     }
 
 }

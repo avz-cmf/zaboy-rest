@@ -10,7 +10,7 @@
 namespace zaboy\rest\DataStore\Factory;
 
 use Interop\Container\ContainerInterface;
-use zaboy\rest\AbstractFactoryAbstract;
+use zaboy\rest\DataStore\DataStoreException;
 
 /**
  * Create and return an instance of the DataStore which based on Http Client
@@ -30,23 +30,13 @@ use zaboy\rest\AbstractFactoryAbstract;
  * @category   rest
  * @package    zaboy
  */
-class HttpClientAbstractFactory extends AbstractFactoryAbstract
+class HttpClientAbstractFactory extends AbstractDataStoreFactory
 {
+    static $KEY_DATASTORE_CLASS = 'zaboy\rest\DataStore\HttpClient';
 
-    /**
-     * {@inheritdoc}
-     *
-     * {@inheritdoc}
-     */
-    public function canCreate(ContainerInterface $container, $requestedName)
-    {
-        $config = $container->get('config');
-        if (!isset($config['dataStore'][$requestedName]['class'])) {
-            return false;
-        }
-        $requestedClassName = $config['dataStore'][$requestedName]['class'];
-        return is_a($requestedClassName, 'zaboy\rest\DataStore\HttpClient', true);
-    }
+    const KEY_URL = 'url';
+
+    const KEY_OPTIONS = 'options';
 
     /**
      * {@inheritdoc}
@@ -56,17 +46,17 @@ class HttpClientAbstractFactory extends AbstractFactoryAbstract
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
         $config = $container->get('config');
-        $serviceConfig = $config['dataStore'][$requestedName];
-        $requestedClassName = $serviceConfig['class'];
-        if (isset($serviceConfig['url'])) {
-            $url = $serviceConfig['url'];
+        $serviceConfig = $config[self::KEY_DATASTORE][$requestedName];
+        $requestedClassName = $serviceConfig[self::KEY_CLASS];
+        if (isset($serviceConfig[self::KEY_URL])) {
+            $url = $serviceConfig[self::KEY_URL];
         } else {
             throw new DataStoreException(
-            'There is not url for ' . $requestedName . 'in config \'dataStore\''
+                'There is not url for ' . $requestedName . 'in config \'dataStore\''
             );
         }
-        if (isset($serviceConfig['options'])) {
-            $options = $serviceConfig['options'];
+        if (isset($serviceConfig[self::KEY_OPTIONS])) {
+            $options = $serviceConfig[self::KEY_OPTIONS];
             return new $requestedClassName($url, $options);
         } else {
             return new $requestedClassName($url);
