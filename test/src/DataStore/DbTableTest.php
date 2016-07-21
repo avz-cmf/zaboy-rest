@@ -7,6 +7,7 @@
  */
 namespace zaboy\test\rest\DataStore;
 
+use zaboy\rest\DataStore\DbTable;
 use Zend\Db\Adapter\Adapter;
 use  Zend\Db\TableGateway\TableGateway;
 
@@ -15,7 +16,7 @@ use  Zend\Db\TableGateway\TableGateway;
  */
 class DbTableTest extends AbstractTest {
     /**
-     * @var TableGateway
+     * @var DbTable
      */
     protected $object;
     /**
@@ -118,5 +119,8 @@ class DbTableTest extends AbstractTest {
             $dbTable->insert($record);
         }
     }
+
+
+
     /*     * ************************** Identifier *********************** */
 }
