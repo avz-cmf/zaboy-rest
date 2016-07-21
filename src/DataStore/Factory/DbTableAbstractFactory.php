@@ -10,7 +10,6 @@
 namespace zaboy\rest\DataStore\Factory;
 
 use Interop\Container\ContainerInterface;
-use zaboy\rest\AbstractFactoryAbstract;
 use zaboy\rest\DataStore\DataStoreException;
 use zaboy\rest\DataStore\Interfaces\DataStoresInterface;
 use Zend\Db\TableGateway\TableGateway;
@@ -42,33 +41,16 @@ use Zend\Db\TableGateway\TableGateway;
  * @category   rest
  * @package    zaboy
  */
-class DbTableAbstractFactory extends AbstractFactoryAbstract
+class DbTableAbstractFactory extends AbstractDataStoreFactory
 {
 
-    /**
-     * Can the factory create an instance for the service?
-     *
-     * For Service manager V3
-     * Edit 'use' section if need:
-     * Change:
-     * 'use Zend\ServiceManager\AbstractFactoryInterface;' for V2 to
-     * 'use Zend\ServiceManager\Factory\AbstractFactoryInterface;' for V3
-     *
-     * @param  ContainerInterface $container
-     * @param  string $requestedName
-     * @return bool
-     */
-    public function canCreate(ContainerInterface $container, $requestedName)
-    {
-        $config = $container->get('config');
-        if (!isset($config['dataStore'][$requestedName]['class'])) {
-            return false;
-        }
-        $requestedClassName = $config['dataStore'][$requestedName]['class'];
-        $result = is_a($requestedClassName, 'zaboy\rest\DataStore\DbTable', true);
+    const KEY_TABLE_NAME = 'tableName';
 
-        return $result;
-    }
+    const KEY_TABLE_GATEWAY = 'tableGateway';
+
+    const KEY_DB_ADAPTER = 'dbAdapter';
+
+    static $KEY_DATASTORE_CLASS = 'zaboy\rest\DataStore\DbTable';
 
     /**
      * Create and return an instance of the DataStore.
@@ -85,24 +67,37 @@ class DbTableAbstractFactory extends AbstractFactoryAbstract
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
         $config = $container->get('config');
-        $serviceConfig = $config['dataStore'][$requestedName];
-        $requestedClassName = $serviceConfig['class'];
-        if (isset($serviceConfig['tableName'])) {
-            $tableName = $serviceConfig['tableName'];
+        $serviceConfig = $config[self::KEY_DATASTORE][$requestedName];
+        $requestedClassName = $serviceConfig[self::KEY_CLASS];
+
+        if (isset($serviceConfig[self::KEY_TABLE_GATEWAY])) {
+            if($container->has($serviceConfig[self::KEY_TABLE_GATEWAY])){
+                $tableGateway = $container->get($serviceConfig[self::KEY_TABLE_GATEWAY]);
+            }else{
+                throw new DataStoreException(
+                    'Can\'t create ' . $serviceConfig[self::KEY_TABLE_GATEWAY]
+                );
+            }
+        }else if (isset($serviceConfig[self::KEY_TABLE_NAME])) {
+            $tableName = $serviceConfig[self::KEY_TABLE_NAME];
+
+            $dbServiceName = isset($serviceConfig[self::KEY_DB_ADAPTER]) ? $serviceConfig[self::KEY_DB_ADAPTER] : 'db';
+            $db = $container->has($dbServiceName) ? $container->get($dbServiceName) : null;
+
+            if (null !== $db) {
+                $tableGateway = new TableGateway($tableName, $db);
+            } else {
+                throw new DataStoreException(
+                    'Can\'t create Zend\Db\TableGateway\TableGateway for ' . $tableName
+                );
+            }
         } else {
             throw new DataStoreException(
                 'There is not table name for ' . $requestedName . 'in config \'dataStore\''
             );
         }
-        $dbServiceName = isset($serviceConfig['dbAdapter']) ? $serviceConfig['dbAdapter'] : 'db';
-        $db = $container->has($dbServiceName) ? $container->get($dbServiceName) : null;
-        if (null !== $db) {
-            $tableGateway = new TableGateway($tableName, $db);
-        } else {
-            throw new DataStoreException(
-                'Can\'t create Zend\Db\TableGateway\TableGateway for ' . $tableName
-            );
-        }
+
+
         return new $requestedClassName($tableGateway);
     }
 }

@@ -9,10 +9,10 @@
 
 namespace zaboy\rest\TableGateway\Factory;
 
-use Zend\Db\TableGateway\TableGateway;
-use Zend\Db\Metadata\Metadata;
 use Interop\Container\ContainerInterface;
 use zaboy\rest\AbstractFactoryAbstract;
+use Zend\Db\Metadata\Metadata;
+use Zend\Db\TableGateway\TableGateway;
 
 /**
  * Create and return an instance of the TableGateway
@@ -29,6 +29,10 @@ use zaboy\rest\AbstractFactoryAbstract;
  */
 class TableGatewayAbstractFactory extends AbstractFactoryAbstract
 {
+
+    const KEY_SQL = 'sql';
+
+    const KEY_TABLE_GATEWAY = 'tableGateway';
     /*
      * @var array cache of tables names in db
      */
@@ -49,7 +53,7 @@ class TableGatewayAbstractFactory extends AbstractFactoryAbstract
      * 'use Zend\ServiceManager\AbstractFactoryInterface;' for V2 to
      * 'use Zend\ServiceManager\Factory\AbstractFactoryInterface;' for V3
      *
-     * @param  Interop\Container\ContainerInterface $container
+     * @param  ContainerInterface $container
      * @param  string $requestedName
      * @return bool
      */
@@ -66,19 +70,40 @@ class TableGatewayAbstractFactory extends AbstractFactoryAbstract
     }
 
     /**
+     *
+     * @return bool
+     */
+    protected function setDbAdapter(ContainerInterface $container)
+    {
+        if (!isset($this->db)) {
+            $this->db = $container->has('db') ? $container->get('db') : false;
+        }
+        return (bool)$this->db;
+    }
+
+    /**
      * Create and return an instance of the TableGateway.
      *
      * 'use Zend\ServiceManager\AbstractFactoryInterface;' for V2 to
      * 'use Zend\ServiceManager\Factory\AbstractFactoryInterface;' for V3
      *
-     * @param  Interop\Container\ContainerInterface $container
+     * @param  ContainerInterface $container
      * @param  string $requestedName
      * @param  array $options
-     * @return \DataStores\Interfaces\DataStoresInterface
+     * @return \zaboy\rest\DataStore\Interfaces\DataStoresInterface|TableGateway
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
+        $config = $container->get('config');
+        if (isset($config[self::KEY_TABLE_GATEWAY][$requestedName])) {
+            if(isset($config[self::KEY_TABLE_GATEWAY][$requestedName][self::KEY_SQL])){
+                $sql = new $config[self::KEY_TABLE_GATEWAY][$requestedName][self::KEY_SQL]($this->db, $requestedName);
+                return new TableGateway($requestedName, $this->db, null, null, $sql);
+            }
+        }
+
         return new TableGateway($requestedName, $this->db);
+
     }
 
     /**
@@ -97,18 +122,6 @@ class TableGatewayAbstractFactory extends AbstractFactoryAbstract
             }
         }
         return $this->tableNames;
-    }
-
-    /**
-     *
-     * @return bool
-     */
-    protected function setDbAdapter(ContainerInterface $container)
-    {
-        if (!isset($this->db)) {
-            $this->db = $container->has('db') ? $container->get('db') : false;
-        }
-        return (bool) $this->db;
     }
 
 }

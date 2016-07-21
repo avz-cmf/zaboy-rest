@@ -5,6 +5,7 @@ namespace zaboy\rest\DataStore\Aspect\Factory;
 use Interop\Container\ContainerInterface;
 use zaboy\rest\AbstractFactoryAbstract;
 use zaboy\rest\DataStore\DataStoreException;
+use zaboy\rest\DataStore\Factory\AbstractDataStoreFactory;
 
 /**
  * Create and return an instance of the DataStore which based on AspectAbstract
@@ -23,24 +24,10 @@ use zaboy\rest\DataStore\DataStoreException;
  * @category   rest
  * @package    zaboy
  */
-class AspectAbstractFactory extends AbstractFactoryAbstract
+class AspectAbstractFactory extends AbstractDataStoreFactory
 {
-    const KEY_DATASTORE = 'dataStore';
 
-    /**
-     * {@inheritdoc}
-     *
-     * {@inheritdoc}
-     */
-    public function canCreate(ContainerInterface $container, $requestedName)
-    {
-        $config = $container->get('config');
-        if (!isset($config[self::KEY_DATASTORE][$requestedName][self::KEY_CLASS])) {
-            return false;
-        }
-        $requestedClassName = $config[self::KEY_DATASTORE][$requestedName][self::KEY_CLASS];
-        return is_a($requestedClassName, 'zaboy\rest\DataStore\Aspect\AspectAbstract', true);
-    }
+    static $KEY_DATASTORE_CLASS = 'zaboy\rest\DataStore\Aspect\AspectAbstract';
 
     /**
      * {@inheritdoc}

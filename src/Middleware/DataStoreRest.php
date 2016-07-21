@@ -173,18 +173,18 @@ class DataStoreRest extends Middleware\DataStoreAbstract
         $rowCountQuery
             ->setSelect(new XSelectNode([new AggregateFunctionNode('count', $this->dataStore->getIdentifier())]));
         $rowCount = $this->dataStore->query($rowCountQuery);
-        if (!isset($rowCount[0][$this->dataStore->getIdentifier() . '->count'])) {
-            throw new RestException('Can not make Content-Range header in response');
+        if (isset($rowCount[0][$this->dataStore->getIdentifier() . '->count'])) {
+
+            //throw new RestException('Can not make Content-Range header in response');
+
+            $limitObject = $rqlQueryObject->getLimit();
+            $offset = !$limitObject ? 0 : $limitObject->getOffset();
+            $contentRange = 'items ' . $offset . '-' . ($offset + count($rowset) - 1) . '/' . $rowCount[0][$this->dataStore
+                    ->getIdentifier() . '->count'];
+            $response = $response->withHeader('Content-Range', $contentRange);
         }
 
-        $limitObject = $rqlQueryObject->getLimit();
 
-        $offset = !$limitObject ? 0 : $limitObject->getOffset();
-
-        $contentRange = 'items ' . $offset . '-' . ($offset + count($rowset) - 1) . '/' . $rowCount[0][$this->dataStore
-                ->getIdentifier() . '->count'];
-
-        $response = $response->withHeader('Content-Range', $contentRange);
         $response = $response->withStatus(200);
         return $response;
     }

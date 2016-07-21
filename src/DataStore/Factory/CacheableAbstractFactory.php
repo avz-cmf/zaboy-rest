@@ -14,8 +14,13 @@ use zaboy\rest\AbstractFactoryAbstract;
 use zaboy\rest\DataStore\Cacheable;
 use zaboy\rest\DataStore\DataStoreException;
 
-class CacheableAbstractFactory extends AbstractFactoryAbstract
+class CacheableAbstractFactory extends AbstractDataStoreFactory
 {
+    static $KEY_DATASTORE_CLASS = 'zaboy\rest\DataStore\Cacheable';
+
+    const KEY_DATASOURCE = 'dataSource';
+
+    const KEY_CACHEABLE = 'cacheable';
 
     /**
      * @param ContainerInterface $container
@@ -27,11 +32,11 @@ class CacheableAbstractFactory extends AbstractFactoryAbstract
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
         $config = $container->get('config');
-        $serviceConfig = $config['dataStore'][$requestedName];
-        $requestedClassName = $serviceConfig['class'];
-        if (isset($serviceConfig['dataSource'])) {
-            if ($container->has($serviceConfig['dataSource'])) {
-                $getAll = $container->get($serviceConfig['dataSource']);
+        $serviceConfig = $config[self::KEY_DATASTORE][$requestedName];
+        $requestedClassName = $serviceConfig[self::KEY_CLASS];
+        if (isset($serviceConfig[self::KEY_DATASOURCE])) {
+            if ($container->has($serviceConfig[self::KEY_DATASOURCE])) {
+                $getAll = $container->get($serviceConfig[self::KEY_DATASOURCE]);
             } else {
                 throw new DataStoreException(
                     'There is DataSource not created ' . $requestedName . 'in config \'dataStore\''
@@ -42,12 +47,12 @@ class CacheableAbstractFactory extends AbstractFactoryAbstract
                 'There is DataSource for ' . $requestedName . 'in config \'dataStore\''
             );
         }
-        if (isset($serviceConfig['cacheable'])) {
-            if ($container->has($serviceConfig['cacheable'])) {
-                $cashStore = $container->get($serviceConfig['cacheable']);
+        if (isset($serviceConfig[self::KEY_CACHEABLE])) {
+            if ($container->has($serviceConfig[self::KEY_CACHEABLE])) {
+                $cashStore = $container->get($serviceConfig[self::KEY_CACHEABLE]);
             } else {
                 throw new DataStoreException(
-                    'There is DataSource for ' . $serviceConfig['cacheable'] . 'in config \'dataStore\''
+                    'There is DataSource for ' . $serviceConfig[self::KEY_CACHEABLE] . 'in config \'dataStore\''
                 );
             }
         } else {
@@ -56,31 +61,5 @@ class CacheableAbstractFactory extends AbstractFactoryAbstract
 
         //$cashStore = isset($serviceConfig['cashStore']) ?  new $serviceConfig['cashStore']() : null;
         return new $requestedClassName($getAll, $cashStore);
-    }
-
-    /**
-     * Can the factory create an instance for the service?
-     *
-     * For Service manager V3
-     * Edit 'use' section if need:
-     * Change:
-     * 'use Zend\ServiceManager\AbstractFactoryInterface;' for V2 to
-     * 'use Zend\ServiceManager\Factory\AbstractFactoryInterface;' for V3
-     *
-     * @param  ContainerInterface $container
-     * @param  string $requestedName
-     * @return bool
-     */
-    public function canCreate(ContainerInterface $container, $requestedName)
-    {
-        $config = $container->get('config');
-        if (!isset($config['dataStore'][$requestedName]['class'])) {
-            return false;
-        }
-        $requestedClassName = $config['dataStore'][$requestedName]['class'];
-
-        $result = is_a("$requestedClassName", 'zaboy\rest\DataStore\Cacheable', true);
-
-        return $result;
     }
 }

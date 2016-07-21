@@ -13,6 +13,7 @@ use Xiag\Rql\Parser\Node\SortNode;
 use Xiag\Rql\Parser\Query;
 use zaboy\rest\DataStore\ConditionBuilder\SqlConditionBuilder;
 use zaboy\rest\RqlParser\AggregateFunctionNode;
+use zaboy\rest\RqlParser\XSelectNode;
 use Zend\Db\Adapter\Adapter;
 use Zend\Db\ResultSet\ResultSet;
 use Zend\Db\Sql\Predicate\Expression;
@@ -50,6 +51,53 @@ class DbTable extends DataStoreAbstract
     }
 
 //** Interface "zaboy\rest\DataStore\Interfaces\ReadInterface" **/
+
+    /**
+     * {@inheritdoc}
+     *
+     * {@inheritdoc}
+     */
+    public function create($itemData, $rewriteIfExist = false)
+    {
+
+        $identifier = $this->getIdentifier();
+        $adapter = $this->dbTable->getAdapter();
+        // begin Transaction
+        $errorMsg = 'Can\'t start insert transaction';
+
+        $query = new Query();
+        $query->setSelect(new XSelectNode([new AggregateFunctionNode('max', $this->getIdentifier())]));
+        $prewId = $this->query($query)[0][$this->getIdentifier() . '->max'];
+
+        $adapter->getDriver()->getConnection()->beginTransaction();
+        try {
+            if (isset($itemData[$identifier]) && $rewriteIfExist) {
+                $errorMsg = 'Can\'t delete item with "id" = ' . $itemData[$identifier];
+                $this->dbTable->delete(array($identifier => $itemData[$identifier]));
+            }
+            $errorMsg = 'Can\'t insert item';
+            $rowsCount = $this->dbTable->insert($itemData);
+            $adapter->getDriver()->getConnection()->commit();
+        } catch (\Exception $e) {
+            $adapter->getDriver()->getConnection()->rollback();
+            throw new DataStoreException($errorMsg, 0, $e);
+        }
+
+
+        if ($rowsCount > 1) {
+            $newItem = [];
+            $lastId = $this->query($query)[0][$this->getIdentifier() . '->max'];
+            foreach (range($prewId+1, $lastId) as $id) {
+                $newItem[] = [$identifier => $id];
+            }
+        } else {
+            $id = $this->dbTable->lastInsertValue;
+            $newItem = array_merge(array($identifier => $id), $itemData);
+        }
+
+
+        return $newItem;
+    }
 
     /**
      * {@inheritdoc}
@@ -142,37 +190,6 @@ class DbTable extends DataStoreAbstract
         // ***********************   return   ***********************
 
         return $rowset->toArray();
-    }
-
-    /**
-     * {@inheritdoc}
-     *
-     * {@inheritdoc}
-     */
-    public function create($itemData, $rewriteIfExist = false)
-    {
-
-        $identifier = $this->getIdentifier();
-        $adapter = $this->dbTable->getAdapter();
-        // begin Transaction
-        $errorMsg = 'Can\'t start insert transaction';
-        $adapter->getDriver()->getConnection()->beginTransaction();
-        try {
-            if (isset($itemData[$identifier]) && $rewriteIfExist) {
-                $errorMsg = 'Can\'t delete item with "id" = ' . $itemData[$identifier];
-                $this->dbTable->delete(array($identifier => $itemData[$identifier]));
-            }
-            $errorMsg = 'Can\'t insert item';
-            $rowsCount = $this->dbTable->insert($itemData);
-            $adapter->getDriver()->getConnection()->commit();
-        } catch (\Exception $e) {
-            $adapter->getDriver()->getConnection()->rollback();
-            throw new DataStoreException($errorMsg, 0, $e);
-        }
-
-        $id = $this->dbTable->getLastInsertValue();
-        $newItem = array_merge(array($identifier => $id), $itemData);
-        return $newItem;
     }
 
 // ** Interface "zaboy\rest\DataStore\Interfaces\DataStoresInterface"  **/
