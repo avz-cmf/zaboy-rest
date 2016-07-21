@@ -13,6 +13,7 @@ use Interop\Container\ContainerInterface;
 use zaboy\rest\AbstractFactoryAbstract;
 use zaboy\rest\DataStore\DataStoreException;
 use zaboy\rest\DataStore\Interfaces\DataStoresInterface;
+use zaboy\rest\DbSql\MultiInsertSql;
 use Zend\Db\TableGateway\TableGateway;
 
 /**
@@ -97,7 +98,12 @@ class DbTableAbstractFactory extends AbstractFactoryAbstract
         $dbServiceName = isset($serviceConfig['dbAdapter']) ? $serviceConfig['dbAdapter'] : 'db';
         $db = $container->has($dbServiceName) ? $container->get($dbServiceName) : null;
         if (null !== $db) {
-            $tableGateway = new TableGateway($tableName, $db);
+            if(isset($serviceConfig['multiInsert']) && $serviceConfig['multiInsert'] === true){
+                $sql = new MultiInsertSql($db, $tableName);
+                $tableGateway = new TableGateway($tableName, $db, null, null, $sql);
+            }else{
+                $tableGateway = new TableGateway($tableName, $db);
+            }
         } else {
             throw new DataStoreException(
                 'Can\'t create Zend\Db\TableGateway\TableGateway for ' . $tableName

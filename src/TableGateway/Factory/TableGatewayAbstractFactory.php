@@ -49,7 +49,7 @@ class TableGatewayAbstractFactory extends AbstractFactoryAbstract
      * 'use Zend\ServiceManager\AbstractFactoryInterface;' for V2 to
      * 'use Zend\ServiceManager\Factory\AbstractFactoryInterface;' for V3
      *
-     * @param  Interop\Container\ContainerInterface $container
+     * @param  ContainerInterface $container
      * @param  string $requestedName
      * @return bool
      */
@@ -71,10 +71,10 @@ class TableGatewayAbstractFactory extends AbstractFactoryAbstract
      * 'use Zend\ServiceManager\AbstractFactoryInterface;' for V2 to
      * 'use Zend\ServiceManager\Factory\AbstractFactoryInterface;' for V3
      *
-     * @param  Interop\Container\ContainerInterface $container
+     * @param  ContainerInterface $container
      * @param  string $requestedName
      * @param  array $options
-     * @return \DataStores\Interfaces\DataStoresInterface
+     * @return \zaboy\rest\DataStore\Interfaces\DataStoresInterface|TableGateway
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
