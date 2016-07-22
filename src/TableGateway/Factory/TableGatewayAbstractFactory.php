@@ -95,11 +95,10 @@ class TableGatewayAbstractFactory extends AbstractFactoryAbstract
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
         $config = $container->get('config');
-        if (isset($config[self::KEY_TABLE_GATEWAY][$requestedName])) {
-            if(isset($config[self::KEY_TABLE_GATEWAY][$requestedName][self::KEY_SQL])){
-                $sql = new $config[self::KEY_TABLE_GATEWAY][$requestedName][self::KEY_SQL]($this->db, $requestedName);
-                return new TableGateway($requestedName, $this->db, null, null, $sql);
-            }
+
+        if (isset($config[self::KEY_TABLE_GATEWAY][$requestedName][self::KEY_SQL]) and is_a($config[self::KEY_TABLE_GATEWAY][$requestedName][self::KEY_SQL], 'Zend\Db\Sql\Sql', true)) {
+            $sql = new $config[self::KEY_TABLE_GATEWAY][$requestedName][self::KEY_SQL]($this->db, $requestedName);
+            return new TableGateway($requestedName, $this->db, null, null, $sql);
         }
 
         return new TableGateway($requestedName, $this->db);

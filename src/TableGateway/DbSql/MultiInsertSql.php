@@ -6,7 +6,7 @@
  * Time: 13:39
  */
 
-namespace zaboy\rest\DbSql;
+namespace zaboy\rest\TableGateway\DbSql;
 
 use Zend\Db\Sql\Exception\InvalidArgumentException;
 use Zend\Db\Sql\Sql;

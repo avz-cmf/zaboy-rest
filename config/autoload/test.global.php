@@ -12,7 +12,7 @@ return [
 
     'tableGateway' =>[
             'test_res_tablle' => [
-                'sql' => 'zaboy\rest\DbSql\MultiInsertSql'
+                'sql' => 'zaboy\rest\TableGateway\DbSql\MultiInsertSql'
             ]
     ],
 

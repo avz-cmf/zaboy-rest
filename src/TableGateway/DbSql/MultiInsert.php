@@ -7,7 +7,7 @@
  * Time: 13:36
  */
 
-namespace zaboy\rest\DbSql;
+namespace zaboy\rest\TableGateway\DbSql;
 
 use Zend\Db\Adapter\Driver\DriverInterface;
 use Zend\Db\Adapter\ParameterContainer;
