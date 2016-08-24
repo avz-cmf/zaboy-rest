@@ -18,7 +18,6 @@ use zaboy\rest\RestException;
 use zaboy\rest\RqlParser\RqlParser;
 use Zend\Stratigility\MiddlewareInterface;
 
-
 /**
  * Parse body fron JSON and add result array to $request->withParsedBody()
  *
@@ -38,7 +37,6 @@ class RequestDecoder implements MiddlewareInterface
 
     private $allowedAggregateFunction = ['count', 'max', 'min'];
 
-
     /**                         Location: http://www.example.com/users/4/
      *
      * @todo positionHeaders = 'beforeId'  'Put-Default-Position'  'Put-Default-Position'
@@ -49,6 +47,7 @@ class RequestDecoder implements MiddlewareInterface
      */
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response, callable $next = null)
     {
+
         // @see https://github.com/SitePen/dstore/blob/21129125823a29c6c18533e7b5a31432cf6e5c56/src/Rest.js
         $overwriteModeHeader = $request->getHeader('If-Match');
         $overwriteMode = isset($overwriteModeHeader[0]) && $overwriteModeHeader[0] === '*' ? true : false;
@@ -68,7 +67,7 @@ class RequestDecoder implements MiddlewareInterface
         $rqlQueryString = rtrim($rqlQueryStringWithXdebug, '&XDEBUG_SESSION_START=netbeans-xdebug');
         $rqlQueryObject = RqlParser::rqlDecode($rqlQueryString);
         $request = $request->withAttribute('Rql-Query-Object', $rqlQueryObject);
-        
+
         $headerLimit = $request->getHeader('Range');
         if (isset($headerLimit) && is_array($headerLimit) && count($headerLimit) > 0) {
             $match = [];
@@ -85,12 +84,20 @@ class RequestDecoder implements MiddlewareInterface
             }
         }
 
-        $contenttype = $request->getHeader('Content-Type');
-        if (isset($contenttype[0]) && false !== strpos($contenttype[0], 'json')) {
+        $contenttypeArray = $request->getHeader('Content-Type');
+        $contenttype = isset($contenttypeArray[0]) ? $contenttypeArray[0] : 'text/html';
+        if (false !== strpos($contenttype, 'json')) {
             $body = $this->jsonDecode($request->getBody()->__toString());
+            $request = $request->withParsedBody($body);
+        } elseif ($contenttype === 'text/plain' or $contenttype === 'text/html') {
+            $body = $request->getBody()->__toString();
             $request = $request->withParsedBody($body);
         } else {
             //todo XML?
+            throw new RestException(
+            'Unknown Content-Type header - ' .
+            $contenttype
+            );
         }
 
         if ($next) {
@@ -107,14 +114,13 @@ class RequestDecoder implements MiddlewareInterface
         $result = json_decode($data, true);
         if (JSON_ERROR_NONE !== json_last_error()) {
             throw new RestException(
-                'Unable to decode data from JSON' .
-                json_last_error_msg()
+            'Unable to decode data from JSON' .
+            json_last_error_msg()
             );
         }
         json_encode(null);
 
         return $result;
     }
-
 
 }
