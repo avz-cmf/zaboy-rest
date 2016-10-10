@@ -89,14 +89,17 @@ class RequestDecoder implements MiddlewareInterface
         if (false !== strpos($contenttype, 'json')) {
             $body = $this->jsonDecode($request->getBody()->__toString());
             $request = $request->withParsedBody($body);
-        } elseif ($contenttype === 'text/plain' or $contenttype === 'text/html') {
+        } elseif ($contenttype === 'text/plain'
+            or $contenttype === 'text/html'
+            or $contenttype === 'application/x-www-form-urlencoded'
+        ) {
             $body = $request->getBody()->__toString();
             $request = $request->withParsedBody($body);
         } else {
             //todo XML?
             throw new RestException(
-            'Unknown Content-Type header - ' .
-            $contenttype
+                'Unknown Content-Type header - ' .
+                $contenttype
             );
         }
 
@@ -114,8 +117,8 @@ class RequestDecoder implements MiddlewareInterface
         $result = json_decode($data, true);
         if (JSON_ERROR_NONE !== json_last_error()) {
             throw new RestException(
-            'Unable to decode data from JSON' .
-            json_last_error_msg()
+                'Unable to decode data from JSON' .
+                json_last_error_msg()
             );
         }
         json_encode(null);
