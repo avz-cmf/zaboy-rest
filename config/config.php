@@ -1,20 +1,24 @@
 <?php
-use Zend\Config\Factory;
-use Zend\Config\Writer\PhpArray;
-$env = getenv('APP_ENV') ?: 'dev';
-$mergedConfigFile = __DIR__ . '/../data/cache/config_cache.php';
-// If in production and merged config exists, return it
-if ($env === 'pro' && is_file($mergedConfigFile)) {
-    return include $mergedConfigFile;
+
+use Zend\Stdlib\ArrayUtils;
+use Zend\Stdlib\Glob;
+
+$cachedConfigFile = 'data/cache/app_config.php';
+$config = [];
+if (is_file($cachedConfigFile)) {
+    // Try to load the cached config
+    $config = json_decode(file_get_contents($cachedConfigFile), true);
+} else {
+    // Load configuration from autoload path
+    foreach (Glob::glob('config/autoload/{{,*.}global,{,*.}local}.php', Glob::GLOB_BRACE) as $file) {
+        $config = ArrayUtils::merge($config, include $file);
+    }
+    // Cache config if enabled
+    if (isset($config['config_cache_enabled']) && $config['config_cache_enabled'] === true) {
+        file_put_contents($cachedConfigFile, json_encode($config));
+    }
 }
-// Merge configuration files
-$mergedConfig = Factory::fromFiles(
-    glob(__DIR__ . '/autoload/{,*.}{global,local}.php', GLOB_BRACE)
-);
-// If in production, cache merged config
-if ($env === 'pro') {
-    $writer = new PhpArray();
-    $writer->toFile($mergedConfigFile, $mergedConfig);
-}
-// Finally, Return the merged configuration
-return $mergedConfig;
+
+// Return an ArrayObject so we can inject the config as a service in Aura.Di
+// and still use array checks like ``is_array``.
+return new ArrayObject($config, ArrayObject::ARRAY_AS_PROPS);

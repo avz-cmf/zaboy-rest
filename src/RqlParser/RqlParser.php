@@ -26,23 +26,10 @@ class RqlParser
     private $allowedAggregateFunction;
     private $conditionBuilder;
 
-    public static function rqlDecode($rqlQueryString)
-    {
-        $parser = new self();
-        $result = $parser->decode($rqlQueryString);
-        unset($parser);
-        return $result;
-    }
-
-    public static function rqlEncode($query)
-    {
-        $parser = new self();
-        $result = $parser->encode($query);
-        unset($parser);
-        return $result;
-    }
-
-    public function __construct(array $allowedAggregateFunction = null, ConditionBuilderAbstract $conditionBuilder = null)
+    public function __construct(
+        array $allowedAggregateFunction = null,
+        ConditionBuilderAbstract $conditionBuilder = null
+    )
     {
         if (isset($allowedAggregateFunction)) {
             $this->allowedAggregateFunction = $allowedAggregateFunction;
@@ -57,8 +44,37 @@ class RqlParser
         }
     }
 
+    public static function rqlDecode($rqlQueryString)
+    {
+        $rqlQueryString = RqlParser::prepare_rql_string($rqlQueryString);
+        $parser = new self();
+        $result = $parser->decode($rqlQueryString);
+        unset($parser);
+        return $result;
+    }
+    protected static function prepare_rql_string($rqlQueryString){
+        $sortNodePattern = '/sort\(([^\(\)\&]+)\)/';
+        //$sortFieldPattern = '/([-|+]?[\w]+\,?)/g';
+        $match = [];
+        if (preg_match($sortNodePattern, $rqlQueryString, $match)) {
+            $sortNode = "sort(";
+            $fieldsSortType = explode(',', $match[1]);
+            foreach ($fieldsSortType as $fieldSortType) {
+                if (!preg_match('/^[+|-]([\W\w])/', $fieldSortType)) {
+                    $fieldSortType = '+' . $fieldSortType;
+                }
+
+                $sortNode .= $fieldSortType . ',';
+            }
+            $sortNode = trim($sortNode, ",") . ")";
+            $rqlQueryString = preg_replace($sortNodePattern, $sortNode, $rqlQueryString);
+        }
+        return $rqlQueryString;
+    }
+
     public function decode($rqlQueryString)
     {
+        $rqlQueryString = RqlParser::prepare_rql_string($rqlQueryString);
         $queryTokenParser = new TokenParserGroup();
         $queryTokenParser
             ->addTokenParser(new TokenParser\Query\GroupTokenParser($queryTokenParser))
@@ -101,6 +117,14 @@ class RqlParser
         $rqlQueryObject = $parser->parse((new Lexer())->tokenize($rqlQueryString));
 
         return $rqlQueryObject;
+    }
+
+    public static function rqlEncode($query)
+    {
+        $parser = new self();
+        $result = $parser->encode($query);
+        unset($parser);
+        return $result;
     }
 
     public function encode(Query $query)
