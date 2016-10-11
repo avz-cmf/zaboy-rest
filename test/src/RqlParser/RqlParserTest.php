@@ -86,7 +86,7 @@ class RqlParserTest extends PHPUnit_Framework_TestCase
         $this->rqlString .= "&limit(20,30)";
         $this->rqlString .= "&sort(-q,+w,+e)";
         $this->rqlString .= "&select(q,max(q),min(q),count(q))";
-        
+
         $rqlString = RqlParser::rqlEncode($this->queryObject);
         $this->assertEquals($rqlString, $this->rqlString);
     }

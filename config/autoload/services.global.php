@@ -16,8 +16,8 @@ return [
             'zaboy\rest\DataStore\Factory\CsvAbstractFactory',
             'zaboy\rest\DataStore\Factory\MemoryAbstractFactory',
             'zaboy\rest\DataStore\Factory\CacheableAbstractFactory',
-            'zaboy\rest\TableGateway\Factory\TableGatewayAbstractFactory',
             'Zend\Db\Adapter\AdapterAbstractServiceFactory',
+            'zaboy\rest\TableGateway\Factory\TableGatewayAbstractFactory',
         ]
     ]
 ];
