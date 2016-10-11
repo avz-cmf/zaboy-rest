@@ -12,7 +12,7 @@ namespace zaboy\rest;
 //use Zend\ServiceManager\Factory\AbstractFactoryInterface;
 //uncomment it ^^ for Zend\ServiceManager V3
 use zaboy\rest\DataStore\Interfaces\DataStoresInterface;
-use Zend\ServiceManager\AbstractFactoryInterface;
+use Zend\ServiceManager\Factory\AbstractFactoryInterface;
 //comment it ^^ for Zend\ServiceManager V3
 use Zend\ServiceManager\ServiceLocatorInterface;
 use Interop\Container\ContainerInterface;

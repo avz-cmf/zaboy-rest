@@ -71,6 +71,7 @@ class TableGatewayAbstractFactory extends AbstractFactoryAbstract
 
     /**
      *
+     * @param ContainerInterface $container
      * @return bool
      */
     protected function setDbAdapter(ContainerInterface $container)
@@ -108,6 +109,7 @@ class TableGatewayAbstractFactory extends AbstractFactoryAbstract
     /**
      * For static tables set
      *
+     * @param ContainerInterface $container
      * @return array|false
      */
     protected function getCachedTables(ContainerInterface $container)
