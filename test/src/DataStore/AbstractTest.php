@@ -900,6 +900,7 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
         $query->setSelect(new XSelectNode([$aggregateCount]));
         $resp = $this->object->query($query);
         $this->assertEquals(1, count($resp));
+        //$this->assertEquals(4, $resp[0]['count(id)']);
         $this->assertEquals(4, $resp[0]['id->count']);
     }
 
@@ -911,6 +912,7 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
         $query->setSelect(new XSelectNode([$aggregateCount]));
         $resp = $this->object->query($query);
         $this->assertEquals(1, count($resp));
+       // $this->assertEquals(4, $resp[0]['max(id)']);
         $this->assertEquals(4, $resp[0]['id->max']);
     }
 
@@ -922,6 +924,7 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
         $query->setSelect(new XSelectNode([$aggregateCount]));
         $resp = $this->object->query($query);
         $this->assertEquals(1, count($resp));
+        //$this->assertEquals(1, $resp[0]['min(id)']);
         $this->assertEquals(1, $resp[0]['id->min']);
     }
 
@@ -943,9 +946,13 @@ abstract class AbstractTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(1, count($resp));
 
         $this->assertEquals(2, $resp[0]['id->count']);
+        //$this->assertEquals(2, $resp[0]['count(id)']);
         $this->assertEquals(4, $resp[0]['id->max']);
+        //$this->assertEquals(4, $resp[0]['max(id)']);
         $this->assertEquals(3, $resp[0]['id->min']);
+        //$this->assertEquals(3, $resp[0]['min(id)']);
         $this->assertEquals(40, $resp[0]['anotherId']);
+        //$this->assertEquals(40, $resp[0]['anotherId']);
     }
 
     /**
