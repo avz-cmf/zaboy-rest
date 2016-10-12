@@ -14,6 +14,11 @@ use zaboy\rest\Pipe\Factory\RestRqlFactory;
 //echo urlencode('.');
 //echo '!*****************';
 
+// Define application environment
+if (getenv('APP_ENV') === 'dev') {
+    error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+}
 
 /**
   use ReputationVIP\QueueClient\QueueClient;
