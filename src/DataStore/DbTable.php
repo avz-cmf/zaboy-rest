@@ -135,8 +135,6 @@ class DbTable extends DataStoreAbstract
         if ($offset <> 0) {
             $selectSQL->offset($offset);
         }
-        $isAggregate = false;
-
         // *********************  fields  ***********************
 
         if (!empty($selectFields)) {
@@ -144,7 +142,6 @@ class DbTable extends DataStoreAbstract
 
             foreach ($selectFields as $field) {
                 if ($field instanceof AggregateFunctionNode) {
-                    $isAggregate = true;
                     $fields[$field->getField() . "->" . $field->getFunction()] = new Expression($field->__toString());
                 } else {
                     $fields[] = $field;
@@ -155,39 +152,27 @@ class DbTable extends DataStoreAbstract
         }
         // ***********************   Aggregate query   ***********************
 
-        if ($isAggregate) {
-            $externalSql = new Select();
-            $insertedSql = $this->dbTable->getSql()->select();
+        //create new Select - for aggregate func query
+        $externalSql = new Select();
 
-            if (isset($fields)) {
-                $externalSql->columns($fields);
-            }
-
-            $insertedSql->where($where);
-
-            if ($limit <> self::LIMIT_INFINITY) {
-                $insertedSql->limit($limit);
-            }
-
-            if ($offset <> 0) {
-                $insertedSql->offset($offset);
-            }
-
-            $from = "(" . $this->dbTable->getSql()->buildSqlString($insertedSql) . ")";
-            $externalSql->from(array('Q' => $from));
-
-            $sql = $this->dbTable->getSql()->buildSqlString($externalSql);
-            $sql = str_replace(["`(", ")`", "``"], ['(', ')', "`"], $sql);
-
-            /** @var Adapter $adapter */
-            $adapter = $this->dbTable->getAdapter();
-            $rowset = $adapter->query($sql, $adapter::QUERY_MODE_EXECUTE);
-        } else {
-            $sql = $this->dbTable->getSql();
-            $rowset = $this->dbTable->selectWith($selectSQL);
+        if (isset($fields)) {
+            $externalSql->columns($fields);
         }
+        //change select column to all
+        $selectSQL->columns(['*']);
 
-        // ***********************   return   ***********************
+        //create sub query without aggreagate func and with all fields
+        $from = "(" . $this->dbTable->getSql()->buildSqlString($selectSQL) . ")";
+        $externalSql->from(array('Q' => $from));
+
+        //build sql string
+        $sql = $this->dbTable->getSql()->buildSqlString($externalSql);
+        //replace double ` char to single.
+        $sql = str_replace(["`(", ")`", "``"], ['(', ')', "`"], $sql);
+
+        /** @var Adapter $adapter */
+        $adapter = $this->dbTable->getAdapter();
+        $rowset = $adapter->query($sql, $adapter::QUERY_MODE_EXECUTE);
 
         return $rowset->toArray();
     }
