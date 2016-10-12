@@ -155,18 +155,19 @@ class DbTable extends DataStoreAbstract
         //create new Select - for aggregate func query
         $externalSql = new Select();
 
-
         if (isset($fields)) {
             $externalSql->columns($fields);
         }
         //change select column to all
         $selectSQL->columns(['*']);
 
-        //create sub query without aggreagate func and
+        //create sub query without aggreagate func and with all fields
         $from = "(" . $this->dbTable->getSql()->buildSqlString($selectSQL) . ")";
         $externalSql->from(array('Q' => $from));
 
+        //build sql string
         $sql = $this->dbTable->getSql()->buildSqlString($externalSql);
+        //replace double ` char to single.
         $sql = str_replace(["`(", ")`", "``"], ['(', ')', "`"], $sql);
 
         /** @var Adapter $adapter */
