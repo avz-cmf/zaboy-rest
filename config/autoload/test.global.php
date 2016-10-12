@@ -33,13 +33,12 @@ return [
             'class' => 'zaboy\rest\DataStore\DbTable',
             'tableGateway' => 'test_res_tablle',
         ],
-
-        'testHttpClient' => [
+        /*'testHttpClient' => [
             'class' => 'zaboy\rest\DataStore\HttpClient',
             'tableName' => 'test_res_http',
             'url' => 'http://zaboy-rest.loc/api/rest/test_res_http',
             'options' => ['timeout' => 30]
-        ],
+        ],*/
         'testMemory' => [
             'class' => 'zaboy\rest\DataStore\Memory',
         ],
