@@ -32,11 +32,10 @@ use zaboy\rest\DataStore\DataStoreException;
  */
 class HttpClientAbstractFactory extends AbstractDataStoreFactory
 {
-    static $KEY_DATASTORE_CLASS = 'zaboy\rest\DataStore\HttpClient';
-
     const KEY_URL = 'url';
-
     const KEY_OPTIONS = 'options';
+    static $KEY_DATASTORE_CLASS = 'zaboy\rest\DataStore\HttpClient';
+    protected static $KEY_IN_CREATE = 0;
 
     /**
      * {@inheritdoc}
@@ -45,22 +44,32 @@ class HttpClientAbstractFactory extends AbstractDataStoreFactory
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
+        if ($this::$KEY_IN_CREATE) {
+            throw new DataStoreException("Create will be called without pre call canCreate method");
+        }
+        $this::$KEY_IN_CREATE = 1;
+
         $config = $container->get('config');
         $serviceConfig = $config[self::KEY_DATASTORE][$requestedName];
         $requestedClassName = $serviceConfig[self::KEY_CLASS];
         if (isset($serviceConfig[self::KEY_URL])) {
             $url = $serviceConfig[self::KEY_URL];
         } else {
+            $this::$KEY_IN_CREATE = 0;
             throw new DataStoreException(
                 'There is not url for ' . $requestedName . 'in config \'dataStore\''
             );
         }
         if (isset($serviceConfig[self::KEY_OPTIONS])) {
             $options = $serviceConfig[self::KEY_OPTIONS];
-            return new $requestedClassName($url, $options);
+            $result = new $requestedClassName($url, $options);
         } else {
-            return new $requestedClassName($url);
+            $result = new $requestedClassName($url);
         }
+        $this::$KEY_IN_CREATE = 0;
+        return $result;
     }
+
+
 
 }
