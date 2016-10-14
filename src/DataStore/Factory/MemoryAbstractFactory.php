@@ -11,6 +11,7 @@ namespace zaboy\rest\DataStore\Factory;
 
 use Interop\Container\ContainerInterface;
 use zaboy\rest\AbstractFactoryAbstract;
+use zaboy\rest\DataStore\DataStoreException;
 use zaboy\rest\DataStore\Interfaces\DataStoresInterface;
 
 /**
@@ -34,6 +35,7 @@ class MemoryAbstractFactory extends AbstractDataStoreFactory
 {
 
     static $KEY_DATASTORE_CLASS = 'zaboy\rest\DataStore\Memory';
+    protected static $KEY_IN_CREATE = 0;
 
     /**
      * Create and return an instance of the DataStore.
@@ -45,13 +47,24 @@ class MemoryAbstractFactory extends AbstractDataStoreFactory
      * @param  string $requestedName
      * @param  array $options
      * @return DataStoresInterface
+     * @throws DataStoreException
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
+         if($this::$KEY_IN_CREATE)
+        {
+            throw new DataStoreException("Create will be called without pre call canCreate method");
+        }
+        $this::$KEY_IN_CREATE = 1;
+
         $config = $container->get('config');
         $serviceConfig = $config[self::KEY_DATASTORE][$requestedName];
         $requestedClassName = $serviceConfig[self::KEY_CLASS];
+        $this::$KEY_IN_CREATE = 0;
         return new $requestedClassName();
+
     }
+
+
 
 }

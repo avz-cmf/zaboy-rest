@@ -28,6 +28,7 @@ class AspectAbstractFactory extends AbstractDataStoreFactory
 {
 
     static $KEY_DATASTORE_CLASS = 'zaboy\rest\DataStore\Aspect\AspectAbstract';
+    protected static $KEY_IN_CREATE = 0;
 
     /**
      * {@inheritdoc}

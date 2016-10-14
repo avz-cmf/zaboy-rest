@@ -10,16 +10,21 @@ namespace zaboy\rest\DataStore\Factory;
 
 use Interop\Container\ContainerInterface;
 use zaboy\rest\AbstractFactoryAbstract;
+use zaboy\rest\DataStore\DataStoreException;
 
 abstract class AbstractDataStoreFactory extends AbstractFactoryAbstract
 {
     const KEY_DATASTORE = 'dataStore';
 
-    static $KEY_DATASTORE_CLASS = 'zaboy\rest\DataStore\DataStoreAbstract';
+    protected static $KEY_DATASTORE_CLASS = 'zaboy\rest\DataStore\DataStoreAbstract';
+
+    protected static $KEY_IN_CANCREATE = 0;
+    protected static $KEY_IN_CREATE = 0;
 
     /**
      * Can the factory create an instance for the service?
-     *
+     * Use protection against circular dependencies (via static flags).
+     * read https://github.com/avz-cmf/zaboy-rest/tree/master/src/DataStore/Factory/README.md
      * For Service manager V3
      * Edit 'use' section if need:
      * Change:
@@ -32,13 +37,20 @@ abstract class AbstractDataStoreFactory extends AbstractFactoryAbstract
      */
     public function canCreate(ContainerInterface $container, $requestedName)
     {
-        $config = $container->get('config');
-        if (!isset($config[self::KEY_DATASTORE][$requestedName][self::KEY_CLASS])) {
+        if($this::$KEY_IN_CANCREATE || $this::$KEY_IN_CREATE) {
             return false;
         }
-
-        $requestedClassName = $config[self::KEY_DATASTORE][$requestedName][self::KEY_CLASS];
-        $result = is_a($requestedClassName, $this::$KEY_DATASTORE_CLASS, true);
+        $this::$KEY_IN_CANCREATE = 1;
+        $config = $container->get('config');
+        if (!isset($config[self::KEY_DATASTORE][$requestedName][self::KEY_CLASS])) {
+            $result = false;
+        }else {
+            $requestedClassName = $config[self::KEY_DATASTORE][$requestedName][self::KEY_CLASS];
+            $result = is_a($requestedClassName, $this::$KEY_DATASTORE_CLASS, true);
+        }
+        $this::$KEY_IN_CANCREATE = 0;
         return $result;
     }
+
+
 }
