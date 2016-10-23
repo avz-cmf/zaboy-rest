@@ -46,8 +46,6 @@ class DbTable extends DataStoreAbstract
     public function __construct(TableGateway $dbTable)
     {
         $this->dbTable = $dbTable;
-        $db = $dbTable->getAdapter();
-        $this->conditionBuilder = new SqlConditionBuilder($db);
     }
 
 //** Interface "zaboy\rest\DataStore\Interfaces\ReadInterface" **/
@@ -62,12 +60,16 @@ class DbTable extends DataStoreAbstract
 
         $identifier = $this->getIdentifier();
         $adapter = $this->dbTable->getAdapter();
+
+
+        if (is_int(array_keys($itemData)[0])) {
+            $query = new Query();
+            $query->setSelect(new XSelectNode([new AggregateFunctionNode('max', $this->getIdentifier())]));
+            $prewId = $this->query($query)[0][$this->getIdentifier() . '->max'];
+        }
+
         // begin Transaction
         $errorMsg = 'Can\'t start insert transaction';
-
-        $query = new Query();
-        $query->setSelect(new XSelectNode([new AggregateFunctionNode('max', $this->getIdentifier())]));
-        $prewId = $this->query($query)[0][$this->getIdentifier() . '->max'];
 
         $adapter->getDriver()->getConnection()->beginTransaction();
         try {
@@ -87,7 +89,7 @@ class DbTable extends DataStoreAbstract
         if ($rowsCount > 1) {
             $newItem = [];
             $lastId = $this->query($query)[0][$this->getIdentifier() . '->max'];
-            foreach (range($prewId+1, $lastId) as $id) {
+            foreach (range($prewId + 1, $lastId) as $id) {
                 $newItem[] = [$identifier => $id];
             }
         } else {
@@ -106,37 +108,60 @@ class DbTable extends DataStoreAbstract
      */
     public function query(Query $query)
     {
-        $limits = $query->getLimit();
-        $limit = !$limits ? self::LIMIT_INFINITY : $query->getLimit()->getLimit();
-        $offset = !$limits ? 0 : $query->getLimit()->getOffset();
-        $sort = $query->getSort();
-        $sortFields = !$sort ? [$this->getIdentifier() => SortNode::SORT_ASC] : $sort->getFields();
-        $select = $query->getSelect();  //What fields will return
 
-        $selectFields = !$select ? [] : $select->getFields();
+        $conditionBuilder = new SqlConditionBuilder($this->dbTable->getAdapter());
 
         $selectSQL = $this->dbTable->getSql()->select();
-        // ***********************   where   ***********************
-        $conditionBuilder = $this->conditionBuilder;
-        $where = $conditionBuilder($query->getQuery());
-        $selectSQL->where($where);
-        // ***********************   order   ***********************
-        foreach ($sortFields as $ordKey => $ordVal) {
-            if ((int)$ordVal === SortNode::SORT_DESC) {
-                $selectSQL->order($ordKey . ' ' . Select::ORDER_DESCENDING);
-            } else {
-                $selectSQL->order($ordKey . ' ' . Select::ORDER_ASCENDING);
-            }
-        }
-        // *********************  limit, offset   ***********************
+        $selectSQL->where($conditionBuilder($query->getQuery()));
+        $selectSQL = $this->setSelectOrder($selectSQL, $query);
+        $selectSQL = $this->setSelectLimitOffset($selectSQL, $query);
+        $selectSQL = $this->setSelectColumns($selectSQL, $query);
+        $selectSQL = $this->setSelectJoin($selectSQL, $query);
+        $selectSQL = $this->makeExternalSql($selectSQL);
+
+        //build sql string
+        $sql = $this->dbTable->getSql()->buildSqlString($selectSQL);
+        //replace double ` char to single.
+        $sql = str_replace(["`(", ")`", "``"], ['(', ')', "`"], $sql);
+        /** @var Adapter $adapter */
+        $adapter = $this->dbTable->getAdapter();
+        $rowset = $adapter->query($sql, $adapter::QUERY_MODE_EXECUTE);
+
+        return $rowset->toArray();
+    }
+
+    protected function setSelectLimitOffset(Select $selectSQL, Query $query)
+    {
+        $limits = $query->getLimit();
+        $limit = !$limits ? self::LIMIT_INFINITY : $limits->getLimit();
+        $offset = !$limits ? 0 : $limits->getOffset();
         if ($limit <> self::LIMIT_INFINITY) {
             $selectSQL->limit($limit);
         }
         if ($offset <> 0) {
             $selectSQL->offset($offset);
         }
-        // *********************  fields  ***********************
+        return $selectSQL;
+    }
 
+    protected function setSelectOrder(Select $selectSQL, Query $query)
+    {
+        $sort = $query->getSort();
+        $sortFields = !$sort ? [$this->getIdentifier() => SortNode::SORT_ASC] : $sort->getFields();
+        foreach ($sortFields as $ordKey => $ordVal) {
+            if ((int) $ordVal === SortNode::SORT_DESC) {
+                $selectSQL->order($ordKey . ' ' . Select::ORDER_DESCENDING);
+            } else {
+                $selectSQL->order($ordKey . ' ' . Select::ORDER_ASCENDING);
+            }
+        }
+        return $selectSQL;
+    }
+
+    protected function setSelectColumns(Select $selectSQL, Query $query)
+    {
+        $select = $query->getSelect();  //What fields will return
+        $selectFields = !$select ? [] : $select->getFields();
         if (!empty($selectFields)) {
             $fields = [];
 
@@ -147,34 +172,33 @@ class DbTable extends DataStoreAbstract
                     $fields[] = $field;
                 }
             }
-
             $selectSQL->columns($fields);
         }
-        // ***********************   Aggregate query   ***********************
+        return $selectSQL;
+    }
 
+    protected function setSelectJoin(Select $selectSQL, Query $query)
+    {
+        return $selectSQL;
+    }
+
+    protected function makeExternalSql(Select $selectSQL)
+    {
         //create new Select - for aggregate func query
-        $externalSql = new Select();
-
-        if (isset($fields)) {
-            $externalSql->columns($fields);
+        $fields = $selectSQL->getRawState(Select::COLUMNS);
+        $hasAggregateFilds = array_keys($fields) != range(0, sizeof($fields) - 1);
+        if ($hasAggregateFilds) {
+            $externalSql = new Select();
+            $externalSql->columns($selectSQL->getRawState(Select::COLUMNS));
+            //change select column to all
+            $selectSQL->columns(['*']);
+            //create sub query without aggreagate func and with all fields
+            $from = "(" . $this->dbTable->getSql()->buildSqlString($selectSQL) . ")";
+            $externalSql->from(array('Q' => $from));
+            return $externalSql;
+        } else {
+            return $selectSQL;
         }
-        //change select column to all
-        $selectSQL->columns(['*']);
-
-        //create sub query without aggreagate func and with all fields
-        $from = "(" . $this->dbTable->getSql()->buildSqlString($selectSQL) . ")";
-        $externalSql->from(array('Q' => $from));
-
-        //build sql string
-        $sql = $this->dbTable->getSql()->buildSqlString($externalSql);
-        //replace double ` char to single.
-        $sql = str_replace(["`(", ")`", "``"], ['(', ')', "`"], $sql);
-
-        /** @var Adapter $adapter */
-        $adapter = $this->dbTable->getAdapter();
-        $rowset = $adapter->query($sql, $adapter::QUERY_MODE_EXECUTE);
-
-        return $rowset->toArray();
     }
 
 // ** Interface "zaboy\rest\DataStore\Interfaces\DataStoresInterface"  **/
@@ -195,18 +219,18 @@ class DbTable extends DataStoreAbstract
         $adapter = $this->dbTable->getAdapter();
         $errorMsg = 'Can\'t update item with "id" = ' . $id;
         $queryStr = 'SELECT ' . Select::SQL_STAR
-            . ' FROM ' . $adapter->platform->quoteIdentifier($this->dbTable->getTable())
-            . ' WHERE ' . $adapter->platform->quoteIdentifier($identifier) . ' = ?'
-            . ' FOR UPDATE';
+                . ' FROM ' . $adapter->platform->quoteIdentifier($this->dbTable->getTable())
+                . ' WHERE ' . $adapter->platform->quoteIdentifier($identifier) . ' = ?'
+                . ' FOR UPDATE';
         $adapter->getDriver()->getConnection()->beginTransaction();
         try {
             //is row with this index exist?
             $rowset = $adapter->query($queryStr, array($id));
             $isExist = !is_null($rowset->current());
             switch (true) {
-                case !$isExist && !$createIfAbsent:
+                case!$isExist && !$createIfAbsent:
                     throw new DataStoreException($errorMsg);
-                case !$isExist && $createIfAbsent:
+                case!$isExist && $createIfAbsent:
                     $this->dbTable->insert($itemData);
                     $result = $itemData;
                     break;
@@ -281,9 +305,9 @@ class DbTable extends DataStoreAbstract
         $adapter = $this->dbTable->getAdapter();
         /* @var $rowset ResultSet */
         $rowset = $adapter->query(
-            'SELECT COUNT(*) AS count FROM '
-            . $adapter->platform->quoteIdentifier($this->dbTable->getTable())
-            , $adapter::QUERY_MODE_EXECUTE);
+                'SELECT COUNT(*) AS count FROM '
+                . $adapter->platform->quoteIdentifier($this->dbTable->getTable())
+                , $adapter::QUERY_MODE_EXECUTE);
         return $rowset->current()['count'];
     }
 
@@ -311,4 +335,5 @@ class DbTable extends DataStoreAbstract
         }
         return $keys;
     }
+
 }

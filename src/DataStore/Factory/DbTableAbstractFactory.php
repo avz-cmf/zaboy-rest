@@ -45,9 +45,7 @@ class DbTableAbstractFactory extends AbstractDataStoreFactory
 {
 
     const KEY_TABLE_NAME = 'tableName';
-
     const KEY_TABLE_GATEWAY = 'tableGateway';
-
     const KEY_DB_ADAPTER = 'dbAdapter';
 
     static $KEY_DATASTORE_CLASS = 'zaboy\rest\DataStore\DbTable';
@@ -75,14 +73,21 @@ class DbTableAbstractFactory extends AbstractDataStoreFactory
         $config = $container->get('config');
         $serviceConfig = $config[self::KEY_DATASTORE][$requestedName];
         $requestedClassName = $serviceConfig[self::KEY_CLASS];
+        $tableGateway = $this->getTableGateway($container, $serviceConfig, $requestedName);
 
+        $this::$KEY_IN_CREATE = 0;
+        return new $requestedClassName($tableGateway);
+    }
+
+    protected function getTableGateway($container, $serviceConfig, $requestedName)
+    {
         if (isset($serviceConfig[self::KEY_TABLE_GATEWAY])) {
             if ($container->has($serviceConfig[self::KEY_TABLE_GATEWAY])) {
                 $tableGateway = $container->get($serviceConfig[self::KEY_TABLE_GATEWAY]);
             } else {
                 $this::$KEY_IN_CREATE = 0;
                 throw new DataStoreException(
-                    'Can\'t create ' . $serviceConfig[self::KEY_TABLE_GATEWAY]
+                'Can\'t create ' . $serviceConfig[self::KEY_TABLE_GATEWAY]
                 );
             }
         } else if (isset($serviceConfig[self::KEY_TABLE_NAME])) {
@@ -96,21 +101,16 @@ class DbTableAbstractFactory extends AbstractDataStoreFactory
             } else {
                 $this::$KEY_IN_CREATE = 0;
                 throw new DataStoreException(
-                    'Can\'t create Zend\Db\TableGateway\TableGateway for ' . $tableName
+                'Can\'t create Zend\Db\TableGateway\TableGateway for ' . $tableName
                 );
             }
         } else {
             $this::$KEY_IN_CREATE = 0;
             throw new DataStoreException(
-                'There is not table name for ' . $requestedName . 'in config \'dataStore\''
+            'There is not table name for ' . $requestedName . 'in config \'dataStore\''
             );
         }
-
-        $this::$KEY_IN_CREATE = 0;
-
-        return new $requestedClassName($tableGateway);
+        return $tableGateway;
     }
-
-
 
 }

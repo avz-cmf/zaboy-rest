@@ -388,7 +388,7 @@ class TableManagerMysql
         }
         $fieldParams = [];
         foreach ($fieldParamsDefault as $key => $value) {
-            if (key_exists($key, $fieldData[self::FIELD_PARAMS])) {
+            if (isset($fieldData[self::FIELD_PARAMS]) && key_exists($key, $fieldData[self::FIELD_PARAMS])) {
                 $fieldParams[] = $fieldData[self::FIELD_PARAMS][$key];
             } else {
                 $fieldParams[] = $value;

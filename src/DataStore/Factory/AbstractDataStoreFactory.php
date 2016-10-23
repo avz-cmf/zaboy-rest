@@ -1,9 +1,10 @@
 <?php
+
 /**
- * Created by PhpStorm.
- * User: root
- * Date: 21.07.16
- * Time: 16:28
+ * Zaboy lib (http://zaboy.org/lib/)
+ *
+ * @copyright  Zaboychenko Andrey
+ * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  */
 
 namespace zaboy\rest\DataStore\Factory;
@@ -14,10 +15,10 @@ use zaboy\rest\DataStore\DataStoreException;
 
 abstract class AbstractDataStoreFactory extends AbstractFactoryAbstract
 {
+
     const KEY_DATASTORE = 'dataStore';
 
     protected static $KEY_DATASTORE_CLASS = 'zaboy\rest\DataStore\DataStoreAbstract';
-
     protected static $KEY_IN_CANCREATE = 0;
     protected static $KEY_IN_CREATE = 0;
 
@@ -37,20 +38,19 @@ abstract class AbstractDataStoreFactory extends AbstractFactoryAbstract
      */
     public function canCreate(ContainerInterface $container, $requestedName)
     {
-        if($this::$KEY_IN_CANCREATE || $this::$KEY_IN_CREATE) {
+        if ($this::$KEY_IN_CANCREATE || $this::$KEY_IN_CREATE) {
             return false;
         }
         $this::$KEY_IN_CANCREATE = 1;
         $config = $container->get('config');
         if (!isset($config[self::KEY_DATASTORE][$requestedName][self::KEY_CLASS])) {
             $result = false;
-        }else {
+        } else {
             $requestedClassName = $config[self::KEY_DATASTORE][$requestedName][self::KEY_CLASS];
             $result = is_a($requestedClassName, $this::$KEY_DATASTORE_CLASS, true);
         }
         $this::$KEY_IN_CANCREATE = 0;
         return $result;
     }
-
 
 }
