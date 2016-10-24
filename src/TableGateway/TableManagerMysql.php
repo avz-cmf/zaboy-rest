@@ -11,12 +11,14 @@ namespace zaboy\rest\TableGateway;
 
 use zaboy\rest\DataStore\DataStoreException;
 use Zend\Db\Sql\Ddl\CreateTable;
+use Zend\Db\Sql\Ddl\AlterTable;
 use Zend\Db\Sql\Ddl\Constraint;
 use zaboy\rest\RestException;
 use Zend\Db\Sql;
 use Zend\Db\Adapter;
 use Zend\Db\Metadata\Source\Factory;
 use Zend\Db\Metadata\Source;
+use Zend\Db\Sql\Ddl\Constraint\UniqueKey;
 
 /**
  * Creates table and gets its info
@@ -43,16 +45,24 @@ use Zend\Db\Metadata\Source;
  *  $tableManager->createTable($tableData);
  * </code>
  *
- * As you can see, array $tableData has 3 keys and next structure:
+ * As you can see, array $tableData has 4 keys and next structure:
  * <code>
  *  $tableData = [
  *      'FieldName' => [
  *          'field_type' => 'Integer',
  *          'field_params' => [
- *          'options' => ['autoincrement' => true]
- *          ]
+ *              'options' => ['autoincrement' => true]
+ *          ],
+ *          'field_foreign_key' => [
+ *              'referenceTable' => ... ,
+ *              'referenceColumn' => ... ,
+ *              'onDeleteRule' => null, // ' 'cascade'
+ *              'onUpdateRule' => null, //
+ *              'name' => null  // or Constraint Name
+ *          ],
+ *          'field_unique_key' => true // or Constraint Name
  *      ],
- *      'NextFieldName' => [
+ *
  *  ...
  * </code>
  *
@@ -81,6 +91,9 @@ class TableManagerMysql
 
     const FIELD_TYPE = 'field_type';
     const FIELD_PARAMS = 'field_params';
+    const FOREIGN_KEY = 'field_foreign_key';
+    const UNIQUE_KEY = 'field_unique_key';
+    //
     const KEY_IN_CONFIG = 'tableManagerMysql';
     const KEY_TABLES_CONFIGS = 'tablesConfigs';
     const KEY_AUTOCREATE_TABLES = 'autocreateTables';
@@ -117,10 +130,9 @@ class TableManagerMysql
         'PrecisionColumn' => [ 'digits' => null, 'decimal' => null, 'nullable' => false, 'default' => null, 'options' => []]
     ];
 
-
     /**
      * TableManagerMysql constructor.
-     * 
+     *
      * @param Adapter\Adapter $db
      * @param null $config
      */
@@ -155,7 +167,7 @@ class TableManagerMysql
     {
         if ($this->hasTable($tableName)) {
             throw new DataStoreException(
-                "Table with name $tableName is exist. Use rewriteTable()"
+            "Table with name $tableName is exist. Use rewriteTable()"
             );
         }
         return $this->create($tableName, $tableConfig);
@@ -221,7 +233,6 @@ class TableManagerMysql
         $result .= '    With constraints: ' . PHP_EOL;
 
         foreach ($metadata->getConstraints($tableName) as $constraint) {
-
             /** @var $constraint \Zend\Db\Metadata\Object\ConstraintObject */
             $result .= '        ' . $constraint->getName()
                     . ' -> ' . $constraint->getType()
@@ -229,17 +240,22 @@ class TableManagerMysql
             if (!$constraint->hasColumns()) {
                 continue;
             }
+
             $result .= '            column: ' . implode(', ', $constraint->getColumns());
             if ($constraint->isForeignKey()) {
                 $fkCols = array();
                 foreach ($constraint->getReferencedColumns() as $refColumn) {
                     $fkCols[] = $constraint->getReferencedTableName() . '.' . $refColumn;
                 }
-                $result .= ' => ' . implode(', ', $fkCols);
+                $result .= ' => ' . implode(', ', $fkCols) . PHP_EOL;
+                $result .= '            OnDeleteRule: ' . $constraint->getDeleteRule() . PHP_EOL;
+                $result .= '            OnUpdateRule: ' . $constraint->getUpdateRule() . PHP_EOL;
+            } else {
+                $result .= PHP_EOL;
             }
-
-            return $result;
         }
+        var_dump($result);
+        return $result;
     }
 
     /**
@@ -285,7 +301,6 @@ class TableManagerMysql
         return $tableConfig;
     }
 
-
     /**
      * Creates table by its name and config
      *
@@ -298,52 +313,88 @@ class TableManagerMysql
     {
         $tableConfigArray = $this->getTableConfig($tableConfig);
         $table = new CreateTable($tableName);
+
+        $alterTable = new AlterTable($tableName);
+
+        $table->addConstraint(new Constraint\PrimaryKey('id'));
+
         foreach ($tableConfigArray as $fieldName => $fieldData) {
             $fieldType = $fieldData[self::FIELD_TYPE];
-            switch (true) {
-                case in_array($fieldType, $this->fieldClasses['Column']):
-                    $fieldParamsDefault = $this->parameters['Column'];
-                    break;
-                case in_array($fieldType, $this->fieldClasses['LengthColumn']):
-                    $fieldParamsDefault = $this->parameters['LengthColumn'];
-                    break;
-                case in_array($fieldType, $this->fieldClasses['PrecisionColumn']):
-                    $fieldParamsDefault = $this->parameters['PrecisionColumn'];
-                    break;
-                default:
-                    throw new RestException('Unknown field type:' . $fieldType);
-            }
-            $fieldParams = [];
-            foreach ($fieldParamsDefault as $key => $value) {
-                if (key_exists($key, $fieldData[self::FIELD_PARAMS])) {
-                    $fieldParams[] = $fieldData[self::FIELD_PARAMS][$key];
-                } else {
-                    $fieldParams[] = $value;
-                }
-            }
+            $fieldParams = $this->getFieldParams($fieldData, $fieldType);
             array_unshift($fieldParams, $fieldName);
             $fieldClass = '\\Zend\\Db\\Sql\\Ddl\\Column\\' . $fieldType;
             $reflectionObject = new \ReflectionClass($fieldClass);
             $fieldInstance = $reflectionObject->newInstanceArgs($fieldParams); // it' like new class($callParamsArray[1], $callParamsArray[2]...)
             $table->addColumn($fieldInstance);
+
+            if (isset($fieldData[self::UNIQUE_KEY])) {
+                $uniqueKeyConstraintName = $fieldData[self::UNIQUE_KEY] === true ?
+                        'UniqueKey_' . $tableName . '_' . $fieldName : $fieldData[self::UNIQUE_KEY];
+                $uniqueKeyInstance = new UniqueKey([$fieldName], $uniqueKeyConstraintName);
+                $alterTable->addConstraint($uniqueKeyInstance);
+            }
+
+            if (isset($fieldData[self::FOREIGN_KEY])) {
+                $foreignKeyConstraintName = !isset($fieldData[self::FOREIGN_KEY]['name']) ?
+                        'ForeignKey_' . $tableName . '_' . $fieldName : $fieldData[self::FOREIGN_KEY]['name'];
+                $onDeleteRule = isset($fieldData[self::FOREIGN_KEY]['onDeleteRule']) ?
+                        $fieldData[self::FOREIGN_KEY]['onDeleteRule'] : null;
+                $onUpdateRule = isset($fieldData[self::FOREIGN_KEY]['onUpdateRule']) ?
+                        $fieldData[self::FOREIGN_KEY]['onUpdateRule'] : null;
+                $foreignKeyInstance = new Constraint\ForeignKey(
+                        $foreignKeyConstraintName
+                        , [$fieldName]
+                        , $fieldData[self::FOREIGN_KEY]['referenceTable']
+                        , $fieldData[self::FOREIGN_KEY]['referenceColumn']
+                        , $onDeleteRule
+                        , $onUpdateRule
+                        , $foreignKeyConstraintName
+                );
+                $alterTable->addConstraint($foreignKeyInstance);
+            }
         }
-
-        $table->addConstraint(new Constraint\PrimaryKey('id'));
-
-
-        $ctdMysql = new Sql\Platform\Mysql\Ddl\CreateTableDecorator();
-        $mySqlPlatformDbAdapter = new Adapter\Platform\Mysql();
-        $mySqlPlatformDbAdapter->setDriver($this->db->getDriver());
-        $sqlString = $ctdMysql->setSubject($table)->getSqlString($mySqlPlatformDbAdapter);
 
         // this is simpler version, not MySQL only, but without options[] support
         //$mySqlPlatformSql = new Sql\Platform\Mysql\Mysql();
         //$sql = new Sql\Sql($this->db, null, $mySqlPlatformSql);
         //$sqlString = $sql->buildSqlString($table);
+        $ctdMysql = new Sql\Platform\Mysql\Ddl\CreateTableDecorator();
+        $mySqlPlatformDbAdapter = new Adapter\Platform\Mysql();
+        $mySqlPlatformDbAdapter->setDriver($this->db->getDriver());
+        $sqlStringCreate = $ctdMysql->setSubject($table)->getSqlString($mySqlPlatformDbAdapter);
 
-        return $this->db->query(
-                        $sqlString, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE
-        );
+        $mySqlPlatformSql = new Sql\Platform\Mysql\Mysql();
+        $sql = new Sql\Sql($this->db, null, $mySqlPlatformSql);
+        $sqlStringAlter = $sql->buildSqlString($alterTable);
+
+        $sqlString = $sqlStringCreate . ';' . PHP_EOL . $sqlStringAlter . ';';
+        return $this->db->query($sqlString, \Zend\Db\Adapter\Adapter::QUERY_MODE_EXECUTE);
+    }
+
+    protected function getFieldParams($fieldData, $fieldType)
+    {
+        switch (true) {
+            case in_array($fieldType, $this->fieldClasses['Column']):
+                $fieldParamsDefault = $this->parameters['Column'];
+                break;
+            case in_array($fieldType, $this->fieldClasses['LengthColumn']):
+                $fieldParamsDefault = $this->parameters['LengthColumn'];
+                break;
+            case in_array($fieldType, $this->fieldClasses['PrecisionColumn']):
+                $fieldParamsDefault = $this->parameters['PrecisionColumn'];
+                break;
+            default:
+                throw new RestException('Unknown field type:' . $fieldType);
+        }
+        $fieldParams = [];
+        foreach ($fieldParamsDefault as $key => $value) {
+            if (isset($fieldData[self::FIELD_PARAMS]) && key_exists($key, $fieldData[self::FIELD_PARAMS])) {
+                $fieldParams[] = $fieldData[self::FIELD_PARAMS][$key];
+            } else {
+                $fieldParams[] = $value;
+            }
+        }
+        return $fieldParams;
     }
 
 }

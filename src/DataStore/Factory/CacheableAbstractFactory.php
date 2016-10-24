@@ -1,10 +1,10 @@
 <?php
 
 /**
- * Created by PhpStorm.
- * User: root
- * Date: 04.07.16
- * Time: 11:51
+ * Zaboy lib (http://zaboy.org/lib/)
+ *
+ * @copyright  Zaboychenko Andrey
+ * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  */
 
 namespace zaboy\rest\DataStore\Factory;
@@ -14,12 +14,12 @@ use zaboy\rest\DataStore\DataStoreException;
 
 class CacheableAbstractFactory extends AbstractDataStoreFactory
 {
+
     const KEY_DATASOURCE = 'dataSource';
     const KEY_CACHEABLE = 'cacheable';
+
     static $KEY_DATASTORE_CLASS = 'zaboy\rest\DataStore\Cacheable';
-
     protected static $KEY_IN_CREATE = 0;
-
 
     public function canCreate(ContainerInterface $container, $requestedName)
     {
@@ -27,7 +27,7 @@ class CacheableAbstractFactory extends AbstractDataStoreFactory
         $config = $container->get('config');
         if (!isset($config[self::KEY_DATASTORE][$requestedName][self::KEY_CLASS])) {
             $result = false;
-        }else {
+        } else {
             $requestedClassName = $config[self::KEY_DATASTORE][$requestedName][self::KEY_CLASS];
             $result = is_a($requestedClassName, $this::$KEY_DATASTORE_CLASS, true);
         }
@@ -57,13 +57,13 @@ class CacheableAbstractFactory extends AbstractDataStoreFactory
             } else {
                 $this::$KEY_IN_CREATE = 0;
                 throw new DataStoreException(
-                    'There is DataSource not created ' . $requestedName . 'in config \'dataStore\''
+                'There is DataSource not created ' . $requestedName . 'in config \'dataStore\''
                 );
             }
         } else {
             $this::$KEY_IN_CREATE = 0;
             throw new DataStoreException(
-                'There is DataSource for ' . $requestedName . 'in config \'dataStore\''
+            'There is DataSource for ' . $requestedName . 'in config \'dataStore\''
             );
         }
         if (isset($serviceConfig[self::KEY_CACHEABLE])) {
@@ -72,7 +72,7 @@ class CacheableAbstractFactory extends AbstractDataStoreFactory
             } else {
                 $this::$KEY_IN_CREATE = 0;
                 throw new DataStoreException(
-                    'There is DataSource for ' . $serviceConfig[self::KEY_CACHEABLE] . 'in config \'dataStore\''
+                'There is DataSource for ' . $serviceConfig[self::KEY_CACHEABLE] . 'in config \'dataStore\''
                 );
             }
         } else {
@@ -84,6 +84,5 @@ class CacheableAbstractFactory extends AbstractDataStoreFactory
         //$cashStore = isset($serviceConfig['cashStore']) ?  new $serviceConfig['cashStore']() : null;
         return new $requestedClassName($getAll, $cashStore);
     }
-
 
 }

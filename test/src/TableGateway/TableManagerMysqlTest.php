@@ -37,6 +37,7 @@ class TableManagerMysqlTest extends \PHPUnit_Framework_TestCase
      */
     protected $config = [
         TableManagerMysql::KEY_TABLES_CONFIGS => [
+
             'test_config_table' => [
                 'id' => [
                     'field_type' => 'Integer',
@@ -50,9 +51,43 @@ class TableManagerMysqlTest extends \PHPUnit_Framework_TestCase
                         'length' => 10,
                         'nullable' => true,
                         'default' => 'what?'
+                    ],
+                    'field_unique_key' => true // or Constraint Name
+                ]
+            ],
+            'test_config_table_mastet' => [
+                'id' => [
+                    'field_type' => 'Integer',
+                    'field_params' => [
+                        'options' => ['autoincrement' => true]
+                    ]
+                ],
+                'name' => [
+                    'field_type' => 'Varchar',
+                    'field_params' => [
+                        'length' => 10,
+                        'nullable' => true,
+                        'default' => 'what?'
+                    ],
+                    'field_foreign_key' => [
+                        'referenceTable' => 'table_slave',
+                        'referenceColumn' => 'id',
+                        'onDeleteRule' => 'cascade',
+                        'onUpdateRule' => null,
+                        'name' => null
                     ]
                 ]
-            ]
+            ],
+            'test_config_table_slave' => [
+                'id' => [
+                    'field_type' => 'Varchar',
+                    'field_params' => [
+                        'length' => 10,
+                        'nullable' => true,
+                        'default' => 'what?'
+                    ],
+                ],
+            ],
         ]
     ];
 
@@ -70,6 +105,12 @@ class TableManagerMysqlTest extends \PHPUnit_Framework_TestCase
         $this->object = new TableManagerMysql($this->adapter, $this->config);
         if ($this->object->hasTable($this->tableName)) {
             $this->object->deleteTable($this->tableName);
+        }
+        if ($this->object->hasTable('table_master')) {
+            $this->object->deleteTable('table_master');
+        }
+        if ($this->object->hasTable('table_slave')) {
+            $this->object->deleteTable('table_slave');
         }
     }
 
@@ -92,8 +133,30 @@ class TableManagerMysqlTest extends \PHPUnit_Framework_TestCase
                 '        name -> varchar' . PHP_EOL . PHP_EOL .
                 '    With constraints: ' . PHP_EOL .
                 '        _zf_test_create_table_PRIMARY -> PRIMARY KEY' . PHP_EOL .
-                '            column: id'
+                '            column: id' . PHP_EOL .
+                '        _zf_test_create_table_UniqueKey_test_create_table_name -> UNIQUE' . PHP_EOL .
+                '            column: name' . PHP_EOL
                 , $this->object->getTableInfoStr($this->tableName)
+        );
+    }
+
+    public function testTableManagerMysql_foreign_key()
+    {
+        $this->object->rewriteTable('table_slave', 'test_config_table_slave');
+        $this->object->rewriteTable('table_master', 'test_config_table_mastet');
+        $this->assertSame(
+                '    With columns: ' . PHP_EOL .
+                '        id -> int' . PHP_EOL .
+                '        name -> varchar' . PHP_EOL .
+                PHP_EOL .
+                '    With constraints: ' . PHP_EOL .
+                '        _zf_table_master_PRIMARY -> PRIMARY KEY' . PHP_EOL .
+                '            column: id' . PHP_EOL .
+                '        ForeignKey_table_master_name -> FOREIGN KEY' . PHP_EOL .
+                '            column: name => table_slave.id' . PHP_EOL .
+                '            OnDeleteRule: CASCADE' . PHP_EOL .
+                '            OnUpdateRule: NO ACTION' . PHP_EOL
+                , $this->object->getTableInfoStr('table_master')
         );
     }
 
