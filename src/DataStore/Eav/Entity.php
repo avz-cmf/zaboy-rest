@@ -51,6 +51,11 @@ class Entity extends DbTable
 //     */
 //    protected $propsTables;
 
+    public function __construct(TableGateway $dbTable)
+    {
+        parent::__construct($dbTable);
+        $this->sysEntitiesTable = new TableGateway(SysEntities::TABLE_NAME, $this->dbTable->getAdapter());
+    }
 
     public function getEntityName()
     {
@@ -95,12 +100,12 @@ class Entity extends DbTable
                     $fields[$field->getField() . "->" . $field->getFunction()] = new Expression($field->__toString());
                 } else if (substr($field, 0, 1) == '@') {
                     /** @var TableGateway $prop */
-                    $prop = $this->propsTableGateway[$field];
-                    $selectSql->join(
+                    /*$prop = $this->propsTableGateway[$field];
+                    $selectSQL->join(
                             $prop->getTable()
                             , [$this->entityName . '_id' => 'id']
                             , Select::SQL_STAR, Select::JOIN_LEFT
-                    );
+                    );*/
                 } else {
                     $fields[] = $field;
                 }
@@ -112,9 +117,10 @@ class Entity extends DbTable
 
     protected function setSelectJoin(Select $selectSQL, Query $query)
     {
+        $on = $this->sysEntitiesTable->table . '.' . $this->getIdentifier() . ' = ' . $this->dbTable->table . '.' . $this->getIdentifier();
         $selectSQL->join(
-                $this->dbTable->table
-                , $sysEntitiesTableGateway->table . '.' . $this->getIdentifier() . ' = ' . $this->dbTable->table . '.' . $this->getIdentifier()
+                $this->sysEntitiesTable->table
+                , $on
                 , Select::SQL_STAR, Select::JOIN_LEFT
         );
         return $selectSQL;
