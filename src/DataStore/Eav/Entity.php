@@ -103,12 +103,12 @@ class Entity extends DbTable
                     $fields[$field->getField() . "->" . $field->getFunction()] = new Expression($field->__toString());
                 } else if (substr($field, 0, 1) == '@') {
                     /** @var TableGateway $prop */
-                    $prop = $this->propsTableGateway[$field];
-                    $selectSql->join(
-                            $prop->getTable()
-                            , [$this->entityName . '_id' => 'id']
-                            , Select::SQL_STAR, Select::JOIN_LEFT
-                    );
+                    /*                     * $prop = $this->propsTableGateway[$field];
+                      $selectSql->join(
+                      $prop->getTable()
+                      , [$this->entityName . '_id' => 'id']
+                      , Select::SQL_STAR, Select::JOIN_LEFT
+                      ); */
                 } else {
                     $fields[] = $field;
                 }
@@ -120,9 +120,10 @@ class Entity extends DbTable
 
     protected function setSelectJoin(Select $selectSQL, Query $query)
     {
+        $on = SysEntities::TABLE_NAME . '.' . $this->getIdentifier() . ' = ' . $this->getEntityTableName() . '.' . $this->getIdentifier();
         $selectSQL->join(
-                $this->dbTable->table
-                , $sysEntitiesTableGateway->table . '.' . $this->getIdentifier() . ' = ' . $this->dbTable->table . '.' . $this->getIdentifier()
+                SysEntities::TABLE_NAME
+                , $on
                 , Select::SQL_STAR, Select::JOIN_LEFT
         );
         return $selectSQL;

@@ -147,8 +147,11 @@ class DbTable extends DataStoreAbstract
     protected function setSelectOrder(Select $selectSQL, Query $query)
     {
         $sort = $query->getSort();
-        $sortFields = !$sort ? [$this->getIdentifier() => SortNode::SORT_ASC] : $sort->getFields();
+        $sortFields = !$sort ? [$this->dbTable->table . '.' . $this->getIdentifier() => SortNode::SORT_ASC] : $sort->getFields();
         foreach ($sortFields as $ordKey => $ordVal) {
+            if (!preg_match('/[\w]+\.[\w]+/', $ordKey)) {
+                $ordKey = $this->dbTable->table . '.' . $ordKey;
+            }
             if ((int) $ordVal === SortNode::SORT_DESC) {
                 $selectSQL->order($ordKey . ' ' . Select::ORDER_DESCENDING);
             } else {

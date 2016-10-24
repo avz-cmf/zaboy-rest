@@ -40,9 +40,9 @@ class SysEntities extends DbTable
     {
         $identifier = $this->getIdentifier();
         //What is it array of arrays?
-        if (isset($itemData[$identifier]) && $rewriteIfExist) {
-            $sysEntities->delete($itemData[$identifier]);
-        }
+//        if (isset($itemData[$identifier]) && $rewriteIfExist) {
+//            $sysEntities->delete($itemData[$identifier]);
+//        }
         $sysItem = [
             'add_date' => (new \DateTime())->format("Y-m-d"),
             'entity_type' => $entityName,
