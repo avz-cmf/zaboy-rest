@@ -1,4 +1,4 @@
-# zaboy-rest 3.9.5
+# zaboy-rest 3.9.6
 
 # Test
 
