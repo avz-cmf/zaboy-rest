@@ -16,6 +16,8 @@ use zaboy\rest\TableGateway\TableManagerMysql as TableManager;
 
 /**
  *
+ *
+ * @see https://docs.google.com/spreadsheets/d/1k51Dtv1z-eK_ic5TXJMdJ9_jeLBtcrKQPQI9A0Jpts0/edit
  */
 class StoreCatalog
 {
@@ -23,8 +25,11 @@ class StoreCatalog
     const PRODUCT_RESOURCE_NAME = 'product';
     const PRODUCT_DATASTORE = 'product-datastore';
     const PRODUCT_TABLE_NAME = SysEntities::ENTITY_PREFIX . self::PRODUCT_RESOURCE_NAME;
+    const PROP_LINKED_URL_RESOURCE_NAME = 'prop_linked_url';
+    const PROP_LINKED_URL_DATASTORE = 'prop_linked_url';
+    const PROP_LINKED_URL_TABLE_NAME = SysEntities::PROP_PREFIX . 'linked_url'; //'prop_linked_url'
 
-    public $product_table_config = [
+    public $develop_tables_config = [
         self::PRODUCT_TABLE_NAME => [
             'id' => [
                 TableManager::FIELD_TYPE => 'Integer',
@@ -51,6 +56,38 @@ class StoreCatalog
                 ],
             ],
         ],
+        self::PROP_LINKED_URL_TABLE_NAME => [
+            'id' => [
+                TableManager::FIELD_TYPE => 'Integer',
+                TableManager::FIELD_PARAMS => [
+                    'options' => ['autoincrement' => true]
+                ]
+            ],
+            'sys_enities_id' => [
+                TableManager::FIELD_TYPE => 'Integer',
+                TableManager::FOREIGN_KEY => [
+                    'referenceTable' => SysEntities::TABLE_NAME,
+                    'referenceColumn' => 'id',
+                    'onDeleteRule' => 'cascade',
+                    'onUpdateRule' => null,
+                    'name' => null
+                ]
+            ],
+            'url' => [
+                TableManager::FIELD_TYPE => 'Varchar',
+                TableManager::FIELD_PARAMS => [
+                    'length' => 100,
+                    'nullable' => false,
+                ],
+            ],
+            'alt' => [
+                TableManager::FIELD_TYPE => 'Varchar',
+                TableManager::FIELD_PARAMS => [
+                    'length' => 100,
+                    'nullable' => false,
+                ],
+            ],
+        ]
     ];
 
 }

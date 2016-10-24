@@ -22,6 +22,7 @@ use Zend\Db\Sql\Predicate\Expression;
 use Zend\Db\Sql\Select;
 use Zend\Db\TableGateway\TableGateway;
 use zaboy\rest\DataStore\Eav\SysEntities;
+use zaboy\rest\DataStore\Eav\Prop;
 
 /**
  *
@@ -41,22 +42,15 @@ use zaboy\rest\DataStore\Eav\SysEntities;
 class Entity extends DbTable
 {
 
-    /**
-     * @var TableGateway
-     */
-    protected $sysEntitiesTable;
-
-//    /**
-//     * @var array <TableGateway>
-//     */
-//    protected $propsTables;
-
-
     public function getEntityName()
     {
         $tableName = $this->dbTable->table;
-        $entityName = substr($tableName, strlen(SysEntities::ENTITY_PREFIX));
-        return $entityName;
+        return SysEntities::getEntityName($tableName);
+    }
+
+    public function getEntityTableName()
+    {
+        return $tableName = $this->dbTable->table;
     }
 
     public function create($itemData, $rewriteIfExist = false)
@@ -67,11 +61,25 @@ class Entity extends DbTable
         $identifier = $this->getIdentifier();
         $adapter = $this->dbTable->getAdapter();
         $adapter->getDriver()->getConnection()->beginTransaction();
+        $propsData = [];
+        $props = [];
+        foreach ($itemData as $key => $value) {
+            if (strpos($key, SysEntities::PROP_PREFIX) === 0) {
+                $propTableName = explode('.', $key)[0];
+                $props[$key] = new Prop(new TableGateway($propTableName, $adapter));
+                $propsData[$key] = $value;
+                unset($itemData[$key]);
+            }
+        }
         try {
             $sysEntities = new SysEntities(new TableGateway(SysEntities::TABLE_NAME, $adapter));
             $itemData = $sysEntities->prepareEntityCreate($this->getEntityName(), $itemData);
             $itemInserted = parent::create($itemData, false);
+
             if (!empty($itemInserted)) {
+                foreach ($props as $key => $prop) {
+                    $prop->createWithEntity($propsData[$key], $itemInserted[$identifier], $this->getEntityName(), $key);
+                }
                 $adapter->getDriver()->getConnection()->commit();
             } else {
                 throw new DataStoreException('Not all data has been inserted. -> rollback');

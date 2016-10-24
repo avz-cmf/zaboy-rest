@@ -82,6 +82,10 @@ use Zend\Db\Sql\Ddl\Constraint\UniqueKey;
  * <li>storage</li>
  * </ul>
  *
+ * select * from INFORMATION_SCHEMA.COLUMNS where column_name like 'TABLE%'
+ * SELECT RC.TABLE_NAME, RC.REFERENCED_TABLE_NAME, KCU.COLUMN_NAME, KCU.REFERENCED_COLUMN_NAME FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS RC JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE KCU USING(CONSTRAINT_NAME)
+ *
+ * 
  * @see Examples/TableGateway/index.php
  * @category   rest
  * @package    zaboy

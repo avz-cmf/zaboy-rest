@@ -34,6 +34,7 @@ class Installer
         global $container;
         $dbAdapter = $container->get('db');
         $scriptInstaller = new EavInstaller($dbAdapter);
+        $scriptInstaller->uninstall();
         $scriptInstaller->install();
     }
 

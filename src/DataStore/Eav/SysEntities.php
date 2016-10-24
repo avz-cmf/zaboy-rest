@@ -33,6 +33,8 @@ class SysEntities extends DbTable
 
     const TABLE_NAME = 'sys_entities';
     const ENTITY_PREFIX = 'entity_';
+    const PROP_PREFIX = 'prop_';
+    const ID_SUFFIX = '_id';
 
     public function prepareEntityCreate($entityName, $itemData)
     {
@@ -54,6 +56,30 @@ class SysEntities extends DbTable
         }
         $itemData[$identifier] = $sysItemInserted[$identifier];
         return $itemData;
+    }
+
+    public static function getEntityName($tableName)
+    {
+        $entityName = substr($tableName, strlen(SysEntities::ENTITY_PREFIX));
+        return $entityName;
+    }
+
+    public static function getEntityTableName($entityName)
+    {
+        $tableName = SysEntities::ENTITY_PREFIX . $entityName;
+        return $tableName;
+    }
+
+    public static function getPropName($tableName)
+    {
+        $propName = substr($tableName, strlen(SysEntities::PROP_PREFIX));
+        return $propName;
+    }
+
+    public static function getPropTableName($propName)
+    {
+        $tableName = SysEntities::PROP_PREFIX . $propName;
+        return $tableName;
     }
 
 }
