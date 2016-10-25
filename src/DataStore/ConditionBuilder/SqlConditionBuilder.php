@@ -9,12 +9,10 @@
 
 namespace zaboy\rest\DataStore\ConditionBuilder;
 
-use Xiag\Rql\Parser\Node\Query\AbstractArrayOperatorNode;
+use Xiag\Rql\Parser\DataType\Glob;
 use Xiag\Rql\Parser\Node\Query\AbstractScalarOperatorNode;
-use zaboy\rest\DataStore\ConditionBuilder\ConditionBuilderAbstract;
 use zaboy\rest\DataStore\DataStoreException;
 use Zend\Db\Adapter\AdapterInterface;
-use Xiag\Rql\Parser\DataType\Glob;
 
 /**
  * {@inheritdoc}
@@ -51,16 +49,20 @@ class SqlConditionBuilder extends ConditionBuilderAbstract
      */
     protected $db;
 
+    protected $tableName;
+
     /**
      *
      * @param AdapterInterface $dbAdapter
+     * @param $tableName
      */
-    public function __construct(AdapterInterface $dbAdapter)
+    public function __construct(AdapterInterface $dbAdapter, $tableName)
     {
         $this->db = $dbAdapter;
         $this->emptyCondition = $this->prepareFieldValue(1)
-                . ' = '
-                . $this->prepareFieldValue(1);
+            . ' = '
+            . $this->prepareFieldValue(1);
+        $this->tableName = $tableName;
     }
 
     /**
@@ -70,7 +72,18 @@ class SqlConditionBuilder extends ConditionBuilderAbstract
      */
     public function prepareFieldName($fieldName)
     {
-        return $this->db->platform->quoteIdentifier($fieldName);
+        if (!strpos($fieldName, '.')) {
+            $fieldName = $this->db->platform->quoteIdentifier($this->tableName) .
+                '.' .
+                $this->db->platform->quoteIdentifier($fieldName);
+        } else {
+            $name = explode('.', $fieldName);
+            $fieldName = $this->db->platform->quoteIdentifier($name[0]) .
+                '.' .
+                $this->db->platform->quoteIdentifier($name[1]);
+        }
+        return $fieldName;
+
     }
 
     /**
@@ -97,7 +110,7 @@ class SqlConditionBuilder extends ConditionBuilderAbstract
         $glob = parent::getValueFromGlob($globNode);
 
         $regexSQL = strtr(
-                preg_quote(rawurldecode(strtr($glob, ['*' => $constStar, '?' => $constQuestion])), '/'), [$constStar => '%', $constQuestion => '_']
+            preg_quote(rawurldecode(strtr($glob, ['*' => $constStar, '?' => $constQuestion])), '/'), [$constStar => '%', $constQuestion => '_']
         );
 
         return $regexSQL;
@@ -122,15 +135,15 @@ class SqlConditionBuilder extends ConditionBuilderAbstract
         $strQuery = $this->literals['ScalarOperator'][$nodeName]['before']
             . $this->prepareFieldName($node->getField());
 
-        if(is_null($value)){
-            if($nodeName === 'eq'){
+        if (is_null($value)) {
+            if ($nodeName === 'eq') {
                 $strQuery .= "IS NULL";
-            }else if ($nodeName === 'ne'){
+            } else if ($nodeName === 'ne') {
                 $strQuery .= "IS NOT NULL";
-            }else{
-                throw new DataStoreException("Can't use `null` for ". $nodeName. ". Only for `eq` or `ne`");
+            } else {
+                throw new DataStoreException("Can't use `null` for " . $nodeName . ". Only for `eq` or `ne`");
             }
-        }else{
+        } else {
             $strQuery .= $this->literals['ScalarOperator'][$nodeName]['between']
                 . $this->prepareFieldValue($value);
         }

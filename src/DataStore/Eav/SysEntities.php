@@ -36,6 +36,7 @@ class SysEntities extends DbTable
     const PROP_PREFIX = 'prop_';
     const ID_SUFFIX = '_id';
 
+
     public function prepareEntityCreate($entityName, $itemData, $rewriteIfExist)
     {
         $identifier = $this->getIdentifier();
@@ -82,4 +83,9 @@ class SysEntities extends DbTable
         return $tableName;
     }
 
+    public function deleteAllInEntity($entityType){
+        $where = SysEntities::ENTITY_PREFIX . 'type = \'' . $entityType . '\'';
+        $deletedItemsCount = $this->dbTable->delete($where);
+        return $deletedItemsCount;
+    }
 }

@@ -109,7 +109,7 @@ class DbTable extends DataStoreAbstract
     public function query(Query $query)
     {
 
-        $conditionBuilder = new SqlConditionBuilder($this->dbTable->getAdapter());
+        $conditionBuilder = new SqlConditionBuilder($this->dbTable->getAdapter(), $this->dbTable->getTable());
 
         $selectSQL = $this->dbTable->getSql()->select();
         $selectSQL->where($conditionBuilder($query->getQuery()));

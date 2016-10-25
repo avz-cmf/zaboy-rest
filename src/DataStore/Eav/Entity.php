@@ -10,20 +10,15 @@
 namespace zaboy\rest\DataStore\Eav;
 
 use Xiag\Rql\Parser\Node\Query\ScalarOperator\EqNode;
-use zaboy\rest\DataStore\DbTable;
-use Xiag\Rql\Parser\Node\SortNode;
 use Xiag\Rql\Parser\Query;
 use zaboy\rest\DataStore\ConditionBuilder\SqlConditionBuilder;
-use zaboy\rest\DataStore\DataStoreAbstract;
 use zaboy\rest\DataStore\DataStoreException;
+use zaboy\rest\DataStore\DbTable;
 use zaboy\rest\RqlParser\AggregateFunctionNode;
-use zaboy\rest\TableGateway\TableManagerMysql as TableManager;
 use Zend\Db\Adapter\Adapter;
 use Zend\Db\Sql\Predicate\Expression;
 use Zend\Db\Sql\Select;
 use Zend\Db\TableGateway\TableGateway;
-use zaboy\rest\DataStore\Eav\SysEntities;
-use zaboy\rest\DataStore\Eav\Prop;
 
 /**
  *
@@ -54,6 +49,7 @@ class Entity extends DbTable
         return $tableName = $this->dbTable->table;
     }
 
+    //TODO: во время метода parent::create мы закроем транзакцию и если возникнет исключение мы не сможем вызвать rollback
     public function create($itemData, $rewriteIfExist = false)
     {
         //Check props in $itemData filed and generate propsTableGateway
@@ -78,14 +74,36 @@ class Entity extends DbTable
             $itemInserted = parent::create($itemData, false);
 
             if (!empty($itemInserted)) {
+                /**
+                 * @var string $key
+                 * @var Prop $prop
+                 */
                 foreach ($props as $key => $prop) {
-                    $prop->createWithEntity($propsData[$key], $itemInserted[$identifier], $this->getEntityName(), $key);
+                    $itemInserted[$key] = $prop->createWithEntity($propsData[$key], $itemInserted[$identifier], $this->getEntityName(), $key);
                 }
                 $adapter->getDriver()->getConnection()->commit();
             } else {
                 throw new DataStoreException('Not all data has been inserted. -> rollback');
             }
         } catch (\Exception $e) {
+            $adapter->getDriver()->getConnection()->rollback();
+            throw new DataStoreException("", 0, $e);
+        }
+        return $itemInserted;
+    }
+
+    public function update($itemData, $createIfAbsent = false)
+    {
+        $identifier = $this->getIdentifier();
+        $adapter = $this->dbTable->getAdapter();
+        $adapter->getDriver()->getConnection()->beginTransaction();
+        try{
+            if($createIfAbsent){
+                throw new DataStoreException("This method dosn't work with flag $createIfAbsent = true");
+            }
+            $itemInserted = parent::update($itemData, false);
+            $adapter->getDriver()->getConnection()->commit();
+        } catch (\Exception $e){
             $adapter->getDriver()->getConnection()->rollback();
             throw new DataStoreException("", 0, $e);
         }
@@ -100,7 +118,7 @@ class Entity extends DbTable
     public function query(Query $query)
     {
 
-        $conditionBuilder = new SqlConditionBuilder($this->dbTable->getAdapter());
+        $conditionBuilder = new SqlConditionBuilder($this->dbTable->getAdapter(), $this->dbTable->getTable());
 
         $selectSQL = $this->dbTable->getSql()->select();
         $selectSQL->where($conditionBuilder($query->getQuery()));
@@ -110,7 +128,7 @@ class Entity extends DbTable
 
         $fields = $selectSQL->getRawState(Select::COLUMNS);
         $props = [];
-        if(isset($fields['props'])){
+        if (isset($fields['props'])) {
             $props = $fields['props'];
             unset($fields['props']);
             $selectSQL->columns($fields);
@@ -128,8 +146,8 @@ class Entity extends DbTable
         $rowset = $adapter->query($sql, $adapter::QUERY_MODE_EXECUTE);
 
         $data = $rowset->toArray();
-        if(!empty($props)){
-            foreach ($data as &$item){
+        if (!empty($props)) {
+            foreach ($data as &$item) {
                 /** @var $prop Prop */
                 foreach ($props as $key => $prop) {
                     $linkedColumn = $prop->getLinkedColumn($this->getEntityName(), $key);
@@ -167,7 +185,7 @@ class Entity extends DbTable
                     throw new DataStoreException('Cannot use aggregate function with props');
                 }
             }
-            if(!empty($props)){
+            if (!empty($props)) {
                 $fields['props'] = $props;
             }
             $selectSQL->columns($fields);
@@ -179,11 +197,24 @@ class Entity extends DbTable
     {
         $on = SysEntities::TABLE_NAME . '.' . $this->getIdentifier() . ' = ' . $this->getEntityTableName() . '.' . $this->getIdentifier();
         $selectSQL->join(
-                SysEntities::TABLE_NAME
-                , $on
-                , Select::SQL_STAR, Select::JOIN_LEFT
+            SysEntities::TABLE_NAME
+            , $on
+            , Select::SQL_STAR, Select::JOIN_LEFT
         );
         return $selectSQL;
     }
+
+    public function delete($id)
+    {
+        $sysEntities = new SysEntities(new TableGateway(SysEntities::TABLE_NAME, $this->dbTable->getAdapter()));
+        return $sysEntities->delete($id);
+    }
+
+    public function deleteAll()
+    {
+        $sysEntities = new SysEntities(new TableGateway(SysEntities::TABLE_NAME, $this->dbTable->getAdapter()));
+        return $sysEntities->deleteAllInEntity($this->getEntityName());
+    }
+
 
 }

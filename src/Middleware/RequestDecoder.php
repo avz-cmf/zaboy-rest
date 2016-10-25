@@ -86,14 +86,15 @@ class RequestDecoder implements MiddlewareInterface
 
         $contenttypeArray = $request->getHeader('Content-Type');
         $contenttype = isset($contenttypeArray[0]) ? $contenttypeArray[0] : 'text/html';
+
         if (false !== strpos($contenttype, 'json')) {
-            $body = $this->jsonDecode($request->getBody()->__toString());
+            $body = !empty($request->getBody()->__toString()) ? $this->jsonDecode($request->getBody()->__toString()) : null;
             $request = $request->withParsedBody($body);
         } elseif ($contenttype === 'text/plain'
             or $contenttype === 'text/html'
             or $contenttype === 'application/x-www-form-urlencoded'
         ) {
-            $body = $request->getBody()->__toString();
+            $body = !empty($request->getBody()->__toString()) ? $request->getBody()->__toString() : null;
             $request = $request->withParsedBody($body);
         } else {
             //todo XML?
