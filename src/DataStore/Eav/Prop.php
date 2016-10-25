@@ -96,4 +96,5 @@ class Prop extends DbTable
         return $linkedColumn;
     }
 
+
 }

@@ -88,24 +88,27 @@ class EntityTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(1, $this->object->count());
     }
 
-//    public function test__query_Product_PropLinkedUrl()
-//    {
-//        $this->object = $this->container->get(SysEntities::ENTITY_PREFIX . 'product');
-//        $this->object->create([
-//            'title' => 'title_1',
-//            'price' => 100,
-//            StoreCatalog::PROP_LINKED_URL_TABLE_NAME => [
-//                [ 'url' => 'http://google.com', 'alt' => 'Pot1'],
-//                [ 'url' => 'http://google.com1', 'alt' => 'Pot2'],
-//            ]
-//        ]);
-//        $query = new Query;
-//        $query->setSelect(new SelectNode([StoreCatalog::PROP_LINKED_URL_TABLE_NAME]));
-//        $entityData = $this->object->query($query);
-//        $this->assertEquals(
-//                [ 'url' => 'http://google.com', 'alt' => 'Pot1'], $propData[0]
-//        );
-//    }
+    public function test__query_Product_PropLinkedUrl()
+    {
+        $this->object = $this->container->get(SysEntities::ENTITY_PREFIX . 'product');
+        $this->object->create([
+            'title' => 'title_1',
+            'price' => 100,
+            StoreCatalog::PROP_LINKED_URL_TABLE_NAME => [
+                [ 'url' => 'http://google.com', 'alt' => 'Pot1'],
+                [ 'url' => 'http://google.com1', 'alt' => 'Pot2'],
+            ]
+        ]);
+        $query = new Query;
+        $query->setSelect(new SelectNode([StoreCatalog::PROP_LINKED_URL_TABLE_NAME]));
+        $entityData = $this->object->query($query);
+        $propData = $entityData[0]['prop_linked_url'];
+        unset($propData[0]['id']);
+        unset($propData[0]['sys_entities_id']);
+        $this->assertEquals(
+                [ 'url' => 'http://google.com', 'alt' => 'Pot1'], $propData[0]
+        );
+    }
 
     public function test__query()
     {
@@ -203,6 +206,36 @@ class EntityTest extends \PHPUnit_Framework_TestCase
         $result = $this->object->query($query);
         $this->assertEquals(true, $result[0]['sys_entities.add_date->max'] >= $time);
     }
+
+    /*public function test__query_with_select_prop()
+    {
+        $this->object = $this->container->get(SysEntities::ENTITY_PREFIX . 'product');
+        for ($i = 1; $i < 10; $i++) {
+            $data = [
+                'title' => 'title_' . $i,
+                'price' => 100 * $i
+                ''
+            ];
+
+            $this->object->create($data);
+            $this->assertEquals($i, $this->object->count());
+
+            $query = new Query();
+
+            $query->setQuery(new EqNode('title', $data['title']));
+            $query->setSelect(new SelectNode(['price']));
+
+            $result = $this->object->query($query);
+            $unset = array_diff(array_keys($result[0]), array_keys($data));
+
+            foreach ($unset as $key) {
+                unset($result[0][$key]);
+            }
+
+            $this->assertEquals(1, count($result[0]));
+            $this->assertEquals($data['price'], $result[0]['price']);
+        }
+    }*/
 
     public function test__query_with_sort()
     {

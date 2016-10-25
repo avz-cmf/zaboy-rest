@@ -9,6 +9,7 @@
 
 namespace zaboy\rest\DataStore\Eav;
 
+use Xiag\Rql\Parser\Node\Query\ScalarOperator\EqNode;
 use zaboy\rest\DataStore\DbTable;
 use Xiag\Rql\Parser\Node\SortNode;
 use Xiag\Rql\Parser\Query;
@@ -91,27 +92,83 @@ class Entity extends DbTable
         return $itemInserted;
     }
 
+    /**
+     * {@inheritdoc}
+     *
+     * {@inheritdoc}
+     */
+    public function query(Query $query)
+    {
+
+        $conditionBuilder = new SqlConditionBuilder($this->dbTable->getAdapter());
+
+        $selectSQL = $this->dbTable->getSql()->select();
+        $selectSQL->where($conditionBuilder($query->getQuery()));
+        $selectSQL = $this->setSelectOrder($selectSQL, $query);
+        $selectSQL = $this->setSelectLimitOffset($selectSQL, $query);
+        $selectSQL = $this->setSelectColumns($selectSQL, $query);
+
+        $fields = $selectSQL->getRawState(Select::COLUMNS);
+        $props = [];
+        if(isset($fields['props'])){
+            $props = $fields['props'];
+            unset($fields['props']);
+            $selectSQL->columns($fields);
+        }
+
+        $selectSQL = $this->setSelectJoin($selectSQL, $query);
+        $selectSQL = $this->makeExternalSql($selectSQL);
+
+        //build sql string
+        $sql = $this->dbTable->getSql()->buildSqlString($selectSQL);
+        //replace double ` char to single.
+        $sql = str_replace(["`(", ")`", "``"], ['(', ')', "`"], $sql);
+        /** @var Adapter $adapter */
+        $adapter = $this->dbTable->getAdapter();
+        $rowset = $adapter->query($sql, $adapter::QUERY_MODE_EXECUTE);
+
+        $data = $rowset->toArray();
+        if(!empty($props)){
+            foreach ($data as &$item){
+                /** @var $prop Prop */
+                foreach ($props as $key => $prop) {
+                    $linkedColumn = $prop->getLinkedColumn($this->getEntityName(), $key);
+                    $propQuery = new Query();
+                    $propQuery->setQuery(new EqNode($linkedColumn, $item[$this->getIdentifier()]));
+                    $propData = $prop->query($propQuery);
+                    $item[$key] = $propData;
+                }
+            }
+        }
+        return $data;
+    }
+
     protected function setSelectColumns(Select $selectSQL, Query $query)
     {
         $select = $query->getSelect();  //What fields will return
         $selectFields = !$select ? [] : $select->getFields();
+        $props = [];
         if (!empty($selectFields)) {
             $fields = [];
-
+            $hawAggregate = false;
+            $hawProps = false;
             foreach ($selectFields as $field) {
                 if ($field instanceof AggregateFunctionNode) {
                     $fields[$field->getField() . "->" . $field->getFunction()] = new Expression($field->__toString());
-                } else if (substr($field, 0, 1) == '@') {
-                    /** @var TableGateway $prop */
-                    /*                     * $prop = $this->propsTableGateway[$field];
-                      $selectSql->join(
-                      $prop->getTable()
-                      , [$this->entityName . '_id' => 'id']
-                      , Select::SQL_STAR, Select::JOIN_LEFT
-                      ); */
+                    $hawAggregate = true;
+                } else if (strpos($field, SysEntities::PROP_PREFIX) === 0) {
+                    $propTableName = explode('.', $field)[0];
+                    $props[$field] = new Prop(new TableGateway($propTableName, $this->dbTable->getAdapter()));
+                    $hawProps = true;
                 } else {
                     $fields[] = $field;
                 }
+                if ($hawAggregate && $hawProps) {
+                    throw new DataStoreException('Cannot use aggregate function with props');
+                }
+            }
+            if(!empty($props)){
+                $fields['props'] = $props;
             }
             $selectSQL->columns($fields);
         }
