@@ -73,7 +73,7 @@ class Entity extends DbTable
         }
         try {
             $sysEntities = new SysEntities(new TableGateway(SysEntities::TABLE_NAME, $adapter));
-            $itemData = $sysEntities->prepareEntityCreate($this->getEntityName(), $itemData);
+            $itemData = $sysEntities->prepareEntityCreate($this->getEntityName(), $itemData, $rewriteIfExist);
             $itemInserted = parent::create($itemData, false);
 
             if (!empty($itemInserted)) {

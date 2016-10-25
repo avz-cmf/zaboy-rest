@@ -36,13 +36,13 @@ class SysEntities extends DbTable
     const PROP_PREFIX = 'prop_';
     const ID_SUFFIX = '_id';
 
-    public function prepareEntityCreate($entityName, $itemData)
+    public function prepareEntityCreate($entityName, $itemData, $rewriteIfExist)
     {
         $identifier = $this->getIdentifier();
         //What is it array of arrays?
-//        if (isset($itemData[$identifier]) && $rewriteIfExist) {
-//            $sysEntities->delete($itemData[$identifier]);
-//        }
+        if (isset($itemData[$identifier]) && $rewriteIfExist) {
+            $this->delete($itemData[$identifier]);
+        }
         $sysItem = [
             'add_date' => (new \DateTime())->format("Y-m-d"),
             'entity_type' => $entityName,

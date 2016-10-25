@@ -10,20 +10,9 @@
 namespace zaboy\rest\DataStore\Eav;
 
 use zaboy\rest\DataStore\DbTable;
-use Xiag\Rql\Parser\Node\SortNode;
-use Xiag\Rql\Parser\Query;
-use zaboy\rest\DataStore\ConditionBuilder\SqlConditionBuilder;
-use zaboy\rest\DataStore\DataStoreAbstract;
 use zaboy\rest\DataStore\DataStoreException;
-use zaboy\rest\RqlParser\AggregateFunctionNode;
-use zaboy\rest\TableGateway\TableManagerMysql as TableManager;
-use Zend\Db\Adapter\Adapter;
-use Zend\Db\Sql\Predicate\Expression;
-use Zend\Db\Sql\Select;
-use Zend\Db\TableGateway\TableGateway;
 use zaboy\rest\DataStore\Eav\SysEntities;
 use Zend\Db\Metadata\Source\Factory;
-use zaboy\rest\DataStore\DataStoreException;
 
 /**
  *
@@ -47,7 +36,7 @@ class Prop extends DbTable
     {
         $linkedColumn = $this->getLinkedColumn($entityName, $propColumn);
         if (is_null($linkedColumn)) {
-            throwException(new DataStoreException('Wrong linked column: ' . $propColumn));
+            throw new DataStoreException('Wrong linked column: ' . $propColumn);
         }
         $this->dbTable->delete([$linkedColumn => $entityId]);
         foreach ($propData as $row) {
@@ -85,19 +74,19 @@ class Prop extends DbTable
         $columnsNames = $this->getColumnsNames();
 
         //'prop_name.column_name' or 'prop_name'
-        $linkedColumn = !strpos($propColumn, '.') ?
+        $linkedColumn = strpos($propColumn, '.') ?
                 //prop_name.column_name
-                (key_exists(explode('.', $propColumn)[1], $columnsNames) ?
+                (isset(explode('.', $propColumn)[1]) && in_array(explode('.', $propColumn)[1], $columnsNames) ?
                         //column_name
-                        key_exists(explode('.', $propColumn)[1]) :
+                        explode('.', $propColumn)[1] :
                         //error
                         null
                 ) :
                 //prop_name
-                (key_exists($entityName . SysEntities::ID_SUFFIX, $columnsNames) ?
+                ( in_array($entityName . SysEntities::ID_SUFFIX, $columnsNames) ?
                         //entity_id
                         $entityName . SysEntities::ID_SUFFIX :
-                        (key_exists(SysEntities::TABLE_NAME . SysEntities::ID_SUFFIX, $columnsNames) ?
+                        ( in_array(SysEntities::TABLE_NAME . SysEntities::ID_SUFFIX, $columnsNames) ?
                                 //sys_entities_id
                                 SysEntities::TABLE_NAME . SysEntities::ID_SUFFIX :
                                 //error

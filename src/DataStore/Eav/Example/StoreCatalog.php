@@ -22,12 +22,10 @@ use zaboy\rest\TableGateway\TableManagerMysql as TableManager;
 class StoreCatalog
 {
 
-    const PRODUCT_RESOURCE_NAME = 'product';
-    const PRODUCT_DATASTORE = 'product-datastore';
-    const PRODUCT_TABLE_NAME = SysEntities::ENTITY_PREFIX . self::PRODUCT_RESOURCE_NAME;
-    const PROP_LINKED_URL_RESOURCE_NAME = 'prop_linked_url';
-    const PROP_LINKED_URL_DATASTORE = 'prop_linked_url';
-    const PROP_LINKED_URL_TABLE_NAME = SysEntities::PROP_PREFIX . 'linked_url'; //'prop_linked_url'
+    //'entity_productl'
+    const PRODUCT_TABLE_NAME = SysEntities::ENTITY_PREFIX . 'product';
+    //'prop_linked_url'
+    const PROP_LINKED_URL_TABLE_NAME = SysEntities::PROP_PREFIX . 'linked_url';
 
     public $develop_tables_config = [
         self::PRODUCT_TABLE_NAME => [
@@ -63,7 +61,7 @@ class StoreCatalog
                     'options' => ['autoincrement' => true]
                 ]
             ],
-            'sys_enities_id' => [
+            SysEntities::TABLE_NAME . SysEntities::ID_SUFFIX => [
                 TableManager::FIELD_TYPE => 'Integer',
                 TableManager::FOREIGN_KEY => [
                     'referenceTable' => SysEntities::TABLE_NAME,
