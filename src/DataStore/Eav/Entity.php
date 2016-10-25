@@ -10,6 +10,7 @@
 namespace zaboy\rest\DataStore\Eav;
 
 use Xiag\Rql\Parser\Node\Query\ScalarOperator\EqNode;
+use Xiag\Rql\Parser\Node\SelectNode;
 use Xiag\Rql\Parser\Query;
 use zaboy\rest\DataStore\ConditionBuilder\SqlConditionBuilder;
 use zaboy\rest\DataStore\DataStoreException;
@@ -97,13 +98,58 @@ class Entity extends DbTable
         $identifier = $this->getIdentifier();
         $adapter = $this->dbTable->getAdapter();
         $adapter->getDriver()->getConnection()->beginTransaction();
-        try{
-            if($createIfAbsent){
+
+        $propsData = [];
+        $props = [];
+        foreach ($itemData as $key => $value) {
+            if (strpos($key, SysEntities::PROP_PREFIX) === 0) {
+                $propTableName = explode('.', $key)[0];
+                $props[$key] = new Prop(new TableGateway($propTableName, $adapter));
+                $propsData[$key] = $value;
+                unset($itemData[$key]);
+            }
+        }
+        try {
+            if ($createIfAbsent) {
                 throw new DataStoreException("This method dosn't work with flag $createIfAbsent = true");
             }
             $itemInserted = parent::update($itemData, false);
+            if (!empty($itemInserted)) {
+                /**
+                 * @var string $key
+                 * @var  Prop $prop
+                 */
+
+                foreach ($props as $key => $prop) {
+                    $propQuery = new Query();
+                    $propQuery->setQuery(
+                        new EqNode($prop->getLinkedColumn($this->getEntityName(), $key), $itemInserted[$identifier]));
+                    $propQuery->setSelect(new SelectNode([$prop->getIdentifier()]));
+                    $allEntityProp = $prop->query($propQuery);
+
+                    foreach ($allEntityProp as $entityPropItem) {
+                        $find = true;
+                        foreach ($propsData[$key] as &$propDataItem) {
+                            if (isset($propDataItem[$prop->getIdentifier()]) &&
+                                $entityPropItem[$prop->getIdentifier()] === $propDataItem[$prop->getIdentifier()]
+                            ) {
+                                $find = true;
+                                $diff = array_diff_assoc($entityPropItem, $propDataItem);
+                                if (empty($diff) || count($propDataItem) == 1) {
+                                    unset($propDataItem);
+                                }
+                                break;
+                            }
+                        }
+                        if (!$find) {
+                            $prop->delete($entityPropItem[$prop->getIdentifier()]);
+                        }
+                    }
+                    $prop->updateWithEntity($propsData[$key], $itemInserted[$identifier], $this->getEntityName(), $key);
+                }
+            }
             $adapter->getDriver()->getConnection()->commit();
-        } catch (\Exception $e){
+        } catch (\Exception $e) {
             $adapter->getDriver()->getConnection()->rollback();
             throw new DataStoreException("", 0, $e);
         }
