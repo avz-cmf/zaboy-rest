@@ -40,8 +40,6 @@ class ResponseEncoder implements MiddlewareInterface
     {
         $responseBody = $request->getAttribute('Response-Body');
         $accept = $request->getHeaderLine('Accept');
-        /** $getStatusCode = '$getStatusCode ' . (($response->getStatusCode()));
-          var_dump($response->getHeaders()); */
         if (isset($accept) && preg_match('#^application/([^+\s]+\+)?json#', $accept)) {
             $status = $response->getStatusCode();
             $headers = $response->getHeaders();
@@ -58,7 +56,7 @@ class ResponseEncoder implements MiddlewareInterface
                                 $result = $result
                                         . $escaper->escapeHtml($key)
                                         . ' - '
-                                        . $escaper->escapeHtml($value)
+                                        . $escaper->escapeHtml(is_array($value) ? json_encode($valueArray) : $value)
                                         . '; _   _  ';
                             }
                             $result = $result . '<br>' . PHP_EOL;

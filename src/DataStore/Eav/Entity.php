@@ -119,11 +119,10 @@ class Entity extends DbTable
                  * @var string $key
                  * @var  Prop $prop
                  */
-
                 foreach ($props as $key => $prop) {
                     $propQuery = new Query();
                     $propQuery->setQuery(
-                        new EqNode($prop->getLinkedColumn($this->getEntityName(), $key), $itemInserted[$identifier]));
+                            new EqNode($prop->getLinkedColumn($this->getEntityName(), $key), $itemInserted[$identifier]));
                     $propQuery->setSelect(new SelectNode([$prop->getIdentifier()]));
                     $allEntityProp = $prop->query($propQuery);
 
@@ -131,7 +130,7 @@ class Entity extends DbTable
                         $find = false;
                         foreach ($propsData[$key] as &$propDataItem) {
                             if (isset($propDataItem[$prop->getIdentifier()]) &&
-                                $entityPropItem[$prop->getIdentifier()] === $propDataItem[$prop->getIdentifier()]
+                                    $entityPropItem[$prop->getIdentifier()] === $propDataItem[$prop->getIdentifier()]
                             ) {
                                 $find = true;
                                 $diff = array_diff_assoc($entityPropItem, $propDataItem);
@@ -222,7 +221,9 @@ class Entity extends DbTable
             $hawProps = false;
             foreach ($selectFields as $field) {
                 if ($field instanceof AggregateFunctionNode) {
-                    $fields[$field->getField() . "->" . $field->getFunction()] = new Expression($field->__toString());
+                    $fildName = $field->__toString();
+                    $fullFildName = $fildName == "count(id)" ? 'count(' . $this->dbTable->table . '.id)' : $fildName;
+                    $fields[$field->getField() . "->" . $field->getFunction()] = new Expression($fullFildName);
                     $hawAggregate = true;
                 } else if (strpos($field, SysEntities::PROP_PREFIX) === 0) {
                     $propTableName = explode('.', $field)[0];
@@ -247,9 +248,9 @@ class Entity extends DbTable
     {
         $on = SysEntities::TABLE_NAME . '.' . $this->getIdentifier() . ' = ' . $this->getEntityTableName() . '.' . $this->getIdentifier();
         $selectSQL->join(
-            SysEntities::TABLE_NAME
-            , $on
-            , Select::SQL_STAR, Select::JOIN_LEFT
+                SysEntities::TABLE_NAME
+                , $on
+                , Select::SQL_STAR, Select::JOIN_LEFT
         );
         return $selectSQL;
     }
@@ -265,6 +266,5 @@ class Entity extends DbTable
         $sysEntities = new SysEntities(new TableGateway(SysEntities::TABLE_NAME, $this->dbTable->getAdapter()));
         return $sysEntities->deleteAllInEntity($this->getEntityName());
     }
-
 
 }
