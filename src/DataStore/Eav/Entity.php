@@ -128,7 +128,7 @@ class Entity extends DbTable
                     $allEntityProp = $prop->query($propQuery);
 
                     foreach ($allEntityProp as $entityPropItem) {
-                        $find = true;
+                        $find = false;
                         foreach ($propsData[$key] as &$propDataItem) {
                             if (isset($propDataItem[$prop->getIdentifier()]) &&
                                 $entityPropItem[$prop->getIdentifier()] === $propDataItem[$prop->getIdentifier()]
@@ -146,6 +146,10 @@ class Entity extends DbTable
                         }
                     }
                     $prop->updateWithEntity($propsData[$key], $itemInserted[$identifier], $this->getEntityName(), $key);
+
+                    $propQuery->setSelect(new SelectNode());
+                    $allEntityProp = $prop->query($propQuery);
+                    $itemInserted[$key] = $allEntityProp;
                 }
             }
             $adapter->getDriver()->getConnection()->commit();

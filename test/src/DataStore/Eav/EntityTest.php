@@ -167,6 +167,101 @@ class EntityTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(250, $result[0]['price']);
     }
 
+    public function test__update_with_Props_new()
+    {
+        $this->object = $this->container->get(SysEntities::ENTITY_PREFIX . 'product');
+        $data = $this->object->create([
+            'title' => 'title_1',
+            'price' => 100,
+            StoreCatalog::PROP_LINKED_URL_TABLE_NAME => [
+                ['url' => 'http://google.com', 'alt' => 'Pot1'],
+                ['url' => 'http://google.com1', 'alt' => 'Pot2'],
+            ]
+        ]);
+
+        $data[StoreCatalog::PROP_LINKED_URL_TABLE_NAME][] = ['url' => 'http://google.com', 'alt' => 'Pot3'];
+
+        $newData = $this->object->update($data);
+        $this->assertEquals(1, $this->object->count());
+
+        $prop = $this->container->get(StoreCatalog::PROP_LINKED_URL_TABLE_NAME);
+        $this->assertEquals(3, $prop->count());
+
+        $this->assertEquals('Pot3', $newData[StoreCatalog::PROP_LINKED_URL_TABLE_NAME][2]['alt']);
+
+    }
+
+    public function test__update_with_Props_update()
+    {
+        $this->object = $this->container->get(SysEntities::ENTITY_PREFIX . 'product');
+        $data = $this->object->create([
+            'title' => 'title_1',
+            'price' => 100,
+            StoreCatalog::PROP_LINKED_URL_TABLE_NAME => [
+                ['url' => 'http://google.com', 'alt' => 'Pot1'],
+                ['url' => 'http://google.com1', 'alt' => 'Pot2'],
+            ]
+        ]);
+        $data[StoreCatalog::PROP_LINKED_URL_TABLE_NAME][0]['alt'] = 'Pot3';
+
+        $newData = $this->object->update($data);
+        $this->assertEquals(1, $this->object->count());
+
+        $prop = $this->container->get(StoreCatalog::PROP_LINKED_URL_TABLE_NAME);
+        $this->assertEquals(2, $prop->count());
+        $this->assertEquals('Pot3', $newData[StoreCatalog::PROP_LINKED_URL_TABLE_NAME][0]['alt']);
+    }
+
+    public function test__update_with_Props_deleted()
+    {
+        $this->object = $this->container->get(SysEntities::ENTITY_PREFIX . 'product');
+        $data = $this->object->create([
+            'title' => 'title_1',
+            'price' => 100,
+            StoreCatalog::PROP_LINKED_URL_TABLE_NAME => [
+                ['url' => 'http://google.com', 'alt' => 'Pot1'],
+                ['url' => 'http://google.com1', 'alt' => 'Pot2'],
+                ['url' => 'http://google.com2', 'alt' => 'Pot3'],
+            ]
+        ]);
+        unset($data[StoreCatalog::PROP_LINKED_URL_TABLE_NAME][2]);
+
+        $newData = $this->object->update($data);
+        $this->assertEquals(1, $this->object->count());
+
+        $prop = $this->container->get(StoreCatalog::PROP_LINKED_URL_TABLE_NAME);
+        $this->assertEquals(2, $prop->count());
+        $this->assertEquals(false, isset($newData[StoreCatalog::PROP_LINKED_URL_TABLE_NAME][2]));
+    }
+
+    public function test__update_with_Props_combo()
+    {
+        $this->object = $this->container->get(SysEntities::ENTITY_PREFIX . 'product');
+        $data = $this->object->create([
+            'title' => 'title_1',
+            'price' => 100,
+            StoreCatalog::PROP_LINKED_URL_TABLE_NAME => [
+                ['url' => 'http://google.com', 'alt' => 'Pot1'],
+                ['url' => 'http://google.com1', 'alt' => 'Pot2'],
+                ['url' => 'http://google.com2', 'alt' => 'Pot3'],
+            ]
+        ]);
+        unset($data[StoreCatalog::PROP_LINKED_URL_TABLE_NAME][2]);
+        $data[StoreCatalog::PROP_LINKED_URL_TABLE_NAME][] = ['url' => 'http://google.com', 'alt' => 'Pot3'];
+        $data[StoreCatalog::PROP_LINKED_URL_TABLE_NAME][0]['alt'] = 'Pot4';
+        unset($data[StoreCatalog::PROP_LINKED_URL_TABLE_NAME][1]['alt']);
+        unset($data[StoreCatalog::PROP_LINKED_URL_TABLE_NAME][1]['url']);
+        unset($data[StoreCatalog::PROP_LINKED_URL_TABLE_NAME][1]['sys_entities_id']);
+
+        $newData = $this->object->update($data);
+        $this->assertEquals(1, $this->object->count());
+
+        $prop = $this->container->get(StoreCatalog::PROP_LINKED_URL_TABLE_NAME);
+        $this->assertEquals(3, $prop->count());
+        $this->assertEquals('Pot4', $newData[StoreCatalog::PROP_LINKED_URL_TABLE_NAME][0]['alt']);
+        $this->assertEquals('Pot3', $newData[StoreCatalog::PROP_LINKED_URL_TABLE_NAME][2]['alt']);
+    }
+
     public function test__query_with_select()
     {
         $this->object = $this->container->get(SysEntities::ENTITY_PREFIX . 'product');
