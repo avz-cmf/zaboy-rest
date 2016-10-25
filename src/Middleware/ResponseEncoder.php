@@ -56,7 +56,7 @@ class ResponseEncoder implements MiddlewareInterface
                                 $result = $result
                                         . $escaper->escapeHtml($key)
                                         . ' - '
-                                        . $escaper->escapeHtml(is_array($value) ? json_encode($valueArray) : $value)
+                                        . $escaper->escapeHtml(is_array($value) ? print_r($value, true) : $value)
                                         . '; _   _  ';
                             }
                             $result = $result . '<br>' . PHP_EOL;
