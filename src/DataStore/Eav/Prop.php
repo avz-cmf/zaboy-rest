@@ -9,9 +9,8 @@
 
 namespace zaboy\rest\DataStore\Eav;
 
-use zaboy\rest\DataStore\DbTable;
 use zaboy\rest\DataStore\DataStoreException;
-use zaboy\rest\DataStore\Eav\SysEntities;
+use zaboy\rest\DataStore\DbTable;
 use Zend\Db\Metadata\Source\Factory;
 
 /**
@@ -46,6 +45,25 @@ class Prop extends DbTable
         return $result;
     }
 
+    public function updateWithEntity($propData, $entityId, $entityName, $propColumn)
+    {
+        $linkedColumn = $this->getLinkedColumn($entityName, $propColumn);
+        if (is_null($linkedColumn)) {
+            throw new DataStoreException('Wrong linked column: ' . $propColumn);
+        }
+        $result = [];
+        foreach ($propData as $row) {
+            if (!isset($row[$this->getIdentifier()]) ||
+                $this->read($row[$this->getIdentifier()]) == null
+            ) {
+                $row[$linkedColumn] = $entityId;
+                $result[] = $this->create($row);
+            } else if (!empty(array_diff_assoc($row, $this->read($row[$this->getIdentifier()])))) {
+                $result[] = $this->update($row);
+            }
+        }
+    }
+
     public function getPropName()
     {
         $tableName = $this->dbTable->table;
@@ -75,25 +93,26 @@ class Prop extends DbTable
 
         //'prop_name.column_name' or 'prop_name'
         $linkedColumn = strpos($propColumn, '.') ?
-                //prop_name.column_name
-                (isset(explode('.', $propColumn)[1]) && in_array(explode('.', $propColumn)[1], $columnsNames) ?
-                        //column_name
-                        explode('.', $propColumn)[1] :
-                        //error
-                        null
-                ) :
-                //prop_name
-                ( in_array($entityName . SysEntities::ID_SUFFIX, $columnsNames) ?
-                        //entity_id
-                        $entityName . SysEntities::ID_SUFFIX :
-                        ( in_array(SysEntities::TABLE_NAME . SysEntities::ID_SUFFIX, $columnsNames) ?
-                                //sys_entities_id
-                                SysEntities::TABLE_NAME . SysEntities::ID_SUFFIX :
-                                //error
-                                null
-                        )
-                );
+            //prop_name.column_name
+            (isset(explode('.', $propColumn)[1]) && in_array(explode('.', $propColumn)[1], $columnsNames) ?
+                //column_name
+                explode('.', $propColumn)[1] :
+                //error
+                null
+            ) :
+            //prop_name
+            (in_array($entityName . SysEntities::ID_SUFFIX, $columnsNames) ?
+                //entity_id
+                $entityName . SysEntities::ID_SUFFIX :
+                (in_array(SysEntities::TABLE_NAME . SysEntities::ID_SUFFIX, $columnsNames) ?
+                    //sys_entities_id
+                    SysEntities::TABLE_NAME . SysEntities::ID_SUFFIX :
+                    //error
+                    null
+                )
+            );
         return $linkedColumn;
     }
+
 
 }

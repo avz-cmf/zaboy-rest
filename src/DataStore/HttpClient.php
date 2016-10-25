@@ -188,7 +188,7 @@ class HttpClient extends DataStoreAbstract
         $client = $this->initHttpClient(Request::METHOD_DELETE, null, $id);
         $response = $client->send();
         if ($response->isSuccess()) {
-            $result = $this->jsonDecode($response->getBody());
+                $result = !empty($response->getBody()) ? $this->jsonDecode($response->getBody()) : null;
         } else {
             throw new DataStoreException(
             'Status: ' . $response->getStatusCode()

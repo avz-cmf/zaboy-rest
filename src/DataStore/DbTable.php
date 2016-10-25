@@ -109,7 +109,7 @@ class DbTable extends DataStoreAbstract
     public function query(Query $query)
     {
 
-        $conditionBuilder = new SqlConditionBuilder($this->dbTable->getAdapter());
+        $conditionBuilder = new SqlConditionBuilder($this->dbTable->getAdapter(), $this->dbTable->getTable());
 
         $selectSQL = $this->dbTable->getSql()->select();
         $selectSQL->where($conditionBuilder($query->getQuery()));
@@ -189,7 +189,8 @@ class DbTable extends DataStoreAbstract
     {
         //create new Select - for aggregate func query
         $fields = $selectSQL->getRawState(Select::COLUMNS);
-        $hasAggregateFilds = array_keys($fields) != range(0, sizeof($fields) - 1);
+
+        $hasAggregateFilds = array_keys($fields) != range(0, count($fields) - 1) && !empty($fields);
         if ($hasAggregateFilds) {
             $externalSql = new Select();
             $externalSql->columns($selectSQL->getRawState(Select::COLUMNS));
