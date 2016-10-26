@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Created by PhpStorm.
  * User: victorsecuring
@@ -8,10 +9,10 @@
 
 namespace zaboy\rest\DataStore\Interfaces;
 
-
 use Xiag\Rql\Parser\Query;
 
 interface SqlQueryGetterInterface
 {
+
     public function getSqlQuery(Query $query);
 }
