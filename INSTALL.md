@@ -1,13 +1,38 @@
-# zaboy-dojo 1
+# Подключение zaboy-rest
 
-Приложение zaboy-dojo содержит в себе ряд примеров по работе с dojo, rql, zaboy-rest.
+Что бы установить библиотеку, добавьте в composer.json: 
 
-Что бы установить приложение, достаточно склонировать репозиторий, запустить в нем команду 
+	"require": {
+			...
+	        "avz-cmf/zaboy-rest": "^4.0",
+			...
 
-`composer install`
+и выполните `composer update`.
 
-Дальше можно поднять PHP Built-in web server командкой
-`php -S localhost:9090 -t www/` 
+Установите переменную окружения `'APP_ENV' = "dev"` или `'APP_ENV' = "prod"`;
 
-Сервер поднялся на порту 9090.
-Теперь перейдите по ссылке [localhost](http://localhost:9090/ "Localhost") и можете приступать к изучению rql.
+Скопируйте файл `datastore.services.global.php` из библиотеки в `config/autoload` проекта.
+
+Задайте параметры адаптера базы данных, например в файле `db.local.php` в `config/autoload` 
+
+Пример:
+
+	return [
+	    'db' => [
+	        'adapters' => [
+	            'db' => [
+	                'driver' => 'Pdo_Mysql',
+	                'database' => 'zaboy_rest',
+	                'username' => 'root',
+	                'password' => 'pass'
+	            ]
+	        ]
+	    ]
+	  ]
+	];
+
+Запустите скрипт `script/install.php`, он создаст таблицы в базе.
+
+
+
+

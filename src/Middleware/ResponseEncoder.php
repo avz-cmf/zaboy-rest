@@ -49,21 +49,23 @@ class ResponseEncoder implements MiddlewareInterface
             $result = '';
             switch (true) {
                 case gettype($responseBody) == 'array' :
-                    foreach ($responseBody as $valueArray) {
-                        $result = $result . ' - ';
-                        if (is_array($valueArray)) {
-                            foreach ($valueArray as $key => $value) {
-                                $result = $result
-                                        . $escaper->escapeHtml($key)
-                                        . ' - '
-                                        . $escaper->escapeHtml(is_array($value) ? print_r($value, true) : $value)
-                                        . '; _   _  ';
-                            }
-                            $result = $result . '<br>' . PHP_EOL;
-                        } else {
-                            $result = $result . $escaper->escapeHtml($valueArray) . '<br>' . PHP_EOL;
-                        }
-                    }
+//                    foreach ($responseBody as $valueArray) {
+//                        $result = $result . ' - ';
+//                        if (is_array($valueArray)) {
+//                            foreach ($valueArray as $key => $value) {
+//                                $result = $result
+//                                        . $escaper->escapeHtml($key)
+//                                        . ' - '
+//                                        . $escaper->escapeHtml(is_array($value) ? print_r($value, true) : $value)
+//                                        . '; _   _  ';
+//                            }
+//                            $result = $result . '<br>' . PHP_EOL;
+//                        } else {
+//                            $result = $result . $escaper->escapeHtml($valueArray) . '<br>' . PHP_EOL;
+//                        }
+//                    }
+
+                    $result = '<pre>' . $escaper->escapeHtml(print_r($responseBody, true)) . '</pre>';
                     break;
                 case is_numeric($responseBody) or is_string($responseBody) :
                     $result = $responseBody . '<br>' . PHP_EOL;
