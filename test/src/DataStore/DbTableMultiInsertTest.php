@@ -8,8 +8,6 @@
 
 namespace zaboy\test\rest\DataStore;
 
-
-use zaboy\rest\DbSql\MultiInsertSql;
 use Zend\Db\TableGateway\TableGateway;
 
 class DbTableMultiInsertTest extends DbTableTest
@@ -34,7 +32,7 @@ class DbTableMultiInsertTest extends DbTableTest
     {
         $this->_initObject();
         $data = [];
-        foreach (range(0, 20000) as $i) {
+        foreach (range(1, 20000) as $i) {
             $data[] = [
                 'fFloat' => 1000.01 + $i,
                 'fString' => 'Create_withoutId' . $i,
@@ -42,13 +40,7 @@ class DbTableMultiInsertTest extends DbTableTest
         }
 
         $newItems = $this->object->create($data);
-        $this->assertTrue(is_array($newItems));
-        $this->assertTrue(count($newItems) === 20001);
-        $id = 5;
-        foreach ($newItems as $item){
-            $this->assertEquals((string)$id,$item[$this->object->getIdentifier()]);
-            $id++;
-        }
+        $this->assertEquals('Create_withoutId' . 1 ,$newItems['fString']);
     }
 
     public function testCreate_multiRow_withId()
@@ -64,13 +56,23 @@ class DbTableMultiInsertTest extends DbTableTest
         }
 
         $newItems = $this->object->create($data);
-        $this->assertTrue(is_array($newItems));
-        $this->assertEquals(19996, count($newItems));
-        $id = 5;
-        foreach ($newItems as $item){
-            $this->assertEquals((string)$id,$item[$this->object->getIdentifier()]);
-            $id++;
+        $this->assertEquals(20000 ,$newItems[$this->object->getIdentifier()]);
+    }
+
+    public function testCreate_multiRow_withRewrite()
+    {
+        $this->_initObject();
+        $data = [];
+        foreach (range(1, 20000) as $i) {
+            $data[] = [
+                $this->object->getIdentifier() => $i,
+                'fFloat' => 1000.01 + $i,
+                'fString' => 'Create_withoutId' . $i,
+            ];
         }
+
+        $newItems = $this->object->create($data, true);
+        $this->assertEquals(20000 ,$newItems[$this->object->getIdentifier()]);
     }
 
     /**

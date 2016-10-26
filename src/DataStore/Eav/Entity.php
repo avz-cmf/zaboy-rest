@@ -72,7 +72,7 @@ class Entity extends DbTable
         try {
             $sysEntities = new SysEntities(new TableGateway(SysEntities::TABLE_NAME, $adapter));
             $itemData = $sysEntities->prepareEntityCreate($this->getEntityName(), $itemData, $rewriteIfExist);
-            $itemInserted = parent::create($itemData, false);
+            $itemInserted = parent::_create($itemData, false);
 
             if (!empty($itemInserted)) {
                 /**
@@ -88,7 +88,7 @@ class Entity extends DbTable
             }
         } catch (\Exception $e) {
             $adapter->getDriver()->getConnection()->rollback();
-            throw new DataStoreException("", 0, $e);
+            throw new DataStoreException('Can\'t insert item', 0, $e);
         }
         return $itemInserted;
     }
@@ -113,7 +113,7 @@ class Entity extends DbTable
             if ($createIfAbsent) {
                 throw new DataStoreException("This method dosn't work with flag $createIfAbsent = true");
             }
-            $itemInserted = parent::update($itemData, false);
+            $itemInserted = parent::_update($itemData, false);
             if (!empty($itemInserted)) {
                 /**
                  * @var string $key
@@ -154,7 +154,7 @@ class Entity extends DbTable
             $adapter->getDriver()->getConnection()->commit();
         } catch (\Exception $e) {
             $adapter->getDriver()->getConnection()->rollback();
-            throw new DataStoreException("", 0, $e);
+            throw new DataStoreException('Can\'t update item', 0, $e);
         }
         return $itemInserted;
     }
@@ -166,13 +166,7 @@ class Entity extends DbTable
      */
     public function query(Query $query)
     {
-
-        $conditionBuilder = new SqlConditionBuilder($this->dbTable->getAdapter(), $this->dbTable->getTable());
-
         $selectSQL = $this->dbTable->getSql()->select();
-        $selectSQL->where($conditionBuilder($query->getQuery()));
-        $selectSQL = $this->setSelectOrder($selectSQL, $query);
-        $selectSQL = $this->setSelectLimitOffset($selectSQL, $query);
         $selectSQL = $this->setSelectColumns($selectSQL, $query);
 
         $fields = $selectSQL->getRawState(Select::COLUMNS);
@@ -183,13 +177,7 @@ class Entity extends DbTable
             $selectSQL->columns($fields);
         }
 
-        $selectSQL = $this->setSelectJoin($selectSQL, $query);
-        $selectSQL = $this->makeExternalSql($selectSQL);
-
-        //build sql string
-        $sql = $this->dbTable->getSql()->buildSqlString($selectSQL);
-        //replace double ` char to single.
-        $sql = str_replace(["`(", ")`", "``"], ['(', ')', "`"], $sql);
+        $sql = $this->getSqlQuery($query);
         /** @var Adapter $adapter */
         $adapter = $this->dbTable->getAdapter();
         $rowset = $adapter->query($sql, $adapter::QUERY_MODE_EXECUTE);
@@ -265,6 +253,32 @@ class Entity extends DbTable
     {
         $sysEntities = new SysEntities(new TableGateway(SysEntities::TABLE_NAME, $this->dbTable->getAdapter()));
         return $sysEntities->deleteAllInEntity($this->getEntityName());
+    }
+
+    public function getSqlQuery(Query $query)
+    {
+        $conditionBuilder = new SqlConditionBuilder($this->dbTable->getAdapter(), $this->dbTable->getTable());
+
+        $selectSQL = $this->dbTable->getSql()->select();
+        $selectSQL->where($conditionBuilder($query->getQuery()));
+        $selectSQL = $this->setSelectOrder($selectSQL, $query);
+        $selectSQL = $this->setSelectLimitOffset($selectSQL, $query);
+        $selectSQL = $this->setSelectColumns($selectSQL, $query);
+
+        $fields = $selectSQL->getRawState(Select::COLUMNS);
+        if (isset($fields['props'])) {
+            unset($fields['props']);
+            $selectSQL->columns($fields);
+        }
+
+        $selectSQL = $this->setSelectJoin($selectSQL, $query);
+        $selectSQL = $this->makeExternalSql($selectSQL);
+
+        //build sql string
+        $sql = $this->dbTable->getSql()->buildSqlString($selectSQL);
+        //replace double ` char to single.
+        $sql = str_replace(["`(", ")`", "``"], ['(', ')', "`"], $sql);
+        return $sql;
     }
 
 }

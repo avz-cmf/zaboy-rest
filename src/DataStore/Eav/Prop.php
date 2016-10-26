@@ -38,9 +38,10 @@ class Prop extends DbTable
             throw new DataStoreException('Wrong linked column: ' . $propColumn);
         }
         $this->dbTable->delete([$linkedColumn => $entityId]);
+        $result = [];
         foreach ($propData as $row) {
             $row[$linkedColumn] = $entityId;
-            $result[] = $this->create($row);
+            $result[] = $this->_create($row);
         }
         return $result;
     }
@@ -57,9 +58,9 @@ class Prop extends DbTable
                 $this->read($row[$this->getIdentifier()]) == null
             ) {
                 $row[$linkedColumn] = $entityId;
-                $result[] = $this->create($row);
+                $result[] = $this->_create($row);
             } else if (!empty(array_diff_assoc($row, $this->read($row[$this->getIdentifier()])))) {
-                $result[] = $this->update($row);
+                $result[] = $this->_update($row);
             }
         }
     }

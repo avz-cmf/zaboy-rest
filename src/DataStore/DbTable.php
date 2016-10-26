@@ -12,8 +12,8 @@ namespace zaboy\rest\DataStore;
 use Xiag\Rql\Parser\Node\SortNode;
 use Xiag\Rql\Parser\Query;
 use zaboy\rest\DataStore\ConditionBuilder\SqlConditionBuilder;
+use zaboy\rest\DataStore\Interfaces\SqlQueryGetterInterface;
 use zaboy\rest\RqlParser\AggregateFunctionNode;
-use zaboy\rest\RqlParser\XSelectNode;
 use Zend\Db\Adapter\Adapter;
 use Zend\Db\ResultSet\ResultSet;
 use Zend\Db\Sql\Predicate\Expression;
@@ -30,7 +30,7 @@ use Zend\Db\TableGateway\TableGateway;
  * @category   rest
  * @package    zaboy
  */
-class DbTable extends DataStoreAbstract
+class DbTable extends DataStoreAbstract implements SqlQueryGetterInterface
 {
 
     /**
@@ -58,47 +58,94 @@ class DbTable extends DataStoreAbstract
     public function create($itemData, $rewriteIfExist = false)
     {
 
-        $identifier = $this->getIdentifier();
+        /*$identifier = $this->getIdentifier();
         $adapter = $this->dbTable->getAdapter();
-
-
-        if (is_int(array_keys($itemData)[0])) {
-            $query = new Query();
-            $query->setSelect(new XSelectNode([new AggregateFunctionNode('max', $this->getIdentifier())]));
-            $prewId = $this->query($query)[0][$this->getIdentifier() . '->max'];
-        }
 
         // begin Transaction
         $errorMsg = 'Can\'t start insert transaction';
 
         $adapter->getDriver()->getConnection()->beginTransaction();
         try {
-            if (isset($itemData[$identifier]) && $rewriteIfExist) {
-                $errorMsg = 'Can\'t delete item with "id" = ' . $itemData[$identifier];
-                $this->dbTable->delete(array($identifier => $itemData[$identifier]));
+            if ($rewriteIfExist) {
+                if (isset($itemData[$identifier])) {
+                    $errorMsg = 'Can\'t delete item with "id" = ' . $itemData[$identifier];
+                    if ($this->read($itemData[$identifier])) {
+                        $this->dbTable->delete(array($identifier => $itemData[$identifier]));
+                    }
+                } else if (isset($itemData[0]) && isset($itemData[0][$identifier])) {
+                    foreach ($itemData as $item) {
+                        if (isset($item[$identifier])) {
+                            $errorMsg = 'Can\'t delete item with "id" = ' . $item[$identifier];
+                            if ($this->read($item[$identifier])) {
+                                $this->dbTable->delete(array($identifier => $item[$identifier]));
+                            }
+                        }
+                    }
+                }
             }
             $errorMsg = 'Can\'t insert item';
             $rowsCount = $this->dbTable->insert($itemData);
             $adapter->getDriver()->getConnection()->commit();
-        } catch (\Exception $e) {
+        } catch
+        (\Exception $e) {
             $adapter->getDriver()->getConnection()->rollback();
             throw new DataStoreException($errorMsg, 0, $e);
         }
 
-
-        if ($rowsCount > 1) {
-            $newItem = [];
-            $lastId = $this->query($query)[0][$this->getIdentifier() . '->max'];
-            foreach (range($prewId + 1, $lastId) as $id) {
-                $newItem[] = [$identifier => $id];
-            }
-        } else {
-            $id = $this->dbTable->lastInsertValue;
-            $newItem = array_merge(array($identifier => $id), $itemData);
+        if(!isset($itemData[$identifier])) {
+            $id = $this->dbTable->getLastInsertValue();
+            $newItem = $this->read($id);
+        }else {
+            $newItem = $itemData;
         }
 
+        return $newItem;*/
+        $adapter = $this->dbTable->getAdapter();
+
+        $adapter->getDriver()->getConnection()->beginTransaction();
+        try {
+            $insertedItem = $this->_create($itemData, $rewriteIfExist);
+            $adapter->getDriver()->getConnection()->commit();
+        } catch (\Exception $e) {
+            $adapter->getDriver()->getConnection()->rollback();
+            throw new DataStoreException('Can\'t insert item', 0, $e);
+        }
+        return $insertedItem;
+    }
+
+    protected function _create($itemData, $rewriteIfExist = false)
+    {
+
+        $identifier = $this->getIdentifier();
+        if ($rewriteIfExist) {
+            if (isset($itemData[$identifier])) {
+                $this->deleteIfExist($itemData, $identifier);
+            } else if (isset($itemData[0]) && isset($itemData[0][$identifier])) {
+                foreach ($itemData as $item) {
+                    $this->deleteIfExist($item, $identifier);
+                }
+            }
+        }
+        $this->dbTable->insert($itemData);
+        if (!isset($itemData[$identifier])) {
+            $id = $this->dbTable->getLastInsertValue();
+            $newItem = $this->read($id);
+        } else {
+            $newItem = $itemData;
+        }
 
         return $newItem;
+    }
+
+    protected function deleteIfExist(array $item, $identifier)
+    {
+        if ($this->read($item[$identifier])) {
+            try {
+                $this->dbTable->delete(array($identifier => $item[$identifier]));
+            } catch (\Exception $e) {
+                throw new DataStoreException('Can\'t delete item with "id" = ' . $item[$identifier], 0, $e);
+            }
+        }
     }
 
     /**
@@ -108,22 +155,7 @@ class DbTable extends DataStoreAbstract
      */
     public function query(Query $query)
     {
-
-        $conditionBuilder = new SqlConditionBuilder($this->dbTable->getAdapter(), $this->dbTable->getTable());
-
-        $selectSQL = $this->dbTable->getSql()->select();
-        $selectSQL->where($conditionBuilder($query->getQuery()));
-        $selectSQL = $this->setSelectOrder($selectSQL, $query);
-        $selectSQL = $this->setSelectLimitOffset($selectSQL, $query);
-        $selectSQL = $this->setSelectColumns($selectSQL, $query);
-        $selectSQL = $this->setSelectJoin($selectSQL, $query);
-        $selectSQL = $this->makeExternalSql($selectSQL);
-
-        //build sql string
-        $sql = $this->dbTable->getSql()->buildSqlString($selectSQL);
-        //replace double ` char to single.
-        $sql = str_replace(["`(", ")`", "``"], ['(', ')', "`"], $sql);
-        /** @var Adapter $adapter */
+        $sql = $this->getSqlQuery($query);
         $adapter = $this->dbTable->getAdapter();
         $rowset = $adapter->query($sql, $adapter::QUERY_MODE_EXECUTE);
 
@@ -152,7 +184,7 @@ class DbTable extends DataStoreAbstract
             if (!preg_match('/[\w]+\.[\w]+/', $ordKey)) {
                 $ordKey = $this->dbTable->table . '.' . $ordKey;
             }
-            if ((int) $ordVal === SortNode::SORT_DESC) {
+            if ((int)$ordVal === SortNode::SORT_DESC) {
                 $selectSQL->order($ordKey . ' ' . Select::ORDER_DESCENDING);
             } else {
                 $selectSQL->order($ordKey . ' ' . Select::ORDER_ASCENDING);
@@ -214,19 +246,24 @@ class DbTable extends DataStoreAbstract
      */
     public function update($itemData, $createIfAbsent = false)
     {
+
+        /*$adapter = $this->dbTable->getAdapter();
+        $adapter->getDriver()->getConnection()->beginTransaction();
+
         $identifier = $this->getIdentifier();
         if (!isset($itemData[$identifier])) {
             throw new DataStoreException('Item must has primary key');
         }
         $id = $itemData[$identifier];
         $this->checkIdentifierType($id);
-        $adapter = $this->dbTable->getAdapter();
+
         $errorMsg = 'Can\'t update item with "id" = ' . $id;
+
         $queryStr = 'SELECT ' . Select::SQL_STAR
-                . ' FROM ' . $adapter->platform->quoteIdentifier($this->dbTable->getTable())
-                . ' WHERE ' . $adapter->platform->quoteIdentifier($identifier) . ' = ?'
-                . ' FOR UPDATE';
-        $adapter->getDriver()->getConnection()->beginTransaction();
+            . ' FROM ' . $adapter->platform->quoteIdentifier($this->dbTable->getTable())
+            . ' WHERE ' . $adapter->platform->quoteIdentifier($identifier) . ' = ?'
+            . ' FOR UPDATE';
+
         try {
             //is row with this index exist?
             $rowset = $adapter->query($queryStr, array($id));
@@ -249,6 +286,54 @@ class DbTable extends DataStoreAbstract
         } catch (\Exception $e) {
             $adapter->getDriver()->getConnection()->rollback();
             throw new DataStoreException($errorMsg, 0, $e);
+        }
+        return $result;*/
+
+        $adapter = $this->dbTable->getAdapter();
+        $adapter->getDriver()->getConnection()->beginTransaction();
+        try {
+            $result = $this->_update($itemData, $createIfAbsent);
+            $adapter->getDriver()->getConnection()->commit();
+        } catch (\Exception $e) {
+            $adapter->getDriver()->getConnection()->rollback();
+            throw new DataStoreException('Can\'t update item', 0, $e);
+        }
+        return $result;
+    }
+
+    public function _update($itemData, $createIfAbsent = false)
+    {
+        $adapter = $this->dbTable->getAdapter();
+
+        $identifier = $this->getIdentifier();
+        if (!isset($itemData[$identifier])) {
+            throw new DataStoreException('Item must has primary key');
+        }
+        $id = $itemData[$identifier];
+        $this->checkIdentifierType($id);
+
+        $queryStr = 'SELECT ' . Select::SQL_STAR
+            . ' FROM ' . $adapter->platform->quoteIdentifier($this->dbTable->getTable())
+            . ' WHERE ' . $adapter->platform->quoteIdentifier($identifier) . ' = ?'
+            . ' FOR UPDATE';
+
+        //is row with this index exist?
+        $rowset = $adapter->query($queryStr, array($id));
+        $isExist = !is_null($rowset->current());
+        $result = [];
+        switch (true) {
+            case!$isExist && !$createIfAbsent:
+                throw new DataStoreException('Can\'t update item with "id" = ' . $id);
+            case!$isExist && $createIfAbsent:
+                $this->dbTable->insert($itemData);
+                $result = $itemData;
+                break;
+            case $isExist:
+                unset($itemData[$identifier]);
+                $this->dbTable->update($itemData, array($identifier => $id));
+                $rowset = $adapter->query($queryStr, array($id));
+                $result = $rowset->current()->getArrayCopy();
+                break;
         }
         return $result;
     }
@@ -309,9 +394,9 @@ class DbTable extends DataStoreAbstract
         $adapter = $this->dbTable->getAdapter();
         /* @var $rowset ResultSet */
         $rowset = $adapter->query(
-                'SELECT COUNT(*) AS count FROM '
-                . $adapter->platform->quoteIdentifier($this->dbTable->getTable())
-                , $adapter::QUERY_MODE_EXECUTE);
+            'SELECT COUNT(*) AS count FROM '
+            . $adapter->platform->quoteIdentifier($this->dbTable->getTable())
+            , $adapter::QUERY_MODE_EXECUTE);
         return $rowset->current()['count'];
     }
 
@@ -340,4 +425,22 @@ class DbTable extends DataStoreAbstract
         return $keys;
     }
 
+    public function getSqlQuery(Query $query)
+    {
+        $conditionBuilder = new SqlConditionBuilder($this->dbTable->getAdapter(), $this->dbTable->getTable());
+
+        $selectSQL = $this->dbTable->getSql()->select();
+        $selectSQL->where($conditionBuilder($query->getQuery()));
+        $selectSQL = $this->setSelectOrder($selectSQL, $query);
+        $selectSQL = $this->setSelectLimitOffset($selectSQL, $query);
+        $selectSQL = $this->setSelectColumns($selectSQL, $query);
+        $selectSQL = $this->setSelectJoin($selectSQL, $query);
+        $selectSQL = $this->makeExternalSql($selectSQL);
+
+        //build sql string
+        $sql = $this->dbTable->getSql()->buildSqlString($selectSQL);
+        //replace double ` char to single.
+        $sql = str_replace(["`(", ")`", "``"], ['(', ')', "`"], $sql);
+        return $sql;
+    }
 }

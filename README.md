@@ -9,16 +9,23 @@
 
 Пример:
 
-	return [
-	  "dataStore" => [
-	      'testHttpClient' => [
-	          'class' => 'zaboy\rest\DataStore\HttpClient',
-	          'tableName' => 'test_res_http',
-	          'url' => 'http://localhost/api/rest/test_res_http',
-	          'options' => ['timeout' => 30]
-	      ],
-	  ]
-	];
+ ```php
+    return [
+        "dataStore" => [
+            'testHttpClient' => [
+                'class' => 'zaboy\rest\DataStore\HttpClient',
+                'tableName' => 'test_res_http',
+                'url' => 'http://localhost/api/rest/test_res_http',
+                'options' => ['timeout' => 30]
+            ],
+            'testEavOverHttpClient' => [
+                'class' => 'zaboy\rest\DataStore\HttpClient',
+                 'url' => 'http://localhost/api/rest/entity_product',
+                 'options' => ['timeout' => 30]
+            ],
+        ]
+    ];
+ ```
 
 Скопируйте `index.php`и .htaccess из библиотеки в паблик директорию проекта.
 

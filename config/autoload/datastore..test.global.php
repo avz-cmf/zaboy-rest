@@ -38,6 +38,11 @@ return [
             'tableName' => 'test_res_http',
             'url' => 'http://zaboy-rest.loc/api/rest/test_res_http',
             'options' => ['timeout' => 30]
+        ],
+        'testEavOverHttpClient' => [
+            'class' => 'zaboy\rest\DataStore\HttpClient',
+            'url' => 'http://zaboy-rest.loc/api/rest/entity_product',
+            'options' => ['timeout' => 30]
         ],*/
         'testMemory' => [
             'class' => 'zaboy\rest\DataStore\Memory',
