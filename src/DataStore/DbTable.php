@@ -12,6 +12,7 @@ namespace zaboy\rest\DataStore;
 use Xiag\Rql\Parser\Node\SortNode;
 use Xiag\Rql\Parser\Query;
 use zaboy\rest\DataStore\ConditionBuilder\SqlConditionBuilder;
+use zaboy\rest\DataStore\Interfaces\SqlQueryGetterInterface;
 use zaboy\rest\RqlParser\AggregateFunctionNode;
 use Zend\Db\Adapter\Adapter;
 use Zend\Db\ResultSet\ResultSet;
@@ -29,7 +30,7 @@ use Zend\Db\TableGateway\TableGateway;
  * @category   rest
  * @package    zaboy
  */
-class DbTable extends DataStoreAbstract
+class DbTable extends DataStoreAbstract implements SqlQueryGetterInterface
 {
 
     /**
@@ -154,22 +155,7 @@ class DbTable extends DataStoreAbstract
      */
     public function query(Query $query)
     {
-
-        $conditionBuilder = new SqlConditionBuilder($this->dbTable->getAdapter(), $this->dbTable->getTable());
-
-        $selectSQL = $this->dbTable->getSql()->select();
-        $selectSQL->where($conditionBuilder($query->getQuery()));
-        $selectSQL = $this->setSelectOrder($selectSQL, $query);
-        $selectSQL = $this->setSelectLimitOffset($selectSQL, $query);
-        $selectSQL = $this->setSelectColumns($selectSQL, $query);
-        $selectSQL = $this->setSelectJoin($selectSQL, $query);
-        $selectSQL = $this->makeExternalSql($selectSQL);
-
-        //build sql string
-        $sql = $this->dbTable->getSql()->buildSqlString($selectSQL);
-        //replace double ` char to single.
-        $sql = str_replace(["`(", ")`", "``"], ['(', ')', "`"], $sql);
-        /** @var Adapter $adapter */
+        $sql = $this->getSqlQuery($query);
         $adapter = $this->dbTable->getAdapter();
         $rowset = $adapter->query($sql, $adapter::QUERY_MODE_EXECUTE);
 
@@ -439,4 +425,22 @@ class DbTable extends DataStoreAbstract
         return $keys;
     }
 
+    public function getSqlQuery(Query $query)
+    {
+        $conditionBuilder = new SqlConditionBuilder($this->dbTable->getAdapter(), $this->dbTable->getTable());
+
+        $selectSQL = $this->dbTable->getSql()->select();
+        $selectSQL->where($conditionBuilder($query->getQuery()));
+        $selectSQL = $this->setSelectOrder($selectSQL, $query);
+        $selectSQL = $this->setSelectLimitOffset($selectSQL, $query);
+        $selectSQL = $this->setSelectColumns($selectSQL, $query);
+        $selectSQL = $this->setSelectJoin($selectSQL, $query);
+        $selectSQL = $this->makeExternalSql($selectSQL);
+
+        //build sql string
+        $sql = $this->dbTable->getSql()->buildSqlString($selectSQL);
+        //replace double ` char to single.
+        $sql = str_replace(["`(", ")`", "``"], ['(', ')', "`"], $sql);
+        return $sql;
+    }
 }
