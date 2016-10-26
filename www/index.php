@@ -22,7 +22,7 @@ $container = include 'config/container.php';
 $RestRqlFactory = new RestRqlFactory();
 $rest = $RestRqlFactory($container, '');
 
-$app = new MiddlewarePipeOptions(['env' => $env ? $env : null]); //['env' => 'develop']
+$app = new MiddlewarePipeOptions(['env' => isset($env) ? $env : null]); //['env' => 'develop']
 $app->pipe('/api/rest', $rest);
 
 $server = Server::createServer($app, $_SERVER, $_GET, $_POST, $_COOKIE, $_FILES);
