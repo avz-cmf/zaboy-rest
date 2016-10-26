@@ -11,10 +11,12 @@ namespace zaboy\test\rest\DataStore\Eav;
 
 use Interop\Container\ContainerInterface;
 use Xiag\Rql\Parser\DataType\DateTime;
+use Xiag\Rql\Parser\Node\Query\LogicOperator\AndNode;
 use Xiag\Rql\Parser\Node\Query\ScalarOperator\EqNode;
 use Xiag\Rql\Parser\Node\SelectNode;
 use Xiag\Rql\Parser\Node\SortNode;
 use Xiag\Rql\Parser\Query;
+use zaboy\rest\DataStore\DataStoreException;
 use zaboy\rest\DataStore\Eav\Entity;
 use zaboy\rest\DataStore\Eav\Example\StoreCatalog;
 use zaboy\rest\DataStore\Eav\Prop;
@@ -429,5 +431,77 @@ class EntityTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(true, empty($result));
     }
 
+
+    public function test__create_nested_rollback()
+    {
+        $this->object = $this->container->get(SysEntities::ENTITY_PREFIX . 'product');
+
+        try {
+            $this->object->create([
+                'title' => 'title_1',
+                'price' => 100,
+                StoreCatalog::PROP_LINKED_URL_TABLE_NAME => [
+                    ['url' => 'http://google.com-1', 'alt' => 'Pot1-1'],
+                    ['url' => 'http://google.com2', 'alt' => 'Pot3', 'ttt' => 'asd'],
+                ]
+            ]);
+        } catch (DataStoreException $e) {
+            $query = new Query();
+            $query->setQuery(
+                new AndNode([
+                    new EqNode('url', 'http://google.com-1'),
+                    new EqNode('alt', 'Pot1-1')
+                ])
+            );
+            $prop = new Prop(new TableGateway(StoreCatalog::PROP_LINKED_URL_TABLE_NAME, $this->container->get('db')));
+            $result = $prop->query($query);
+            $this->assertEquals(0, count($result));
+
+
+            $query = new Query();
+            $query->setQuery(
+                new AndNode([
+                    new EqNode('title', 'title_1'),
+                    new EqNode('price', 100)
+                ])
+            );
+            $result = $this->object->query($query);
+            $this->assertEquals(0, count($result));
+            return;
+        }
+        $this->fail("An expected exception has not been raised.");
+    }
+
+    public function test__update_nested_rollback()
+    {
+        $this->object = $this->container->get(SysEntities::ENTITY_PREFIX . 'product');
+        $data = $this->object->create([
+            'title' => 'title_1',
+            'price' => 100,
+            StoreCatalog::PROP_LINKED_URL_TABLE_NAME => [
+                ['url' => 'http://google.com', 'alt' => 'Pot1'],
+                ['url' => 'http://google.com2', 'alt' => 'Pot3'],
+            ]
+        ]);
+
+        $data[StoreCatalog::PROP_LINKED_URL_TABLE_NAME] = ['url' => 'http://google.com3', 'alt' => 'Pot4', 'ttt' => 'asd'];
+        $data[StoreCatalog::PROP_LINKED_URL_TABLE_NAME] = ['url' => 'http://google.com-1', 'alt' => 'Pot1-1'];
+        try {
+            $this->object->update($data);
+        } catch (DataStoreException $e) {
+            $query = new Query();
+            $query->setQuery(
+                new AndNode([
+                    new EqNode('url', 'http://google.com-1'),
+                    new EqNode('alt', 'Pot1-1')
+                ])
+            );
+            $prop = new Prop(new TableGateway(StoreCatalog::PROP_LINKED_URL_TABLE_NAME, $this->container->get('db')));
+            $result = $prop->query($query);
+            $this->assertEquals(0, count($result));
+            return ;
+        }
+        $this->fail("An expected exception has not been raised.");
+    }
 
 }

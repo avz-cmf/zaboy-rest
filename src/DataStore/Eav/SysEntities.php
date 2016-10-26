@@ -53,7 +53,7 @@ class SysEntities extends DbTable
         if (isset($itemData[$identifier])) {
             $sysItem[$identifier] = $itemData[$identifier];
         }
-        $sysItemInserted = $this->create($sysItem);
+        $sysItemInserted = $this->_create($sysItem);
         if (empty($sysItemInserted)) {
             throw new DataStoreException('Can not insert record for ' . $entityName . 'to sys_entities');
         }

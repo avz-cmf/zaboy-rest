@@ -57,7 +57,7 @@ class DbTable extends DataStoreAbstract
     public function create($itemData, $rewriteIfExist = false)
     {
 
-        $identifier = $this->getIdentifier();
+        /*$identifier = $this->getIdentifier();
         $adapter = $this->dbTable->getAdapter();
 
         // begin Transaction
@@ -98,7 +98,53 @@ class DbTable extends DataStoreAbstract
             $newItem = $itemData;
         }
 
+        return $newItem;*/
+        $adapter = $this->dbTable->getAdapter();
+
+        $adapter->getDriver()->getConnection()->beginTransaction();
+        try {
+            $insertedItem = $this->_create($itemData, $rewriteIfExist);
+            $adapter->getDriver()->getConnection()->commit();
+        } catch (\Exception $e) {
+            $adapter->getDriver()->getConnection()->rollback();
+            throw new DataStoreException('Can\'t insert item', 0, $e);
+        }
+        return $insertedItem;
+    }
+
+    protected function _create($itemData, $rewriteIfExist = false)
+    {
+
+        $identifier = $this->getIdentifier();
+        if ($rewriteIfExist) {
+            if (isset($itemData[$identifier])) {
+                $this->deleteIfExist($itemData, $identifier);
+            } else if (isset($itemData[0]) && isset($itemData[0][$identifier])) {
+                foreach ($itemData as $item) {
+                    $this->deleteIfExist($item, $identifier);
+                }
+            }
+        }
+        $this->dbTable->insert($itemData);
+        if (!isset($itemData[$identifier])) {
+            $id = $this->dbTable->getLastInsertValue();
+            $newItem = $this->read($id);
+        } else {
+            $newItem = $itemData;
+        }
+
         return $newItem;
+    }
+
+    protected function deleteIfExist(array $item, $identifier)
+    {
+        if ($this->read($item[$identifier])) {
+            try {
+                $this->dbTable->delete(array($identifier => $item[$identifier]));
+            } catch (\Exception $e) {
+                throw new DataStoreException('Can\'t delete item with "id" = ' . $item[$identifier], 0, $e);
+            }
+        }
     }
 
     /**
@@ -214,19 +260,24 @@ class DbTable extends DataStoreAbstract
      */
     public function update($itemData, $createIfAbsent = false)
     {
+
+        /*$adapter = $this->dbTable->getAdapter();
+        $adapter->getDriver()->getConnection()->beginTransaction();
+
         $identifier = $this->getIdentifier();
         if (!isset($itemData[$identifier])) {
             throw new DataStoreException('Item must has primary key');
         }
         $id = $itemData[$identifier];
         $this->checkIdentifierType($id);
-        $adapter = $this->dbTable->getAdapter();
+
         $errorMsg = 'Can\'t update item with "id" = ' . $id;
+
         $queryStr = 'SELECT ' . Select::SQL_STAR
             . ' FROM ' . $adapter->platform->quoteIdentifier($this->dbTable->getTable())
             . ' WHERE ' . $adapter->platform->quoteIdentifier($identifier) . ' = ?'
             . ' FOR UPDATE';
-        $adapter->getDriver()->getConnection()->beginTransaction();
+
         try {
             //is row with this index exist?
             $rowset = $adapter->query($queryStr, array($id));
@@ -249,6 +300,54 @@ class DbTable extends DataStoreAbstract
         } catch (\Exception $e) {
             $adapter->getDriver()->getConnection()->rollback();
             throw new DataStoreException($errorMsg, 0, $e);
+        }
+        return $result;*/
+
+        $adapter = $this->dbTable->getAdapter();
+        $adapter->getDriver()->getConnection()->beginTransaction();
+        try {
+            $result = $this->_update($itemData, $createIfAbsent);
+            $adapter->getDriver()->getConnection()->commit();
+        } catch (\Exception $e) {
+            $adapter->getDriver()->getConnection()->rollback();
+            throw new DataStoreException('Can\'t update item', 0, $e);
+        }
+        return $result;
+    }
+
+    public function _update($itemData, $createIfAbsent = false)
+    {
+        $adapter = $this->dbTable->getAdapter();
+
+        $identifier = $this->getIdentifier();
+        if (!isset($itemData[$identifier])) {
+            throw new DataStoreException('Item must has primary key');
+        }
+        $id = $itemData[$identifier];
+        $this->checkIdentifierType($id);
+
+        $queryStr = 'SELECT ' . Select::SQL_STAR
+            . ' FROM ' . $adapter->platform->quoteIdentifier($this->dbTable->getTable())
+            . ' WHERE ' . $adapter->platform->quoteIdentifier($identifier) . ' = ?'
+            . ' FOR UPDATE';
+
+        //is row with this index exist?
+        $rowset = $adapter->query($queryStr, array($id));
+        $isExist = !is_null($rowset->current());
+        $result = [];
+        switch (true) {
+            case!$isExist && !$createIfAbsent:
+                throw new DataStoreException('Can\'t update item with "id" = ' . $id);
+            case!$isExist && $createIfAbsent:
+                $this->dbTable->insert($itemData);
+                $result = $itemData;
+                break;
+            case $isExist:
+                unset($itemData[$identifier]);
+                $this->dbTable->update($itemData, array($identifier => $id));
+                $rowset = $adapter->query($queryStr, array($id));
+                $result = $rowset->current()->getArrayCopy();
+                break;
         }
         return $result;
     }

@@ -72,7 +72,7 @@ class Entity extends DbTable
         try {
             $sysEntities = new SysEntities(new TableGateway(SysEntities::TABLE_NAME, $adapter));
             $itemData = $sysEntities->prepareEntityCreate($this->getEntityName(), $itemData, $rewriteIfExist);
-            $itemInserted = parent::create($itemData, false);
+            $itemInserted = parent::_create($itemData, false);
 
             if (!empty($itemInserted)) {
                 /**
@@ -88,7 +88,7 @@ class Entity extends DbTable
             }
         } catch (\Exception $e) {
             $adapter->getDriver()->getConnection()->rollback();
-            throw new DataStoreException("", 0, $e);
+            throw new DataStoreException('Can\'t insert item', 0, $e);
         }
         return $itemInserted;
     }
@@ -113,7 +113,7 @@ class Entity extends DbTable
             if ($createIfAbsent) {
                 throw new DataStoreException("This method dosn't work with flag $createIfAbsent = true");
             }
-            $itemInserted = parent::update($itemData, false);
+            $itemInserted = parent::_update($itemData, false);
             if (!empty($itemInserted)) {
                 /**
                  * @var string $key
@@ -154,7 +154,7 @@ class Entity extends DbTable
             $adapter->getDriver()->getConnection()->commit();
         } catch (\Exception $e) {
             $adapter->getDriver()->getConnection()->rollback();
-            throw new DataStoreException("", 0, $e);
+            throw new DataStoreException('Can\'t update item', 0, $e);
         }
         return $itemInserted;
     }
