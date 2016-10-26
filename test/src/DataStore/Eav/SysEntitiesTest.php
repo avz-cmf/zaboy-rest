@@ -44,4 +44,28 @@ class SysEntitiesTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals([], $this->object->query(new Query()));
     }
 
+    protected static function getTableConfigProdaction()
+    {
+        return [
+            SysEntities::TABLE_NAME => [
+                'id' => [
+                    TableManager::FIELD_TYPE => 'Integer',
+                    TableManager::FIELD_PARAMS => [
+                        'options' => ['autoincrement' => true]
+                    ]
+                ],
+                'entity_type' => [
+                    TableManager::FIELD_TYPE => 'Varchar',
+                    TableManager::FIELD_PARAMS => [
+                        'length' => 100,
+                        'nullable' => false,
+                    ],
+                ],
+                'add_date' => [
+                    TableManager::FIELD_TYPE => 'Timestamp',
+                ]
+            ]
+        ];
+    }
+
 }

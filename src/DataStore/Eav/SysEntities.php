@@ -11,17 +11,20 @@ namespace zaboy\rest\DataStore\Eav;
 
 use zaboy\rest\DataStore\DbTable;
 use zaboy\rest\DataStore\DataStoreException;
+use zaboy\rest\TableGateway\TableManagerMysql as TableManager;
 
 /**
  *
  * Add to config:
  * <code>
- *     'dataStore' => [
- *         SysEntities::TABLE_NAME => [
- *             'class' => SysEntities::class,
- *             'tableName' => SysEntities::TABLE_NAME
- *         ],
- *     ],
+ *    'services' => [
+ *        'aliases' => [
+ *            EavAbstractFactory::DB_SERVICE_NAME => getenv('APP_ENV') === 'prod' ? 'dbOnProduction' : 'local-db',
+ *        ],
+ *        'abstract_factories' => [
+ *            EavAbstractFactory::class,
+ *        ]
+ *    ],
  * </code>
  *
  * Table'sys_entities' must be exist. Use src\installer for create.
@@ -35,7 +38,6 @@ class SysEntities extends DbTable
     const ENTITY_PREFIX = 'entity_';
     const PROP_PREFIX = 'prop_';
     const ID_SUFFIX = '_id';
-
 
     public function prepareEntityCreate($entityName, $itemData, $rewriteIfExist)
     {
@@ -83,9 +85,35 @@ class SysEntities extends DbTable
         return $tableName;
     }
 
-    public function deleteAllInEntity($entityType){
+    public function deleteAllInEntity($entityType)
+    {
         $where = SysEntities::ENTITY_PREFIX . 'type = \'' . $entityType . '\'';
         $deletedItemsCount = $this->dbTable->delete($where);
         return $deletedItemsCount;
     }
+
+    public static function getTableConfigProdaction()
+    {
+        return [
+            SysEntities::TABLE_NAME => [
+                'id' => [
+                    TableManager::FIELD_TYPE => 'Integer',
+                    TableManager::FIELD_PARAMS => [
+                        'options' => ['autoincrement' => true]
+                    ]
+                ],
+                'entity_type' => [
+                    TableManager::FIELD_TYPE => 'Varchar',
+                    TableManager::FIELD_PARAMS => [
+                        'length' => 100,
+                        'nullable' => false,
+                    ],
+                ],
+                'add_date' => [
+                    TableManager::FIELD_TYPE => 'Timestamp',
+                ]
+            ]
+        ];
+    }
+
 }
