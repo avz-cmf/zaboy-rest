@@ -234,8 +234,8 @@ class SuperEntity extends DbTable implements SqlQueryGetterInterface
                             if ($column->getName() == $ordKey){
                                 $ordKey = $entity->dbTable->table . '.' . $ordKey;
                                 $fined = true;
+                                break;
                             }
-                            break;
                         }
                     }
                     if ($fined){
