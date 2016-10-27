@@ -55,9 +55,9 @@ class EavAbstractFactory extends AbstractDataStoreFactory
     public function canCreate(ContainerInterface $container, $requestedName)
     {
         //'SuperEtity - 'entity_table_name_1~entity_table_name_1'
-        $superEtity = strpos($requestedName, SuperEntity::LEFT_JOIN);
+        $superEtity = strpos($requestedName, SuperEntity::INNER_JOIN);
         if ($superEtity) {
-            $eavDataStores = explode(SuperEntity::LEFT_JOIN, $requestedName);
+            $eavDataStores = explode(SuperEntity::INNER_JOIN, $requestedName);
             foreach ($eavDataStores as $eavDataStore) {
                 if (strpos($eavDataStore, SysEntities::ENTITY_PREFIX) !== 0) {
                     return false;
@@ -90,12 +90,12 @@ class EavAbstractFactory extends AbstractDataStoreFactory
         }
 
         //'SuperEtity - 'entity_table_name_1~entity_table_name_1'
-        if (strpos($requestedName, SuperEntity::LEFT_JOIN)) {
-            $eavDataStores = explode(SuperEntity::LEFT_JOIN, $requestedName);
+        if (strpos($requestedName, SuperEntity::INNER_JOIN)) {
+            $eavDataStores = explode(SuperEntity::INNER_JOIN, $requestedName);
             $eavDataStoresObjests = [];
             foreach ($eavDataStores as $eavDataStore) {
                 $eavDataStoresObjests[] = $this->getEavDataStore($db, $eavDataStore);
-                $eavDataStoresObjests[] = SuperEntity::LEFT_JOIN;
+                $eavDataStoresObjests[] = SuperEntity::INNER_JOIN;
             }
             array_pop($eavDataStoresObjests);
             $tableGateway = new TableGateway(SysEntities::TABLE_NAME, $db);

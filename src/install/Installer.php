@@ -10,7 +10,6 @@
 namespace zaboy\rest\install;
 
 use zaboy\rest\install\DataStore\Eav\Installer as EavInstaller;
-use zaboy\rest\install\InstallerAbstract;
 use zaboy\rest\install\DataStore\Eav\Example\StoreCatalog as EavExampleStoreCatalog;
 
 /**

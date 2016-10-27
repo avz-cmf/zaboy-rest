@@ -10,5 +10,6 @@ use zaboy\rest\install\Installer;
 
 $installer = new Installer($container);
 $installer->rewrite();
+$installer->addDataEavExampleStoreCatalog();
 
 

@@ -73,9 +73,13 @@ class SqlConditionBuilder extends ConditionBuilderAbstract
     public function prepareFieldName($fieldName)
     {
         if (!strpos($fieldName, '.')) {
-            $fieldName = $this->db->platform->quoteIdentifier($this->tableName) .
-                '.' .
-                $this->db->platform->quoteIdentifier($fieldName);
+            if ($fieldName == 'id'){
+                $fieldName = $this->db->platform->quoteIdentifier($this->tableName) .
+                    '.' .
+                    $this->db->platform->quoteIdentifier($fieldName);
+            }else {
+                $fieldName = $this->db->platform->quoteIdentifier($fieldName);
+            }
         } else {
             $name = explode('.', $fieldName);
             $fieldName = $this->db->platform->quoteIdentifier($name[0]) .
