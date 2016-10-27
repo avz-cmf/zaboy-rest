@@ -41,23 +41,23 @@ class StoreCatalog
 
     public static $sys_entities = [ "sys_entities" =>
         [
-            [ "id" => "17", "entity_type" => "product_icon", "add_date" => "2005-10-30 ",],
-            [ "id" => "18", "entity_type" => "product_icon", "add_date" => "2005-10-31",],
-            [ "id" => "19", "entity_type" => "product_icon", "add_date" => "2005-10-32",],
-            [ "id" => "11", "entity_type" => "product", "add_date" => "2005-10-33",],
-            [ "id" => "12", "entity_type" => "product", "add_date" => "2005-10-34",],
-            [ "id" => "13", "entity_type" => "product", "add_date" => "2005-10-35",],
-            [ "id" => "14", "entity_type" => "product", "add_date" => "2005-10-36",],
-            [ "id" => "15", "entity_type" => "product", "add_date" => "2005-10-37",],
-            [ "id" => "16", "entity_type" => "product", "add_date" => "2005-10-38",],
-            [ "id" => "31", "entity_type" => "tag", "add_date" => "2005-10-39",],
-            [ "id" => "32", "entity_type" => "tag", "add_date" => "2005-10-40",],
-            [ "id" => "33", "entity_type" => "tag", "add_date" => "2005-10-41",],
-            [ "id" => "21", "entity_type" => "category", "add_date" => "2005-10-42",],
-            [ "id" => "22", "entity_type" => "category", "add_date" => "2005-10-43",],
-            [ "id" => "23", "entity_type" => "category", "add_date" => "2005-10-44",],
-            [ "id" => "24", "entity_type" => "category", "add_date" => "2005-10-45",],
-    ]];
+            [ "id" => "17", "entity_type" => "product_icon", "add_date" => "2005-10-30 ", ],
+            [ "id" => "18", "entity_type" => "product_icon", "add_date" => "2005-10-30 ", ],
+            [ "id" => "19", "entity_type" => "product_icon", "add_date" => "2005-10-30 ", ],
+            [ "id" => "11", "entity_type" => "product", "add_date" => "2005-10-30 ", ],
+            [ "id" => "12", "entity_type" => "product", "add_date" => "2005-10-30 ", ],
+            [ "id" => "13", "entity_type" => "product", "add_date" => "2005-10-30 ", ],
+            [ "id" => "14", "entity_type" => "product", "add_date" => "2005-10-30 ", ],
+            [ "id" => "15", "entity_type" => "product", "add_date" => "2005-10-30 ", ],
+            [ "id" => "16", "entity_type" => "product", "add_date" => "2005-10-30 ", ],
+            [ "id" => "31", "entity_type" => "tag", "add_date" => "2005-10-30 ", ],
+            [ "id" => "32", "entity_type" => "tag", "add_date" => "2005-10-30 ", ],
+            [ "id" => "33", "entity_type" => "tag", "add_date" => "2005-10-30 ", ],
+            [ "id" => "21", "entity_type" => "category", "add_date" => "2005-10-30 ", ],
+            [ "id" => "22", "entity_type" => "category", "add_date" => "2005-10-30 ", ],
+            [ "id" => "23", "entity_type" => "category", "add_date" => "2005-10-30 ", ],
+            [ "id" => "24", "entity_type" => "category", "add_date" => "2005-10-30 ", ],
+        ]];
     public static $entity_product = [ "entity_product" =>
         [
             [ "id" => "11", "title" => "Edelweiss", "price" => "200",],
