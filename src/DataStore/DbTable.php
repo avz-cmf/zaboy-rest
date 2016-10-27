@@ -301,7 +301,7 @@ class DbTable extends DataStoreAbstract implements SqlQueryGetterInterface
         return $result;
     }
 
-    public function _update($itemData, $createIfAbsent = false)
+    protected function _update($itemData, $createIfAbsent = false)
     {
         $adapter = $this->dbTable->getAdapter();
 

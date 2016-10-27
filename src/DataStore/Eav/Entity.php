@@ -50,15 +50,12 @@ class Entity extends DbTable
         return $tableName = $this->dbTable->table;
     }
 
-    //TODO: во время метода parent::create мы закроем транзакцию и если возникнет исключение мы не сможем вызвать rollback
-    public function create($itemData, $rewriteIfExist = false)
-    {
-        //Check props in $itemData filed and generate propsTableGateway
-        //$this->propsTableGatewayInit($itemData);
 
-        $identifier = $this->getIdentifier();
+    protected function genItemProps(&$itemData)
+    {
+        /** @var Adapter $adapter */
         $adapter = $this->dbTable->getAdapter();
-        $adapter->getDriver()->getConnection()->beginTransaction();
+
         $propsData = [];
         $props = [];
         foreach ($itemData as $key => $value) {
@@ -69,23 +66,95 @@ class Entity extends DbTable
                 unset($itemData[$key]);
             }
         }
+        return ['propsData' => $propsData, 'props' => $props];
+    }
+
+    protected function createProps($props, $propsData, &$itemInserted)
+    {
+        /** @var Adapter $adapter */
+        $adapter = $this->dbTable->getAdapter();
+
+        if (!empty($itemInserted)) {
+            /**
+             * @var string $key
+             * @var Prop $prop
+             */
+            $identifier = $this->getIdentifier();
+            foreach ($props as $key => $prop) {
+                $itemInserted[$key] = $prop->createWithEntity(
+                    $propsData[$key],
+                    $itemInserted[$identifier],
+                    $this->getEntityName(),
+                    $key);
+            }
+        } else {
+            throw new DataStoreException('Not all data has been inserted. -> rollback');
+        }
+    }
+
+    protected function updateProps($props, $propsData, &$itemInserted)
+    {
+        $identifier = $this->getIdentifier();
+
+        if (!empty($itemInserted)) {
+            /**
+             * @var string $key
+             * @var  Prop $prop
+             */
+            foreach ($props as $key => $prop) {
+                $propQuery = new Query();
+                $propQuery->setQuery(
+                    new EqNode($prop->getLinkedColumn($this->getEntityName(), $key), $itemInserted[$identifier]));
+                $propQuery->setSelect(new SelectNode([$prop->getIdentifier()]));
+                $allEntityProp = $prop->query($propQuery);
+
+                foreach ($allEntityProp as $entityPropItem) {
+                    $find = false;
+                    foreach ($propsData[$key] as &$propDataItem) {
+                        if (isset($propDataItem[$prop->getIdentifier()]) &&
+                            $entityPropItem[$prop->getIdentifier()] === $propDataItem[$prop->getIdentifier()]
+                        ) {
+                            $find = true;
+                            $diff = array_diff_assoc($entityPropItem, $propDataItem);
+                            if (empty($diff) || count($propDataItem) == 1) {
+                                unset($propDataItem);
+                            }
+                            break;
+                        }
+                    }
+                    if (!$find) {
+                        $prop->delete($entityPropItem[$prop->getIdentifier()]);
+                    }
+                }
+                $prop->updateWithEntity($propsData[$key], $itemInserted[$identifier], $this->getEntityName(), $key);
+
+                $propQuery->setSelect(new SelectNode());
+                $allEntityProp = $prop->query($propQuery);
+                $itemInserted[$key] = $allEntityProp;
+            }
+        }
+    }
+
+
+    public function create($itemData, $rewriteIfExist = false)
+    {
+        //Check props in $itemData filed and generate propsTableGateway
+        //$this->propsTableGatewayInit($itemData);
+        $adapter = $this->dbTable->getAdapter();
+        $adapter->getDriver()->getConnection()->beginTransaction();
+
+        $propsData = [];
+        $props = [];
+        extract($this->genItemProps($itemData));
+
         try {
             $sysEntities = new SysEntities(new TableGateway(SysEntities::TABLE_NAME, $adapter));
             $itemData = $sysEntities->prepareEntityCreate($this->getEntityName(), $itemData, $rewriteIfExist);
-            $itemInserted = parent::_create($itemData, false);
 
-            if (!empty($itemInserted)) {
-                /**
-                 * @var string $key
-                 * @var Prop $prop
-                 */
-                foreach ($props as $key => $prop) {
-                    $itemInserted[$key] = $prop->createWithEntity($propsData[$key], $itemInserted[$identifier], $this->getEntityName(), $key);
-                }
-                $adapter->getDriver()->getConnection()->commit();
-            } else {
-                throw new DataStoreException('Not all data has been inserted. -> rollback');
-            }
+            $itemInserted = $this->_create($itemData, $rewriteIfExist);
+
+            $this->createProps($props, $propsData, $itemInserted);
+            $adapter->getDriver()->getConnection()->commit();
         } catch (\Exception $e) {
             $adapter->getDriver()->getConnection()->rollback();
             throw new DataStoreException('Can\'t insert item', 0, $e);
@@ -95,68 +164,36 @@ class Entity extends DbTable
 
     public function update($itemData, $createIfAbsent = false)
     {
-        $identifier = $this->getIdentifier();
         $adapter = $this->dbTable->getAdapter();
         $adapter->getDriver()->getConnection()->beginTransaction();
 
         $propsData = [];
         $props = [];
-        foreach ($itemData as $key => $value) {
-            if (strpos($key, SysEntities::PROP_PREFIX) === 0) {
-                $propTableName = explode('.', $key)[0];
-                $props[$key] = new Prop(new TableGateway($propTableName, $adapter));
-                $propsData[$key] = $value;
-                unset($itemData[$key]);
-            }
-        }
+        extract($this->genItemProps($itemData));
         try {
             if ($createIfAbsent) {
                 throw new DataStoreException("This method dosn't work with flag $createIfAbsent = true");
             }
-            $itemInserted = parent::_update($itemData, false);
-            if (!empty($itemInserted)) {
-                /**
-                 * @var string $key
-                 * @var  Prop $prop
-                 */
-                foreach ($props as $key => $prop) {
-                    $propQuery = new Query();
-                    $propQuery->setQuery(
-                            new EqNode($prop->getLinkedColumn($this->getEntityName(), $key), $itemInserted[$identifier]));
-                    $propQuery->setSelect(new SelectNode([$prop->getIdentifier()]));
-                    $allEntityProp = $prop->query($propQuery);
 
-                    foreach ($allEntityProp as $entityPropItem) {
-                        $find = false;
-                        foreach ($propsData[$key] as &$propDataItem) {
-                            if (isset($propDataItem[$prop->getIdentifier()]) &&
-                                    $entityPropItem[$prop->getIdentifier()] === $propDataItem[$prop->getIdentifier()]
-                            ) {
-                                $find = true;
-                                $diff = array_diff_assoc($entityPropItem, $propDataItem);
-                                if (empty($diff) || count($propDataItem) == 1) {
-                                    unset($propDataItem);
-                                }
-                                break;
-                            }
-                        }
-                        if (!$find) {
-                            $prop->delete($entityPropItem[$prop->getIdentifier()]);
-                        }
-                    }
-                    $prop->updateWithEntity($propsData[$key], $itemInserted[$identifier], $this->getEntityName(), $key);
+            $itemInserted = $this->_update($itemData, $createIfAbsent);
 
-                    $propQuery->setSelect(new SelectNode());
-                    $allEntityProp = $prop->query($propQuery);
-                    $itemInserted[$key] = $allEntityProp;
-                }
-            }
+            $this->updateProps($props, $propsData, $itemInserted);
             $adapter->getDriver()->getConnection()->commit();
         } catch (\Exception $e) {
             $adapter->getDriver()->getConnection()->rollback();
             throw new DataStoreException('Can\'t update item', 0, $e);
         }
         return $itemInserted;
+    }
+
+    protected function _update($itemData, $createIfAbsent = false){
+        $itemInserted = parent::_update($itemData, false);
+        return $itemInserted;
+    }
+
+    protected function _create($itemData, $rewriteIfExist = false)
+    {
+        return parent::_create($itemData, false);
     }
 
     /**
@@ -236,9 +273,9 @@ class Entity extends DbTable
     {
         $on = SysEntities::TABLE_NAME . '.' . $this->getIdentifier() . ' = ' . $this->getEntityTableName() . '.' . $this->getIdentifier();
         $selectSQL->join(
-                SysEntities::TABLE_NAME
-                , $on
-                , Select::SQL_STAR, Select::JOIN_LEFT
+            SysEntities::TABLE_NAME
+            , $on
+            , Select::SQL_STAR, Select::JOIN_LEFT
         );
         return $selectSQL;
     }

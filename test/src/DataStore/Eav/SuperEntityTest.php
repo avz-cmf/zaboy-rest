@@ -9,9 +9,8 @@
 
 namespace zaboy\test\rest\DataStore\Eav;
 
+use Interop\Container\ContainerInterface;
 use Xiag\Rql\Parser\Node\Query\LogicOperator\AndNode;
-use Xiag\Rql\Parser\Node\Query\ScalarOperator\EqNode;
-use Xiag\Rql\Parser\Node\Query\ScalarOperator\GtNode;
 use Xiag\Rql\Parser\Node\Query\ScalarOperator\LtNode;
 use Xiag\Rql\Parser\Node\Query\ScalarOperator\NeNode;
 use Xiag\Rql\Parser\Node\SelectNode;
@@ -43,8 +42,8 @@ class SuperEntityTest extends \PHPUnit_Framework_TestCase
     }
 
 
-
-    public function provider_supertEntityGetSql(){
+    public function provider_supertEntityGetSql()
+    {
         $query1 = new Query();
         $query2 = new Query();
         $query2->setQuery(
@@ -56,7 +55,7 @@ class SuperEntityTest extends \PHPUnit_Framework_TestCase
         $query3 = new Query();
         $query3->setSelect(new SelectNode(['price', 'icon']));
         $query4 = new Query();
-            $query4->setSort(new SortNode(['price' => -1, 'icon' => +1]));
+        $query4->setSort(new SortNode(['price' => -1, 'icon' => +1]));
         /** @noinspection SqlNoDataSourceInspection */
         return array(
             array(
@@ -102,7 +101,8 @@ class SuperEntityTest extends \PHPUnit_Framework_TestCase
     }
 
 
-    public function provider_query(){
+    public function provider_query()
+    {
         $query1 = new Query();
         $query2 = new Query();
         $query2->setQuery(
@@ -115,6 +115,8 @@ class SuperEntityTest extends \PHPUnit_Framework_TestCase
         $query3->setSelect(new SelectNode(['price', 'icon']));
         $query4 = new Query();
         $query4->setSort(new SortNode(['price' => -1, 'icon' => +1]));
+        $query5 = new Query();
+        $query5->setSelect(new SelectNode([StoreCatalog::PROP_LINKED_URL_TABLE_NAME]));
         return array(
             array(
                 $query1,
@@ -244,6 +246,49 @@ class SuperEntityTest extends \PHPUnit_Framework_TestCase
                         'price' => '21',
                         'icon' => 'icon1.jpg'],
                 ),
+            ),
+            array(
+                $query5,
+                array(
+                    [
+                        'title' => 'Plate41-mainicon',
+                        'price' => '21',
+                        'icon' => 'icon1.jpg',
+                        StoreCatalog::PROP_LINKED_URL_TABLE_NAME => [
+                            ['url' => 'http://google.com', 'alt' => 'Pot1'],
+                            ['url' => 'http://google.com1', 'alt' => 'Pot2'],
+                        ]
+                    ],
+                    [
+                        'title' => 'Plate42-mainicon',
+                        'price' => '22',
+                        'icon' => 'icon2.jpg',
+                        StoreCatalog::PROP_LINKED_URL_TABLE_NAME => [
+                            ['url' => 'http://google.com2', 'alt' => 'Pot3'],
+                            ['url' => 'http://google.com3', 'alt' => 'Pot4'],
+                        ]
+                    ],
+                ),
+                array(
+                    [
+                        'title' => 'Plate41-mainicon',
+                        'price' => '21',
+                        'icon' => 'icon1.jpg',
+                        StoreCatalog::PROP_LINKED_URL_TABLE_NAME => [
+                            ['url' => 'http://google.com', 'alt' => 'Pot1'],
+                            ['url' => 'http://google.com1', 'alt' => 'Pot2'],
+                        ]
+                    ],
+                    [
+                        'title' => 'Plate42-mainicon',
+                        'price' => '22',
+                        'icon' => 'icon2.jpg',
+                        StoreCatalog::PROP_LINKED_URL_TABLE_NAME => [
+                            ['url' => 'http://google.com2', 'alt' => 'Pot3'],
+                            ['url' => 'http://google.com3', 'alt' => 'Pot4'],
+                        ]
+                    ],
+                ),
             )
         );
     }
@@ -254,37 +299,301 @@ class SuperEntityTest extends \PHPUnit_Framework_TestCase
      * @param array $created
      * @param array $expectedResult
      */
-    public function test_query(Query $query, array $created, array $expectedResult){
+    public function test_query(Query $query, array $created, array $expectedResult)
+    {
+
         $this->object = $this->container->get(StoreCatalog::PRODUCT_TABLE_NAME . SuperEntity::INNER_JOIN . StoreCatalog::MAINICON_TABLE_NAME);
-        foreach ($created as $item){
+        foreach ($created as $item) {
             $this->object->create($item);
         }
         $result = $this->object->query($query);
 
-        foreach ($result as &$item){
+        foreach ($result as &$item) {
             $unset = array_diff(array_keys($item), array_keys($created[0]));
             foreach ($unset as $key) {
                 unset($item[$key]);
             }
+            if (isset($item[StoreCatalog::PROP_LINKED_URL_TABLE_NAME])) {
+                foreach ($item[StoreCatalog::PROP_LINKED_URL_TABLE_NAME] as &$propItem) {
+                    $propUnset = array_diff(
+                        array_keys($propItem),
+                        array_keys($expectedResult[0][StoreCatalog::PROP_LINKED_URL_TABLE_NAME][0])
+                    );
+                    foreach ($propUnset as $propKey) {
+                        unset($propItem[$propKey]);
+                    }
+                }
+            }
         }
-        $this->assertEquals($result, $expectedResult);
+        $this->assertEquals($expectedResult, $result);
     }
 
-    public function test__createEntity(){
-        $this->object = $this->container->get(StoreCatalog::PRODUCT_TABLE_NAME . SuperEntity::INNER_JOIN . StoreCatalog::MAINICON_TABLE_NAME);
-        $insertedObject = [
-            'title' => 'Plate4-mainicon',
-            'price' => '24',
-            'icon' => 'icon4.jpg'
-        ];
-        $newItem = $this->object->create($insertedObject);
+    public function provider_create()
+    {
+        if (!$this->container) {
+            $this->container = include 'config/container.php';
+        }
+        return array(
+            array(
+                $this->container->get(StoreCatalog::PRODUCT_TABLE_NAME . SuperEntity::INNER_JOIN . StoreCatalog::MAINICON_TABLE_NAME),
+                [
+                    'title' => 'Plate4-mainicon',
+                    'price' => '24',
+                    'icon' => 'icon4.jpg'
+                ],
+                [
+                    'title' => 'Plate4-mainicon',
+                    'price' => '24',
+                    'icon' => 'icon4.jpg'
+                ]
+            ),
+            array(
+                $this->container->get(StoreCatalog::PRODUCT_TABLE_NAME . SuperEntity::INNER_JOIN . StoreCatalog::MAINICON_TABLE_NAME),
+                [
+                    'title' => 'Plate4-mainicon',
+                    'price' => '24',
+                    'icon' => 'icon4.jpg',
+                    StoreCatalog::PROP_LINKED_URL_TABLE_NAME => [
+                        ['url' => 'http://google.com', 'alt' => 'Pot1'],
+                        ['url' => 'http://google.com1', 'alt' => 'Pot2'],
+                    ]
+                ],
+                [
+                    'title' => 'Plate4-mainicon',
+                    'price' => '24',
+                    'icon' => 'icon4.jpg',
+                    StoreCatalog::PROP_LINKED_URL_TABLE_NAME => [
+                        ['url' => 'http://google.com', 'alt' => 'Pot1'],
+                        ['url' => 'http://google.com1', 'alt' => 'Pot2'],
+                    ]
+                ]
+            )
+        );
+    }
 
-        $unset = array_diff(array_keys($newItem), array_keys($insertedObject));
+    /**
+     * @dataProvider provider_create
+     * @param $obj
+     * @param array $createdItem
+     * @param array $expectedResult
+     */
+    public function test_createEntity($obj, array $createdItem, array $expectedResult)
+    {
+        $this->object = $obj;
+        $newItem = $this->object->create($createdItem);
+
+        $unset = array_diff(array_keys($newItem), array_keys($expectedResult));
 
         foreach ($unset as $key) {
             unset($newItem[$key]);
         }
-        $this->assertEquals($insertedObject, $newItem);
+        if (isset($newItem[StoreCatalog::PROP_LINKED_URL_TABLE_NAME])) {
+            foreach ($newItem[StoreCatalog::PROP_LINKED_URL_TABLE_NAME] as &$propItem) {
+                $propUnset = array_diff(
+                    array_keys($propItem),
+                    array_keys($expectedResult[StoreCatalog::PROP_LINKED_URL_TABLE_NAME][0])
+                );
+                foreach ($propUnset as $propKey) {
+                    unset($propItem[$propKey]);
+                }
+            }
+        }
+        $this->assertEquals($expectedResult, $newItem);
+
     }
 
+    public function provider_update()
+    {
+        if (!$this->container) {
+            $this->container = include 'config/container.php';
+        }
+        return array(
+            array(
+                $this->container->get(StoreCatalog::PRODUCT_TABLE_NAME . SuperEntity::INNER_JOIN . StoreCatalog::MAINICON_TABLE_NAME),
+                [
+                    'title' => 'Plate4-mainicon',
+                    'price' => '24',
+                    'icon' => 'icon4.jpg'
+                ],
+                [
+                    'price' => '25',
+                ],
+                [
+                    'title' => 'Plate4-mainicon',
+                    'price' => '25',
+                    'icon' => 'icon4.jpg'
+                ]
+            ),
+            array(
+                $this->container->get(StoreCatalog::PRODUCT_TABLE_NAME . SuperEntity::INNER_JOIN . StoreCatalog::MAINICON_TABLE_NAME),
+                [
+                    'title' => 'Plate4-mainicon',
+                    'price' => '24',
+                    'icon' => 'icon4.jpg',
+                    StoreCatalog::PROP_LINKED_URL_TABLE_NAME => [
+                        ['url' => 'http://google.com', 'alt' => 'Pot1'],
+                        ['url' => 'http://google.com1', 'alt' => 'Pot2'],
+                    ]
+                ],
+                [
+                    'price' => '25',
+                    StoreCatalog::PROP_LINKED_URL_TABLE_NAME => [
+                        [],
+                        [],
+                        ['url' => 'http://google.com2', 'alt' => 'Pot3'],
+                    ]
+                ],
+                [
+                    'title' => 'Plate4-mainicon',
+                    'price' => '25',
+                    'icon' => 'icon4.jpg',
+                    StoreCatalog::PROP_LINKED_URL_TABLE_NAME => [
+                        ['url' => 'http://google.com', 'alt' => 'Pot1'],
+                        ['url' => 'http://google.com1', 'alt' => 'Pot2'],
+                        ['url' => 'http://google.com2', 'alt' => 'Pot3'],
+                    ]
+                ]
+            ),
+            array(
+                $this->container->get(StoreCatalog::PRODUCT_TABLE_NAME . SuperEntity::INNER_JOIN . StoreCatalog::MAINICON_TABLE_NAME),
+                [
+                    'title' => 'Plate4-mainicon',
+                    'price' => '24',
+                    'icon' => 'icon4.jpg',
+                    StoreCatalog::PROP_LINKED_URL_TABLE_NAME => [
+                        ['url' => 'http://google.com', 'alt' => 'Pot1'],
+                        ['url' => 'http://google.com1', 'alt' => 'Pot2'],
+                    ]
+                ],
+                [
+                    StoreCatalog::PROP_LINKED_URL_TABLE_NAME => [
+                        [],
+                        ['url' => 'http://google.com2'],
+                    ]
+                ],
+                [
+                    'title' => 'Plate4-mainicon',
+                    'price' => '24',
+                    'icon' => 'icon4.jpg',
+                    StoreCatalog::PROP_LINKED_URL_TABLE_NAME => [
+                        ['url' => 'http://google.com', 'alt' => 'Pot1'],
+                        ['url' => 'http://google.com2', 'alt' => 'Pot2'],
+                    ]
+                ]
+            ),
+            array(
+                $this->container->get(StoreCatalog::PRODUCT_TABLE_NAME . SuperEntity::INNER_JOIN . StoreCatalog::MAINICON_TABLE_NAME),
+                [
+                    'title' => 'Plate4-mainicon',
+                    'price' => '24',
+                    'icon' => 'icon4.jpg',
+                    StoreCatalog::PROP_LINKED_URL_TABLE_NAME => [
+                        ['url' => 'http://google.com', 'alt' => 'Pot1'],
+                        ['url' => 'http://google.com1', 'alt' => 'Pot2'],
+                    ]
+                ],
+                [
+                    StoreCatalog::PROP_LINKED_URL_TABLE_NAME => [
+                        [],
+                    ]
+                ],
+                [
+                    'title' => 'Plate4-mainicon',
+                    'price' => '24',
+                    'icon' => 'icon4.jpg',
+                    StoreCatalog::PROP_LINKED_URL_TABLE_NAME => [
+                        ['url' => 'http://google.com', 'alt' => 'Pot1'],
+                    ]
+                ]
+            )
+        );
+    }
+
+    /**
+     * @dataProvider provider_update
+     * @param $obj
+     * @param array $createdItem
+     * @param array $updateItem
+     * @param array $expectedResult
+     */
+    public function test_updateEntity($obj, array $createdItem, array $updateItem, array $expectedResult)
+    {
+        $this->object = $obj;
+        $newCreatedItem = $this->object->create($createdItem);
+
+        $updateItem['id'] = $newCreatedItem['id'];
+        if (isset($updateItem[StoreCatalog::PROP_LINKED_URL_TABLE_NAME])) {
+            for ($i = 0; $i < count($updateItem[StoreCatalog::PROP_LINKED_URL_TABLE_NAME]); ++$i) {
+                if (!isset($newCreatedItem[StoreCatalog::PROP_LINKED_URL_TABLE_NAME][$i])){
+                    break;
+                }
+                if (!isset($updateItem[StoreCatalog::PROP_LINKED_URL_TABLE_NAME][$i]['id'])) {
+                    $updateItem[StoreCatalog::PROP_LINKED_URL_TABLE_NAME][$i]['id'] =
+                        $newCreatedItem[StoreCatalog::PROP_LINKED_URL_TABLE_NAME][$i]['id'];
+                }
+            }
+        }
+
+        $newUpdateItem = $this->object->update($updateItem);
+        $unset = array_diff(array_keys($newUpdateItem), array_keys($expectedResult));
+
+        foreach ($unset as $key) {
+            unset($newUpdateItem[$key]);
+        }
+
+        if (isset($newUpdateItem[StoreCatalog::PROP_LINKED_URL_TABLE_NAME])) {
+            foreach ($newUpdateItem[StoreCatalog::PROP_LINKED_URL_TABLE_NAME] as &$propItem) {
+                $propUnset = array_diff(
+                    array_keys($propItem),
+                    array_keys($expectedResult[StoreCatalog::PROP_LINKED_URL_TABLE_NAME][0])
+                );
+                foreach ($propUnset as $propKey) {
+                    unset($propItem[$propKey]);
+                }
+            }
+        }
+
+        $this->assertEquals($expectedResult, $newUpdateItem);
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
