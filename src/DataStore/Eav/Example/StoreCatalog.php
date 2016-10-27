@@ -35,6 +35,8 @@ class StoreCatalog
     //'prop_tag'
     const PROP_TAG_TABLE_NAME = SysEntities::PROP_PREFIX . 'tag';
 
+    const MAINICON_TABLE_NAME = SysEntities::ENTITY_PREFIX . 'mainicon';
+
     public static $sys_entities = [ "sys_entities" =>
         [
             [ "id" => "11", "entity_type" => "product", "add_date" => "2009-06-04",],
@@ -43,6 +45,12 @@ class StoreCatalog
             [ "id" => "14", "entity_type" => "product", "add_date" => "2009-06-07",],
             [ "id" => "15", "entity_type" => "product", "add_date" => "2009-06-08",],
             [ "id" => "16", "entity_type" => "product", "add_date" => "2009-06-09",],
+
+            [ "id" => "17", "entity_type" => "entity_product~entity_mainicon", "add_date" => "2009-06-09",],
+            [ "id" => "18", "entity_type" => "entity_product~entity_mainicon", "add_date" => "2009-06-09",],
+            [ "id" => "19", "entity_type" => "entity_product~entity_mainicon", "add_date" => "2009-06-09",],
+
+
             [ "id" => "31", "entity_type" => "tag", "add_date" => "2009-06-10",],
             [ "id" => "32", "entity_type" => "tag", "add_date" => "2009-06-11",],
             [ "id" => "33", "entity_type" => "tag", "add_date" => "2009-06-12",],
@@ -59,6 +67,10 @@ class StoreCatalog
             [ "id" => "14", "title" => "King Rose", "price" => "100",],
             [ "id" => "15", "title" => "Plate1", "price" => "10",],
             [ "id" => "16", "title" => "Plate2", "price" => "20",],
+            //entity_product~entity_mainicon
+            [ "id" => "17", "title" => "Plate1-mainicon", "price" => "21",],
+            [ "id" => "18", "title" => "Plate2-mainicon", "price" => "22",],
+            [ "id" => "19", "title" => "Plate3-mainicon", "price" => "23",],
     ]];
     public static $entity_category = [ "entity_category" =>
         [
@@ -73,6 +85,13 @@ class StoreCatalog
             [ "id" => "32", "tag_name" => "MID",],
             [ "id" => "33", "tag_name" => "LOW",],
     ]];
+
+    public static $entity_mainicon = [ "entity_mainicon" =>
+        [
+            [ "id" => "17", "icon" => "icon1.jpg",],
+            [ "id" => "18", "icon" => "icon2.jpg",],
+            [ "id" => "19", "icon" => "icon3.jpg",],
+        ]];
     public static $prop_product_category = [ "prop_product_category" =>
         [
             [ "id" => "1", "category_id" => "22", "product_id" => "11",],
@@ -155,6 +174,25 @@ class StoreCatalog
                 ]
             ],
             'tag_name' => [
+                TableManager::FIELD_TYPE => 'Varchar',
+                TableManager::FIELD_PARAMS => [
+                    'length' => 100,
+                    'nullable' => false,
+                ],
+            ],
+        ],
+        self::MAINICON_TABLE_NAME => [
+            'id' => [
+                TableManager::FIELD_TYPE => 'Integer',
+                TableManager::FOREIGN_KEY => [
+                    'referenceTable' => 'sys_entities',
+                    'referenceColumn' => 'id',
+                    'onDeleteRule' => 'cascade',
+                    'onUpdateRule' => null,
+                    'name' => null
+                ]
+            ],
+            'icon' => [
                 TableManager::FIELD_TYPE => 'Varchar',
                 TableManager::FIELD_PARAMS => [
                     'length' => 100,
@@ -250,7 +288,7 @@ class StoreCatalog
                     'name' => null
                 ]
             ],
-        ],
+        ]
     ];
 
 }
