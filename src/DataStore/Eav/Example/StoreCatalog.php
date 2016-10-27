@@ -34,30 +34,29 @@ class StoreCatalog
     const PROP_PRODUCT_CATEGORY_TABLE_NAME = SysEntities::PROP_PREFIX . 'product_category';
     //'prop_tag'
     const PROP_TAG_TABLE_NAME = SysEntities::PROP_PREFIX . 'tag';
-
+    //'entity_mainicon'
     const MAINICON_TABLE_NAME = SysEntities::ENTITY_PREFIX . 'mainicon';
+    //'entity_main_specific'
+    const MAIN_SPECIFIC_TABLE_NAME = SysEntities::ENTITY_PREFIX . 'main_specific';
 
     public static $sys_entities = [ "sys_entities" =>
         [
-            [ "id" => "11", "entity_type" => "product", "add_date" => "2009-06-04",],
-            [ "id" => "12", "entity_type" => "product", "add_date" => "2009-06-05",],
-            [ "id" => "13", "entity_type" => "product", "add_date" => "2009-06-06",],
-            [ "id" => "14", "entity_type" => "product", "add_date" => "2009-06-07",],
-            [ "id" => "15", "entity_type" => "product", "add_date" => "2009-06-08",],
-            [ "id" => "16", "entity_type" => "product", "add_date" => "2009-06-09",],
-
-            [ "id" => "17", "entity_type" => "entity_product~entity_mainicon", "add_date" => "2009-06-09",],
-            [ "id" => "18", "entity_type" => "entity_product~entity_mainicon", "add_date" => "2009-06-09",],
-            [ "id" => "19", "entity_type" => "entity_product~entity_mainicon", "add_date" => "2009-06-09",],
-
-
-            [ "id" => "31", "entity_type" => "tag", "add_date" => "2009-06-10",],
-            [ "id" => "32", "entity_type" => "tag", "add_date" => "2009-06-11",],
-            [ "id" => "33", "entity_type" => "tag", "add_date" => "2009-06-12",],
-            [ "id" => "21", "entity_type" => "category", "add_date" => "2009-06-13",],
-            [ "id" => "22", "entity_type" => "category", "add_date" => "2009-06-14",],
-            [ "id" => "23", "entity_type" => "category", "add_date" => "2009-06-15",],
-            [ "id" => "24", "entity_type" => "category", "add_date" => "2009-06-16",],
+            [ "id" => "17", "entity_type" => "product_icon", "add_date" => "2005-10-30 ",],
+            [ "id" => "18", "entity_type" => "product_icon", "add_date" => "2005-10-31",],
+            [ "id" => "19", "entity_type" => "product_icon", "add_date" => "2005-10-32",],
+            [ "id" => "11", "entity_type" => "product", "add_date" => "2005-10-33",],
+            [ "id" => "12", "entity_type" => "product", "add_date" => "2005-10-34",],
+            [ "id" => "13", "entity_type" => "product", "add_date" => "2005-10-35",],
+            [ "id" => "14", "entity_type" => "product", "add_date" => "2005-10-36",],
+            [ "id" => "15", "entity_type" => "product", "add_date" => "2005-10-37",],
+            [ "id" => "16", "entity_type" => "product", "add_date" => "2005-10-38",],
+            [ "id" => "31", "entity_type" => "tag", "add_date" => "2005-10-39",],
+            [ "id" => "32", "entity_type" => "tag", "add_date" => "2005-10-40",],
+            [ "id" => "33", "entity_type" => "tag", "add_date" => "2005-10-41",],
+            [ "id" => "21", "entity_type" => "category", "add_date" => "2005-10-42",],
+            [ "id" => "22", "entity_type" => "category", "add_date" => "2005-10-43",],
+            [ "id" => "23", "entity_type" => "category", "add_date" => "2005-10-44",],
+            [ "id" => "24", "entity_type" => "category", "add_date" => "2005-10-45",],
     ]];
     public static $entity_product = [ "entity_product" =>
         [
@@ -67,10 +66,22 @@ class StoreCatalog
             [ "id" => "14", "title" => "King Rose", "price" => "100",],
             [ "id" => "15", "title" => "Plate1", "price" => "10",],
             [ "id" => "16", "title" => "Plate2", "price" => "20",],
-            //entity_product~entity_mainicon
-            [ "id" => "17", "title" => "Plate1-mainicon", "price" => "21",],
-            [ "id" => "18", "title" => "Plate2-mainicon", "price" => "22",],
-            [ "id" => "19", "title" => "Plate3-mainicon", "price" => "23",],
+            [ "id" => "17", "title" => "Plate1-mainicon", "price" => "170",],
+            [ "id" => "18", "title" => "Plate2-mainicon", "price" => "180",],
+            [ "id" => "19", "title" => "Plate3-mainicon", "price" => "190",],
+    ]];
+    public static $entity_mainicon = [ "entity_mainicon" =>
+        [
+            [ "id" => "17", "icon" => "icon1.jpg",],
+            [ "id" => "18", "icon" => "icon2.jpg",],
+            [ "id" => "19", "icon" => "icon3.jpg",],
+    ]];
+    public static $entity_main_specific = [ "entity_main_specific" =>
+        [
+            [ "id" => "18", "key" => "color", "value" => "red",],
+            [ "id" => "19", "key" => "color", "value" => "green",],
+            [ "id" => "11", "key" => "health", "value" => "good",],
+            [ "id" => "12", "key" => "health", "value" => "bad",],
     ]];
     public static $entity_category = [ "entity_category" =>
         [
@@ -85,13 +96,6 @@ class StoreCatalog
             [ "id" => "32", "tag_name" => "MID",],
             [ "id" => "33", "tag_name" => "LOW",],
     ]];
-
-    public static $entity_mainicon = [ "entity_mainicon" =>
-        [
-            [ "id" => "17", "icon" => "icon1.jpg",],
-            [ "id" => "18", "icon" => "icon2.jpg",],
-            [ "id" => "19", "icon" => "icon3.jpg",],
-        ]];
     public static $prop_product_category = [ "prop_product_category" =>
         [
             [ "id" => "1", "category_id" => "22", "product_id" => "11",],
@@ -197,6 +201,32 @@ class StoreCatalog
                 TableManager::FIELD_PARAMS => [
                     'length' => 100,
                     'nullable' => false,
+                ],
+            ],
+        ],
+        self::MAIN_SPECIFIC_TABLE_NAME => [
+            'id' => [
+                TableManager::FIELD_TYPE => 'Integer',
+                TableManager::FOREIGN_KEY => [
+                    'referenceTable' => 'sys_entities',
+                    'referenceColumn' => 'id',
+                    'onDeleteRule' => 'cascade',
+                    'onUpdateRule' => null,
+                    'name' => null
+                ]
+            ],
+            'key' => [
+                TableManager::FIELD_TYPE => 'Varchar',
+                TableManager::FIELD_PARAMS => [
+                    'length' => 50,
+                    'nullable' => true,
+                ],
+            ],
+            'value' => [
+                TableManager::FIELD_TYPE => 'Varchar',
+                TableManager::FIELD_PARAMS => [
+                    'length' => 60,
+                    'nullable' => true,
                 ],
             ],
         ],

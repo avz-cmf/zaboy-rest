@@ -41,14 +41,15 @@ class StoreCatalog extends InstallerAbstract
     public function addData()
     {
         $data = array_merge(
-            EavExampleStoreCatalog::$sys_entities,
-            EavExampleStoreCatalog::$entity_product,
-            EavExampleStoreCatalog::$entity_category,
-            EavExampleStoreCatalog::$entity_tag,
-            EavExampleStoreCatalog::$entity_mainicon,
-            EavExampleStoreCatalog::$prop_tag,
-            EavExampleStoreCatalog::$prop_product_category,
-            EavExampleStoreCatalog::$prop_linked_url
+                EavExampleStoreCatalog::$sys_entities
+                , EavExampleStoreCatalog::$entity_product
+                , EavExampleStoreCatalog::$entity_category
+                , EavExampleStoreCatalog::$entity_tag
+                , EavExampleStoreCatalog::$entity_mainicon
+                , EavExampleStoreCatalog::$entity_main_specific
+                , EavExampleStoreCatalog::$prop_tag
+                , EavExampleStoreCatalog::$prop_product_category
+                , EavExampleStoreCatalog::$prop_linked_url
         );
 
         foreach ($data as $key => $value) {
