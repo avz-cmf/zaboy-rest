@@ -64,6 +64,7 @@ class Installer extends InstallerAbstract
         $tableManager->deleteTable(StoreCatalog::PROP_LINKED_URL_TABLE_NAME);
         $tableManager->deleteTable(StoreCatalog::PROP_PRODUCT_CATEGORY_TABLE_NAME);
         $tableManager->deleteTable(StoreCatalog::PROP_TAG_TABLE_NAME);
+        $tableManager->deleteTable(StoreCatalog::MAIN_SPECIFIC_TABLE_NAME);
         $tableManager->deleteTable(StoreCatalog::MAINICON_TABLE_NAME);
         $tableManager->deleteTable(StoreCatalog::PRODUCT_TABLE_NAME);
         $tableManager->deleteTable(StoreCatalog::CATEGORY_TABLE_NAME);
@@ -86,6 +87,7 @@ class Installer extends InstallerAbstract
             $tableManager->rewriteTable(StoreCatalog::PRODUCT_TABLE_NAME);
             $tableManager->rewriteTable(StoreCatalog::TAG_TABLE_NAME);
             $tableManager->rewriteTable(StoreCatalog::MAINICON_TABLE_NAME);
+            $tableManager->rewriteTable(StoreCatalog::MAIN_SPECIFIC_TABLE_NAME);
             $tableManager->rewriteTable(StoreCatalog::CATEGORY_TABLE_NAME);
             $tableManager->rewriteTable(StoreCatalog::PROP_LINKED_URL_TABLE_NAME);
             $tableManager->rewriteTable(StoreCatalog::PROP_PRODUCT_CATEGORY_TABLE_NAME);
