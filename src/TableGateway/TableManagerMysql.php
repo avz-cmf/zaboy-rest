@@ -10,15 +10,15 @@
 namespace zaboy\rest\TableGateway;
 
 use zaboy\rest\DataStore\DataStoreException;
-use Zend\Db\Sql\Ddl\CreateTable;
+use zaboy\rest\RestException;
+use Zend\Db\Adapter;
+use Zend\Db\Metadata\Source;
+use Zend\Db\Metadata\Source\Factory;
+use Zend\Db\Sql;
 use Zend\Db\Sql\Ddl\AlterTable;
 use Zend\Db\Sql\Ddl\Constraint;
-use zaboy\rest\RestException;
-use Zend\Db\Sql;
-use Zend\Db\Adapter;
-use Zend\Db\Metadata\Source\Factory;
-use Zend\Db\Metadata\Source;
 use Zend\Db\Sql\Ddl\Constraint\UniqueKey;
+use Zend\Db\Sql\Ddl\CreateTable;
 
 /**
  * Creates table and gets its info
@@ -119,9 +119,9 @@ class TableManagerMysql
      * @var array
      */
     protected $fieldClasses = [
-        'Column' => [ 'BigInteger', 'Boolean', 'Date', 'Datetime', 'Integer', 'Time', 'Timestamp'],
-        'LengthColumn' => [ 'Binary', 'Blob', 'Char', 'Text', 'Varbinary', 'Varchar'],
-        'PrecisionColumn' => [ 'Decimal', 'Float', 'Floating']
+        'Column' => ['BigInteger', 'Boolean', 'Date', 'Datetime', 'Integer', 'Time', 'Timestamp'],
+        'LengthColumn' => ['Binary', 'Blob', 'Char', 'Text', 'Varbinary', 'Varchar'],
+        'PrecisionColumn' => ['Decimal', 'Float', 'Floating']
     ];
 
     /**
@@ -129,9 +129,9 @@ class TableManagerMysql
      * @var array
      */
     protected $parameters = [
-        'Column' => [ 'nullable' => false, 'default' => null, 'options' => []],
-        'LengthColumn' => [ 'length' => null, 'nullable' => false, 'default' => null, 'options' => []],
-        'PrecisionColumn' => [ 'digits' => null, 'decimal' => null, 'nullable' => false, 'default' => null, 'options' => []]
+        'Column' => ['nullable' => false, 'default' => null, 'options' => []],
+        'LengthColumn' => ['length' => null, 'nullable' => false, 'default' => null, 'options' => []],
+        'PrecisionColumn' => ['digits' => null, 'decimal' => null, 'nullable' => false, 'default' => null, 'options' => []]
     ];
 
     /**
@@ -171,7 +171,7 @@ class TableManagerMysql
     {
         if ($this->hasTable($tableName)) {
             throw new DataStoreException(
-            "Table with name $tableName is exist. Use rewriteTable()"
+                "Table with name $tableName is exist. Use rewriteTable()"
             );
         }
         return $this->create($tableName, $tableConfig);
@@ -202,7 +202,7 @@ class TableManagerMysql
     public function deleteTable($tableName)
     {
         $deleteStatementStr = "DROP TABLE IF EXISTS "
-                . $this->db->platform->quoteIdentifier($tableName);
+            . $this->db->platform->quoteIdentifier($tableName);
         $deleteStatement = $this->db->query($deleteStatementStr);
         return $deleteStatement->execute();
     }
@@ -229,8 +229,8 @@ class TableManagerMysql
         $result .= '    With columns: ' . PHP_EOL;
         foreach ($table->getColumns() as $column) {
             $result .= '        ' . $column->getName()
-                    . ' -> ' . $column->getDataType()
-                    . PHP_EOL;
+                . ' -> ' . $column->getDataType()
+                . PHP_EOL;
         }
 
         $result .= PHP_EOL;
@@ -239,8 +239,8 @@ class TableManagerMysql
         foreach ($metadata->getConstraints($tableName) as $constraint) {
             /** @var $constraint \Zend\Db\Metadata\Object\ConstraintObject */
             $result .= '        ' . $constraint->getName()
-                    . ' -> ' . $constraint->getType()
-                    . PHP_EOL;
+                . ' -> ' . $constraint->getType()
+                . PHP_EOL;
             if (!$constraint->hasColumns()) {
                 continue;
             }
@@ -333,26 +333,26 @@ class TableManagerMysql
 
             if (isset($fieldData[self::UNIQUE_KEY])) {
                 $uniqueKeyConstraintName = $fieldData[self::UNIQUE_KEY] === true ?
-                        'UniqueKey_' . $tableName . '_' . $fieldName : $fieldData[self::UNIQUE_KEY];
+                    'UniqueKey_' . $tableName . '_' . $fieldName : $fieldData[self::UNIQUE_KEY];
                 $uniqueKeyInstance = new UniqueKey([$fieldName], $uniqueKeyConstraintName);
                 $alterTable->addConstraint($uniqueKeyInstance);
             }
 
             if (isset($fieldData[self::FOREIGN_KEY])) {
                 $foreignKeyConstraintName = !isset($fieldData[self::FOREIGN_KEY]['name']) ?
-                        'ForeignKey_' . $tableName . '_' . $fieldName : $fieldData[self::FOREIGN_KEY]['name'];
+                    'ForeignKey_' . $tableName . '_' . $fieldName : $fieldData[self::FOREIGN_KEY]['name'];
                 $onDeleteRule = isset($fieldData[self::FOREIGN_KEY]['onDeleteRule']) ?
-                        $fieldData[self::FOREIGN_KEY]['onDeleteRule'] : null;
+                    $fieldData[self::FOREIGN_KEY]['onDeleteRule'] : null;
                 $onUpdateRule = isset($fieldData[self::FOREIGN_KEY]['onUpdateRule']) ?
-                        $fieldData[self::FOREIGN_KEY]['onUpdateRule'] : null;
+                    $fieldData[self::FOREIGN_KEY]['onUpdateRule'] : null;
                 $foreignKeyInstance = new Constraint\ForeignKey(
-                        $foreignKeyConstraintName
-                        , [$fieldName]
-                        , $fieldData[self::FOREIGN_KEY]['referenceTable']
-                        , $fieldData[self::FOREIGN_KEY]['referenceColumn']
-                        , $onDeleteRule
-                        , $onUpdateRule
-                        , $foreignKeyConstraintName
+                    $foreignKeyConstraintName
+                    , [$fieldName]
+                    , $fieldData[self::FOREIGN_KEY]['referenceTable']
+                    , $fieldData[self::FOREIGN_KEY]['referenceColumn']
+                    , $onDeleteRule
+                    , $onUpdateRule
+                    , $foreignKeyConstraintName
                 );
                 $alterTable->addConstraint($foreignKeyInstance);
             }
@@ -401,4 +401,13 @@ class TableManagerMysql
         return $fieldParams;
     }
 
+    public function getLinkedTables($tableName)
+    {
+        $getTableSql = "SELECT TABLE_NAME, COLUMN_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = " .
+            "'" . $this->db->getCurrentSchema() . "'".
+            " AND REFERENCED_TABLE_NAME = '" . $tableName . "'" .
+            " AND CONSTRAINT_NAME <>'PRIMARY' AND REFERENCED_TABLE_NAME is not null;";
+        $rowSet = $this->db->query($getTableSql, Adapter\Adapter::QUERY_MODE_EXECUTE);
+        return $rowSet->toArray();
+    }
 }

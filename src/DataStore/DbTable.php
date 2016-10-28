@@ -156,6 +156,7 @@ class DbTable extends DataStoreAbstract implements SqlQueryGetterInterface
     public function query(Query $query)
     {
         $sql = $this->getSqlQuery($query);
+        /** @var Adapter $adapter */
         $adapter = $this->dbTable->getAdapter();
         $rowset = $adapter->query($sql, $adapter::QUERY_MODE_EXECUTE);
 
@@ -391,6 +392,7 @@ class DbTable extends DataStoreAbstract implements SqlQueryGetterInterface
      */
     public function count()
     {
+        /** @var Adapter $adapter */
         $adapter = $this->dbTable->getAdapter();
         /* @var $rowset ResultSet */
         $rowset = $adapter->query(
