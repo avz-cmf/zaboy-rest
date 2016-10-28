@@ -28,12 +28,13 @@ use Zend\Db\TableGateway\TableGateway;
 class SuperEntity extends Entity implements SqlQueryGetterInterface
 {
 
-    const INNER_JOIN = '~';
+    const INNER_JOIN = '-'; //'-'
 
     /**
      *
      * @var array [$dataStoreObj1, '`', $dataStoreObj1, '`'...]
      */
+
     protected $joinedEntities;
 
     public function __construct(TableGateway $dbTable, $joinedEntities)
@@ -127,24 +128,23 @@ class SuperEntity extends Entity implements SqlQueryGetterInterface
 
     protected function _create($itemData, $rewriteIfExist = false)
     {
-        $itemInserted = $this->joinedEntitiesItemHandler($itemData,
-            function (DbTable $entity, $entityItem) {
-                return $entity->_create($entityItem);
-            });
+        $itemInserted = $this->joinedEntitiesItemHandler($itemData, function (DbTable $entity, $entityItem) {
+            return $entity->_create($entityItem);
+        });
         return $itemInserted;
     }
+
     protected function _update($itemData, $createIfAbsent = false)
     {
         $identifier = $this->getIdentifier();
-        $itemInserted = $this->joinedEntitiesItemHandler($itemData,
-            function (DbTable $entity, $entityItem) use ($identifier) {
-                if (count($entityItem) > 1) {
-                    $entityItem = $entity->_update($entityItem);
-                } else {
-                    $entityItem = $entity->read($entityItem[$identifier]);
-                }
-                return $entityItem;
-            });
+        $itemInserted = $this->joinedEntitiesItemHandler($itemData, function (DbTable $entity, $entityItem) use ($identifier) {
+            if (count($entityItem) > 1) {
+                $entityItem = $entity->_update($entityItem);
+            } else {
+                $entityItem = $entity->read($entityItem[$identifier]);
+            }
+            return $entityItem;
+        });
         return $itemInserted;
     }
 
@@ -180,9 +180,8 @@ class SuperEntity extends Entity implements SqlQueryGetterInterface
                         $fildName = $field->__toString();
                         $fullFildName = $fildName == "count(id)" ? 'count(' . $this->dbTable->table . '.id)' : $fildName;
                         $sysEntitiesFields[$field->getField() .
-                        "->" . $field->getFunction()] = new Expression($fullFildName);
+                                "->" . $field->getFunction()] = new Expression($fullFildName);
                         $hawAggregate = true;
-
                     }
                 } else if (strpos($field, SysEntities::PROP_PREFIX) === 0) {
                     $propTableName = explode('.', $field)[0];
@@ -221,9 +220,9 @@ class SuperEntity extends Entity implements SqlQueryGetterInterface
         $joinedEntityfileds = [];
         if (!empty($selectField)) {
             foreach ($selectField as $field) {
-                if ($field instanceof AggregateFunctionNode and !in_array($field->getField(), $sysEntityTable->getColumns())) {
+                if ($field instanceof AggregateFunctionNode and ! in_array($field->getField(), $sysEntityTable->getColumns())) {
                     $joinedEntityfileds[$field->getField() .
-                    "->" . $field->getFunction()] = new Expression($field->__toString());
+                            "->" . $field->getFunction()] = new Expression($field->__toString());
                 } else if (!in_array($field, $sysEntityTable->getColumns())) {
                     $joinedEntityfileds[] = $field;
                 }
@@ -244,10 +243,7 @@ class SuperEntity extends Entity implements SqlQueryGetterInterface
                     }
                 }
                 $selectSQL->join(
-                    $entity->dbTable->table,
-                    $entity->dbTable->table . '.' . $identifier . '=' . $prew->dbTable->table . '.' . $identifier,
-                    empty($entityField) ? Select::SQL_STAR : $entityField,
-                    Select::JOIN_INNER
+                        $entity->dbTable->table, $entity->dbTable->table . '.' . $identifier . '=' . $prew->dbTable->table . '.' . $identifier, empty($entityField) ? Select::SQL_STAR : $entityField, Select::JOIN_INNER
                 );
                 $prew = $entity;
             }
@@ -258,8 +254,7 @@ class SuperEntity extends Entity implements SqlQueryGetterInterface
     protected function setSelectOrder(Select $selectSQL, Query $query)
     {
         $sort = $query->getSort();
-        $sortFields = !$sort ? [$this->dbTable->table . '.' . $this->getIdentifier() => SortNode::SORT_ASC]
-            : $sort->getFields();
+        $sortFields = !$sort ? [$this->dbTable->table . '.' . $this->getIdentifier() => SortNode::SORT_ASC] : $sort->getFields();
 
         /** @var Adapter $adapter */
         $adapter = $this->dbTable->getAdapter();
@@ -289,7 +284,7 @@ class SuperEntity extends Entity implements SqlQueryGetterInterface
                     $ordKey = $this->dbTable->table . '.' . $ordKey;
                 }
             }
-            if ((int)$ordVal === SortNode::SORT_DESC) {
+            if ((int) $ordVal === SortNode::SORT_DESC) {
                 $selectSQL->order($ordKey . ' ' . Select::ORDER_DESCENDING);
             } else {
                 $selectSQL->order($ordKey . ' ' . Select::ORDER_ASCENDING);
@@ -297,37 +292,5 @@ class SuperEntity extends Entity implements SqlQueryGetterInterface
         }
         return $selectSQL;
     }
+
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
