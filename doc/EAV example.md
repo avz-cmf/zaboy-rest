@@ -71,17 +71,305 @@
 
 ## Как создавать записи: ##
 
+Для начала, давайте обратим внимание на таблцы sys_entities и entity_product.
+Допустим мы хотим добавить новый продукт, что бы это сделать нам нужно отправить POST запрос на
+ресурс http://zaboy-rest.loc/api/rest/entity_product в теле которого передать json объект сущности product.
+
+Пример:
+
+Отправим запрос:
+    `POST http://zaboy-rest.loc/api/rest/entity_product`
+```
+{
+    "title": "Edelweiss",
+    "price": "200",
+}
+```
+Получим в ответ:
+```
+{
+    "id": "12",
+    "add_date": "2016-10-28",
+    "title": "Edelweiss",
+    "price": "200",
+}
+```
+> (*) Поле id и add_date может у вас отличатся. 
+
+Так же мы можем создавать новый объект используя (php) Entity DataStore напрямую.
+
+Пример:
+
+```php
+    $createdElement = $entity->create([
+        'title' => 'Edelweiss',
+        'price' => 200
+    ]);
+```
+
+Теперь давайте посмотрим еще на одну таблицу - prop_linked_url.
+Это таблица типа - prop, c ее помощью мы можем расширить наш entity_producе.
+Давайте создадим новый продукт, но уже вместе с linked_url.
+Для этого мы так же должны отправить POST запрос на ресурс `http://zaboy-rest.loc/api/rest/entity_product`
+в теле которого передать json объект сущности product а так же prop.
+
+Пример:
+
+Отправим запрос:
+    `POST http://zaboy-rest.loc/api/rest/entity_product`
+```
+{
+    "title": "Edelweiss",
+    "price": "200",
+    "prop_linked_url": [
+        {"url": "http://google.com", "alt": "url_1"}
+    ]
+}
+```
+Получим в ответ:
+```
+{
+    "id": "13",
+    "add_date": "2016-10-28",
+    "title": "Edelweiss",
+    "price": "200",
+    "prop_linked_url": [
+            {
+                "id": "25",
+                "sys_entities_id": "13",
+                "url": "http://google.com",
+                "alt": "url_1"
+            }
+        ]
+}
+```
+
+Как мы видим мы создали объект product в пропом linked_url.
+Мы так же можем это сдлеать используя php Entity DataStore.
+
+Пример:
+
+```php
+    $createdElement = $entity->create([
+        'title' => 'Edelweiss',
+        'price' => 200,
+        'prop_linked_url' => [
+            ['url' => 'http://google.com', 'alt' => 'url_1']
+        ]
+    ]);
+```
+
+Мы можем обновлять наши сущьности.
+Давайте обновим наш ранее созданый продукт - изменим в нем цену
+Для этого нужно отправить PUT запрос на ресурс `http://zaboy-rest.loc/api/rest/entity_product`
+в теле которого передать json объект сущности product.
+
+Пример:
+
+Отправим запрос:
+    `PUT http://zaboy-rest.loc/api/rest/entity_product`
+```
+{
+    "id": "12"
+    "title": "Edelweiss",
+    "price": "400",
+}
+```
+Получим в ответ:
+```
+{
+    "id": "12",
+    "add_date": "2016-10-28",
+    "title": "Edelweiss",
+    "price": "400",
+}
+```
+
+Мы так же это можно сделать средствами php Entity DataStore.
+
+Пример:
+
+```php
+    $updatedElement = $entity->update([
+        'id' => '12'
+        'title' => 'Edelweiss',
+        'price' => 400
+    ]);
+```
+
+Давайте вернем наше внимание к таблицам prop.
+Используя обновления объекта сущности, мы можем управлять его prop параметрами.
+
+Давайте добавим новый prop linked_url для нашего ранее зданного продукта.
+
+Как мы помним, наш продукт (id = 13) уже обладает одним prop свойством, так как управление prop обектами
+производится через операцию update (PUT) мы должны указать хотя бы id для всех prop свойств того типа который мы 
+редактируем.
 
 
+Пример:
 
+Отправим запрос:
+    `POST http://zaboy-rest.loc/api/rest/entity_product`
+```
+{
+    "id": "13",
+    "prop_linked_url": [
+        {"id": "25"},
+        {"url": "http://google.com-2", "alt": "url_2"},
+    ]
+}
+```
+Получим в ответ:
+```
+{
+    "id": "13",
+    "add_date": "2016-10-28",
+    "title": "Edelweiss",
+    "price": "200",
+    "prop_linked_url": [
+            {
+                "id": "25",
+                "sys_entities_id": "13",
+                "url": "http://google.com",
+                "alt": "url_1"
+            },
+            {
+                "id": "26",
+                "sys_entities_id": "13",
+                "url": "http://google.com-2",
+                "alt": "url_2"
+            }
+        ]
+}
+```
+Как мы видим, мы создали новое prop свойство, при этом существующее осталось неизменным.
 
+То же самое можно самое но используя php
 
+Пример:
 
+```php
+    $updatedElement = $entity->update([
+        'id' => '13'
+        'prop_linked_url' => [
+                    ['id' => '25'],
+                    ['url' => 'http://google.com-2', 'alt' => 'url_2']
+                ]
+    ]);
+```
 
+Теперь давайте обновим prop свойство у нашего продукта.
+Для этого мы так же воспользуемся операцией update (put).
+> Незабываем указывать (хотя бы) id для тех свойств который не хотим изменять в нашем продукте.
 
+Пример:
 
+Отправим запрос:
+    `POST http://zaboy-rest.loc/api/rest/entity_product`
+```
+{
+    "id": "13",
+    "prop_linked_url": [
+        {"id": "25"},
+        {"id": "26", "url": "http://google.com-2-edit", "alt": "url_2-edit"},
+    ]
+}
+```
+Получим в ответ:
+```
+{
+    "id": "13",
+    "add_date": "2016-10-28",
+    "title": "Edelweiss",
+    "price": "200",
+    "prop_linked_url": [
+            {
+                "id": "25",
+                "sys_entities_id": "13",
+                "url": "http://google.com",
+                "alt": "url_1"
+            },
+            {
+                "id": "26",
+                "sys_entities_id": "13",
+                "url": "http://google.com-2-edit",
+                "alt": "url_2-edit"
+            }
+        ]
+}
+```
 
+Как видно запись была обновлена.
 
+То же самое, но используя php
 
+Пример:
 
+```php
+    $updatedElement = $entity->update([
+        'id' => '13'
+        'prop_linked_url' => [
+                    ['id' => '25'],
+                    ['url' => 'http://google.com-2-edit', 'alt' => 'url_2-edit']
+                ]
+    ]);
+```
+
+Теперь давайте удалим одно prop свойство.
+Что бы удалить свойство из объекта, мы должны не указывать его при использовании update (put).
+
+Пример:
+
+Отправим запрос:
+    `POST http://zaboy-rest.loc/api/rest/entity_product`
+```
+{
+    "id": "13",
+    "prop_linked_url": [
+        {"id": "26"},
+    ]
+}
+```
+Получим в ответ:
+```
+{
+    "id": "13",
+    "add_date": "2016-10-28",
+    "title": "Edelweiss",
+    "price": "200",
+    "prop_linked_url": [
+            {
+                "id": "26",
+                "sys_entities_id": "13",
+                "url": "http://google.com-2-edit",
+                "alt": "url_2-edit"
+            }
+        ]
+}
+```
+Как мы можем заметить, свойство было удалено.
+
+То же самое - используя php
+
+Пример:
+
+```php
+    $updatedElement = $entity->update([
+        'id' => '13'
+        'prop_linked_url' => [
+                    ['id' => '26'],
+                ]
+    ]);
+```
+
+Теперь давайте посмотрим на таблицы entity_mainicon и entity_product.
+Мы можем заменить что элементы 17, 18, 19 находятся в обеих таблцах, это потому что они связаны,
+и представляют собой super entity или же комбинированную сущность.
+Мы можем работать с подобными сущностями используя в качестве имени ресурса комбинацию их имен 
+`http://zaboy-rest.loc/api/rest/entity_product-entity_mainicon`
+Звеньев в составной сущности может быть не органиченое количество.
+
+С подобными ресурсами мы можем работать точно так же как если бы это была одна сущность, по этому все практики
+по работе с пропами и обычными сущностями будут работать и на составных.
 
