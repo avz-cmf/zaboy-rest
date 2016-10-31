@@ -103,23 +103,23 @@ class SuperEntityTest extends \PHPUnit_Framework_TestCase
 
     public function provider_query()
     {
-        $query1 = new Query();
-        $query2 = new Query();
-        $query2->setQuery(
+        $emptyQuery = new Query();
+        $queryWithAndNode = new Query();
+        $queryWithAndNode->setQuery(
             new AndNode([
                 new LtNode('price', 23),
                 new NeNode('icon', 'icon1.jpg'),
             ])
         );
-        $query3 = new Query();
-        $query3->setSelect(new SelectNode(['price', 'icon']));
-        $query4 = new Query();
-        $query4->setSort(new SortNode(['price' => -1, 'icon' => +1]));
-        $query5 = new Query();
-        $query5->setSelect(new SelectNode([StoreCatalog::PROP_LINKED_URL_TABLE_NAME]));
+        $queryWithSelect = new Query();
+        $queryWithSelect->setSelect(new SelectNode(['price', 'icon']));
+        $queryWithSort = new Query();
+        $queryWithSort->setSort(new SortNode(['price' => -1, 'icon' => +1]));
+        $queryWithSelectProps = new Query();
+        $queryWithSelectProps->setSelect(new SelectNode([StoreCatalog::PROP_LINKED_URL_TABLE_NAME]));
         return array(
             array(
-                $query1,
+                $emptyQuery,
                 array(
                     [
                         'title' => 'Plate41-mainicon',
@@ -150,7 +150,7 @@ class SuperEntityTest extends \PHPUnit_Framework_TestCase
                 )
             ),
             array(
-                $query2,
+                $queryWithAndNode,
                 array(
                     [
                         'title' => 'Plate41-mainicon',
@@ -173,7 +173,7 @@ class SuperEntityTest extends \PHPUnit_Framework_TestCase
                 )
             ),
             array(
-                $query3,
+                $queryWithSelect,
                 array(
                     [
                         'title' => 'Plate41-mainicon',
@@ -201,7 +201,7 @@ class SuperEntityTest extends \PHPUnit_Framework_TestCase
                 ),
             ),
             array(
-                $query4,
+                $queryWithSort,
                 array(
                     [
                         'title' => 'Plate43-mainicon',
@@ -248,7 +248,7 @@ class SuperEntityTest extends \PHPUnit_Framework_TestCase
                 ),
             ),
             array(
-                $query5,
+                $queryWithSelectProps,
                 array(
                     [
                         'title' => 'Plate41-mainicon',
@@ -307,12 +307,14 @@ class SuperEntityTest extends \PHPUnit_Framework_TestCase
             $this->object->create($item);
         }
         $result = $this->object->query($query);
-
+            
         foreach ($result as &$item) {
+            //Deleting fields whose values can not be defined
             $unset = array_diff(array_keys($item), array_keys($created[0]));
             foreach ($unset as $key) {
                 unset($item[$key]);
             }
+            //Deleting invested fields whose values can not be defined
             if (isset($item[StoreCatalog::PROP_LINKED_URL_TABLE_NAME])) {
                 foreach ($item[StoreCatalog::PROP_LINKED_URL_TABLE_NAME] as &$propItem) {
                     $propUnset = array_diff(
@@ -334,6 +336,7 @@ class SuperEntityTest extends \PHPUnit_Framework_TestCase
             $this->container = include 'config/container.php';
         }
         return array(
+            //create item
             array(
                 $this->container->get(StoreCatalog::PRODUCT_TABLE_NAME . SuperEntity::INNER_JOIN . StoreCatalog::MAINICON_TABLE_NAME),
                 [
@@ -347,6 +350,7 @@ class SuperEntityTest extends \PHPUnit_Framework_TestCase
                     'icon' => 'icon4.jpg'
                 ]
             ),
+            //create item with props
             array(
                 $this->container->get(StoreCatalog::PRODUCT_TABLE_NAME . SuperEntity::INNER_JOIN . StoreCatalog::MAINICON_TABLE_NAME),
                 [
@@ -382,11 +386,12 @@ class SuperEntityTest extends \PHPUnit_Framework_TestCase
         $this->object = $obj;
         $newItem = $this->object->create($createdItem);
 
+        //Deleting fields whose values can not be defined
         $unset = array_diff(array_keys($newItem), array_keys($expectedResult));
-
         foreach ($unset as $key) {
             unset($newItem[$key]);
         }
+        //Deleting invested fields whose values can not be defined
         if (isset($newItem[StoreCatalog::PROP_LINKED_URL_TABLE_NAME])) {
             foreach ($newItem[StoreCatalog::PROP_LINKED_URL_TABLE_NAME] as &$propItem) {
                 $propUnset = array_diff(
@@ -408,6 +413,7 @@ class SuperEntityTest extends \PHPUnit_Framework_TestCase
             $this->container = include 'config/container.php';
         }
         return array(
+            //update item
             array(
                 $this->container->get(StoreCatalog::PRODUCT_TABLE_NAME . SuperEntity::INNER_JOIN . StoreCatalog::MAINICON_TABLE_NAME),
                 [
@@ -424,6 +430,7 @@ class SuperEntityTest extends \PHPUnit_Framework_TestCase
                     'icon' => 'icon4.jpg'
                 ]
             ),
+            //add new prop in item
             array(
                 $this->container->get(StoreCatalog::PRODUCT_TABLE_NAME . SuperEntity::INNER_JOIN . StoreCatalog::MAINICON_TABLE_NAME),
                 [
@@ -454,6 +461,7 @@ class SuperEntityTest extends \PHPUnit_Framework_TestCase
                     ]
                 ]
             ),
+            //update prop in item
             array(
                 $this->container->get(StoreCatalog::PRODUCT_TABLE_NAME . SuperEntity::INNER_JOIN . StoreCatalog::MAINICON_TABLE_NAME),
                 [
@@ -481,6 +489,7 @@ class SuperEntityTest extends \PHPUnit_Framework_TestCase
                     ]
                 ]
             ),
+            //remove prop in item
             array(
                 $this->container->get(StoreCatalog::PRODUCT_TABLE_NAME . SuperEntity::INNER_JOIN . StoreCatalog::MAINICON_TABLE_NAME),
                 [
@@ -521,6 +530,7 @@ class SuperEntityTest extends \PHPUnit_Framework_TestCase
         $this->object = $obj;
         $newCreatedItem = $this->object->create($createdItem);
 
+        //Add the id in the field who want to upgrade.
         $updateItem['id'] = $newCreatedItem['id'];
         if (isset($updateItem[StoreCatalog::PROP_LINKED_URL_TABLE_NAME])) {
             for ($i = 0; $i < count($updateItem[StoreCatalog::PROP_LINKED_URL_TABLE_NAME]); ++$i) {
@@ -537,10 +547,12 @@ class SuperEntityTest extends \PHPUnit_Framework_TestCase
         $newUpdateItem = $this->object->update($updateItem);
         $unset = array_diff(array_keys($newUpdateItem), array_keys($expectedResult));
 
+        //Deleting fields whose values can not be defined
         foreach ($unset as $key) {
             unset($newUpdateItem[$key]);
         }
 
+        //Deleting invested fields whose values can not be defined
         if (isset($newUpdateItem[StoreCatalog::PROP_LINKED_URL_TABLE_NAME])) {
             foreach ($newUpdateItem[StoreCatalog::PROP_LINKED_URL_TABLE_NAME] as &$propItem) {
                 $propUnset = array_diff(

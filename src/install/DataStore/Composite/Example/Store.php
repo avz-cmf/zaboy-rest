@@ -35,6 +35,8 @@ class Store extends InstallerAbstract
         $data = array_merge(
             CompositeStoreExample::$product
             , CompositeStoreExample::$images
+            , CompositeStoreExample::$category
+            , CompositeStoreExample::$categoryProduct
         );
 
         foreach ($data as $key => $value) {

@@ -52,7 +52,9 @@ class Installer extends InstallerAbstract
 
         $tableManager = new TableManager($this->dbAdapter);
         $tableManager->deleteTable(Store::IMAGE_TABLE_NAME);
+        $tableManager->deleteTable(Store::CATEGORY_PRODUCT_TABLE_NAME);
         $tableManager->deleteTable(Store::PRODUCT_TABLE_NAME);
+        $tableManager->deleteTable(Store::CATEGORY_TABLE_NAME);
 
     }
 
@@ -66,6 +68,8 @@ class Installer extends InstallerAbstract
             $tableManager = new TableManager($this->dbAdapter, $tablesConfigDevelop);
             $tableManager->rewriteTable(Store::PRODUCT_TABLE_NAME);
             $tableManager->rewriteTable(Store::IMAGE_TABLE_NAME);
+            $tableManager->rewriteTable(Store::CATEGORY_TABLE_NAME);
+            $tableManager->rewriteTable(Store::CATEGORY_PRODUCT_TABLE_NAME);
 
         }
     }
