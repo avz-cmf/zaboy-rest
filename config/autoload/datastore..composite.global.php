@@ -15,6 +15,14 @@ return [
         'images' => [
             'class' => zaboy\rest\DataStore\Composite\Composite::class,
             'tableName' => 'images'
-        ]
+        ],
+        'category' => [
+            'class' => zaboy\rest\DataStore\Composite\Composite::class,
+            'tableName' => 'category'
+        ],
+        'category_products' => [
+            'class' => zaboy\rest\DataStore\Composite\Composite::class,
+            'tableName' => 'category_products'
+        ],
     ]
 ];

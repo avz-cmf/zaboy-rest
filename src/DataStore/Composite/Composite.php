@@ -10,6 +10,7 @@ namespace zaboy\rest\DataStore\Composite;
 
 
 use Xiag\Rql\Parser\Node\Query\ScalarOperator\EqNode;
+use Xiag\Rql\Parser\Node\SelectNode;
 use Xiag\Rql\Parser\Query;
 use zaboy\rest\DataStore\ConditionBuilder\SqlConditionBuilder;
 use zaboy\rest\DataStore\DataStoreException;
@@ -33,30 +34,6 @@ class Composite extends DbTable
      */
     protected $boundTables;
 
-    protected function initBound(){
-        /** @var Adapter $adapter */
-        $adapter = $this->dbTable->getAdapter();
-        $tableManager = new TableManagerMysql($adapter);
-        $metadata = Factory::createSourceFromAdapter($adapter);
-
-        /** @var $constraint \Zend\Db\Metadata\Object\ConstraintObject */
-        foreach($metadata->getConstraints($this->dbTable->table) as $constraint) {
-            if ($constraint->isForeignKey()) {
-                $this->boundTables['single'][$constraint->getReferencedTableName()] = [
-                    'table' => new Composite(new TableGateway($constraint->getReferencedTableName(), $adapter)),
-                    'column' => $constraint->getColumns()[0]
-                ];
-            }
-        }
-
-        foreach ($tableManager->getLinkedTables($this->dbTable->table) as $linkedTable){
-            $this->boundTables['multiple'][$linkedTable['TABLE_NAME']] = [
-                'table' => new Composite(new TableGateway($linkedTable['TABLE_NAME'], $adapter)),
-                'column' => $linkedTable['COLUMN_NAME']
-                ];
-        }
-    }
-
     public function query(Query $query)
     {
         $selectSQL = $this->dbTable->getSql()->select();
@@ -78,68 +55,52 @@ class Composite extends DbTable
         $data = $rowset->toArray();
 
         //todo: change call place
-        $this->initBound();
 
-        if(!empty($bounds)){
-            foreach ($data as &$item){
-                if(isset($bounds['nested'])){
-                    foreach ($bounds['nested'] as $bound){
-                        $match = [];
-                        if(preg_match_all('/([\w]+)\.#/', $bound, $match)){
-                            $name = $match[1][1];
-                            if (isset($this->boundTables['multiple'][$name])) {
-                                /** @var Composite $composite */
-                                $composite = $this->boundTables['multiple'][$name]['table'];
-                                $composite->initBound();
+        if (!empty($bounds)) {
+            //todo: change call place
+            $this->initBound();
+            foreach ($data as &$item) {
+                foreach ($bounds as $bound) {
+                    /** [$name => $query] */
+                    $name = array_keys($bound)[0];
+                    $boundQuery = $bound[$name];
+                    if (isset($this->boundTables['multiple'][$name])) {
+                        /** @var Composite $composite */
+                        $composite = $this->boundTables['multiple'][$name]['table'];
+                        $boundQuery->setQuery(new EqNode(
+                            $this->boundTables['multiple'][$name]['column'],
+                            $item[$this->getIdentifier()]
+                        ));
+                        $result = $composite->query($boundQuery);
+                        if (isset($item[$name])) {
+                            $result = array_merge_recursive($item[$name], $result);
+                        }
+                        $item[$name] = $result;
+                    } else if (isset($this->boundTables['single'][$name])) {
+                        /** @var Composite $composite */
+                        $composite = $this->boundTables['single'][$name]['table'];
 
-                                $boundQuery = new Query();
-                                $boundQuery->setQuery(new EqNode(
-                                    $this->boundTables['multiple'][$name]['column'],
-                                    $item[$this->getIdentifier()]
-                                ));
-                                $item[$bound] = $composite->query($query);
-                            }else if (isset($this->boundTables['single'][$name])){
-                                $composite = $this->boundTables['single'][$name]['table'];
-                                $composite->initBound();
+                        $boundQuery->setQuery(new EqNode(
+                            $this->boundTables['single'][$name]['column'],
+                            $item[$this->boundTables['single'][$name]['myColumn']]
+                        ));
 
-                                $result = $composite->read($item[$this->getIdentifier()]);
-                                if(isset($result)){
-                                    foreach ($result as $key => $value){
-                                        $item[$key] = $value;
-                                    }
-                                }
+                        $result = $composite->query($boundQuery);
+
+                        if (isset($result[0])) {
+                            $result = $result[0];
+                            unset($result[$this->getIdentifier()]);
+                            foreach ($result as $key => $value){
+                                unset($result[$key]);
+                                $result[$name . "." . $key] = $value;
+                            }
+                            $itemMarge = array_merge_recursive($item, $result);
+                            foreach ($itemMarge as $key => $value) {
+                                $item[$key] = $value;
                             }
                         }
-                    }
-                }
-                if(isset($bounds['own'])){
-                    foreach ($bounds['own'] as $bound){
-                        $match = [];
-                        if(preg_match_all('/([\w]+)\./', $bound, $match)){
-                            $name = $match[1][0];
-                            if (isset($this->boundTables['multiple'][$name])) {
-                                /** @var Composite $composite */
-                                $composite = $this->boundTables['multiple'][$name]['table'];
-
-                                $boundQuery = new Query();
-                                $boundQuery->setQuery(new EqNode(
-                                    $this->boundTables['multiple'][$name]['column'],
-                                    $item[$this->getIdentifier()]
-                                ));
-                                $item[$bound] = $composite->query($query);
-                            }else if (isset($this->boundTables['single'][$name])){
-                                $composite = $this->boundTables['single'][$name]['table'];
-
-                                $result = $composite->read($item[$this->boundTables['single'][$name]['column']]);
-                                if(isset($result)){
-                                    foreach ($result as $key => $value){
-                                        if($key != $this->getIdentifier())
-                                        $item[$key] = $value;
-                                    }
-                                }
-                                unset($item[$this->boundTables['single'][$name]['column']]);
-                            }
-                        }
+                    } else {
+                        throw new DataStoreException('Bounds not found');
                     }
                 }
             }
@@ -153,35 +114,104 @@ class Composite extends DbTable
         $select = $query->getSelect();
         $selectField = !$select ? [] : $select->getFields();
         $fields = [];
-        if(!empty($selectField)){
+        if (!empty($selectField)) {
             $bounds = [];
             $hawAggregate = false;
             $hawBound = false;
             foreach ($selectField as $field) {
-                if ($field instanceof AggregateFunctionNode){
+                $match = [];
+                if ($field instanceof AggregateFunctionNode) {
                     $hawAggregate = true;
                     //todo: create aggregate
-                }else if (stristr($field, '.')){
-                    //todo: rewrite parsing bound str
-                    $hawBound = true;
-                    if (stristr($field, '#')) {
-                        $bounds['nested'][] = $field;
-                    }else {
-                        $bounds['own'][] = $field;
+                } else if (preg_match('/([\w]+)\./', $field, $match)) {
+                    $subMatch = [];
+                    $name = $match[1];
+                    $boundQuery = new Query();
+                    if (preg_match('/([\w]+)\.\#([\w]+)?/', $field, $subMatch)) {
+                        $withOut = $this->dbTable->table;
+                        if (isset($subMatch[2])) {
+                            $withOut = $subMatch[2];
+                        }
+                        $boundQuery->setSelect(new SelectNode(['#' . $withOut]));
+                    } else if (preg_match('/[\w]+\.([\w\.\#]+)/', $field, $subMatch)) {
+                        $boundQuery->setSelect(new SelectNode([$subMatch[1]]));
+                    } else {
+                        $boundQuery->setSelect(new SelectNode());
                     }
-                }else {
+                    $bounds[] = [$name => $boundQuery];
+                } else if (preg_match('/^#([\w]+)?$/', $field, $match)) {
+                    $withOut = '';
+                    if ($match[1]) {
+                        $withOut = $match[1];
+                    }
+                    foreach ($this->getBoundsTableName() as $bound) {
+                        if ($bound != $withOut) {
+                            $boundQuery = new Query();
+                            $boundQuery->setSelect(new SelectNode());
+                            $bounds[] = [$bound => $boundQuery];
+                        }
+                    }
+                } else {
                     $fields[] = $field;
                 }
                 if ($hawAggregate && $hawBound) {
                     throw new DataStoreException('Cannot use aggregate function with bounds');
                 }
             }
-            if (!empty($bounds)){
+            if (!empty($bounds)) {
                 $fields['.bounds.'] = $bounds;
             }
         }
         $selectSQL->columns(empty($fields) ? [Select::SQL_STAR] : $fields);
         return $selectSQL;
+    }
+
+    public function getBoundsTableName()
+    {
+        $this->initBound();
+        $boundNames = [];
+        foreach ($this->boundTables as $bounds) {
+            foreach ($bounds as $bound) {
+                /** @var Composite $composite */
+                $composite = ($bound['table']);
+                $boundNames[] = $composite->dbTable->table;
+            }
+        }
+        return $boundNames;
+    }
+
+    /**
+     * initialize bound table
+     */
+    protected function initBound()
+    {
+        if (!isset($this->boundTables) || empty($this->boundTables)) {
+            /** @var Adapter $adapter */
+            $adapter = $this->dbTable->getAdapter();
+            $tableManager = new TableManagerMysql($adapter);
+            $metadata = Factory::createSourceFromAdapter($adapter);
+            $this->boundTables = [
+                'single' => [],
+                'multiple' => []
+            ];
+            /** @var $constraint \Zend\Db\Metadata\Object\ConstraintObject */
+            foreach ($metadata->getConstraints($this->dbTable->table) as $constraint) {
+                if ($constraint->isForeignKey()) {
+                    $this->boundTables['single'][$constraint->getReferencedTableName()] = [
+                        'table' => new Composite(new TableGateway($constraint->getReferencedTableName(), $adapter)),
+                        'myColumn' => $constraint->getColumns()[0],
+                        'column' => $constraint->getReferencedColumns()[0]
+                    ];
+                }
+            }
+
+            foreach ($tableManager->getLinkedTables($this->dbTable->table) as $linkedTable) {
+                $this->boundTables['multiple'][$linkedTable['TABLE_NAME']] = [
+                    'table' => new Composite(new TableGateway($linkedTable['TABLE_NAME'], $adapter)),
+                    'column' => $linkedTable['COLUMN_NAME']
+                ];
+            }
+        }
     }
 
     public function getSqlQuery(Query $query)
@@ -199,7 +229,7 @@ class Composite extends DbTable
         $fields = $selectSQL->getRawState(Select::COLUMNS);
         if (isset($fields['.bounds.'])) {
             unset($fields['.bounds.']);
-            if(empty($fields)){
+            if (empty($fields)) {
                 $fields = [Select::SQL_STAR];
             }
             $selectSQL->columns($fields);
