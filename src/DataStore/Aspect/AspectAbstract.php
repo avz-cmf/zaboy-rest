@@ -50,8 +50,7 @@ class AspectAbstract implements DataStoresInterface
     {
         $this->preGetIterator();
         $iterator = $this->dataStore->getIterator();
-        $this->postGetIterator($iterator);
-        return $iterator;
+        return $this->postGetIterator($iterator);
     }
 
     /**
@@ -60,9 +59,11 @@ class AspectAbstract implements DataStoresInterface
      * By default does nothing
      *
      * @param \Iterator $iterator
+     * @return \Iterator
      */
-    protected function postGetIterator(\Iterator &$iterator)
+    protected function postGetIterator(\Iterator $iterator)
     {
+        return $iterator;
     }
 
     /**
@@ -73,7 +74,7 @@ class AspectAbstract implements DataStoresInterface
      * @param $itemData
      * @param bool|false $rewriteIfExist
      */
-    protected function preCreate(&$itemData, &$rewriteIfExist = false)
+    protected function preCreate($itemData, $rewriteIfExist = false)
     {
     }
 
@@ -86,8 +87,7 @@ class AspectAbstract implements DataStoresInterface
     {
         $this->preCreate($itemData, $rewriteIfExist);
         $result = $this->dataStore->create($itemData, $rewriteIfExist);
-        $this->postCreate($result, $itemData, $rewriteIfExist);
-        return $result;
+        return $this->postCreate($result, $itemData, $rewriteIfExist);
     }
 
     /**
@@ -99,8 +99,9 @@ class AspectAbstract implements DataStoresInterface
      * @param $itemData
      * @param $rewriteIfExist
      */
-    protected function postCreate(&$result, $itemData, $rewriteIfExist)
+    protected function postCreate($result, $itemData, $rewriteIfExist)
     {
+        return $result;
     }
 
     /**
@@ -111,7 +112,7 @@ class AspectAbstract implements DataStoresInterface
      * @param $itemData
      * @param bool|false $createIfAbsent
      */
-    protected function preUpdate(&$itemData, &$createIfAbsent = false)
+    protected function preUpdate($itemData, $createIfAbsent = false)
     {
     }
 
@@ -124,8 +125,7 @@ class AspectAbstract implements DataStoresInterface
     {
         $this->preUpdate($itemData, $createIfAbsent);
         $result = $this->dataStore->update($itemData, $createIfAbsent);
-        $this->postUpdate($result, $itemData, $createIfAbsent);
-        return $result;
+        return $this->postUpdate($result, $itemData, $createIfAbsent);
     }
 
     /**
@@ -136,9 +136,11 @@ class AspectAbstract implements DataStoresInterface
      * @param mixed $result
      * @param $itemData
      * @param $createIfAbsent
+     * @return mixed
      */
-    protected function postUpdate(&$result, $itemData, $createIfAbsent)
+    protected function postUpdate($result, $itemData, $createIfAbsent)
     {
+        return $result;
     }
 
     /**
@@ -148,7 +150,7 @@ class AspectAbstract implements DataStoresInterface
      *
      * @param $id
      */
-    protected function preDelete(&$id)
+    protected function preDelete($id)
     {
     }
 
@@ -161,8 +163,7 @@ class AspectAbstract implements DataStoresInterface
     {
         $this->preDelete($id);
         $result = $this->dataStore->delete($id);
-        $this->postDelete($result, $id);
-        return $result;
+        return $this->postDelete($result, $id);
     }
 
     /**
@@ -172,9 +173,11 @@ class AspectAbstract implements DataStoresInterface
      *
      * @param mixed $result
      * @param $id
+     * @return mixed
      */
-    protected function postDelete(&$result, $id)
+    protected function postDelete($result, $id)
     {
+        return $result;
     }
 
     /**
@@ -195,8 +198,7 @@ class AspectAbstract implements DataStoresInterface
     {
         $this->preDeleteAll();
         $result = $this->dataStore->deleteAll();
-        $this->postDeleteAll($result);
-        return $result;
+        return $this->postDeleteAll($result);
     }
 
     /**
@@ -205,9 +207,11 @@ class AspectAbstract implements DataStoresInterface
      * By default does nothing
      *
      * @param mixed $result
+     * @return mixed
      */
-    protected function postDeleteAll(&$result)
+    protected function postDeleteAll($result)
     {
+        return $result;
     }
 
     /**
@@ -228,8 +232,7 @@ class AspectAbstract implements DataStoresInterface
     {
         $this->preGetIdentifier();
         $result = $this->dataStore->getIdentifier();
-        $this->postGetIdentifier($result);
-        return $result;
+        return $this->postGetIdentifier($result);
     }
 
     /**
@@ -238,9 +241,11 @@ class AspectAbstract implements DataStoresInterface
      * By default does nothing
      *
      * @param mixed $result
+     * @return mixed
      */
-    protected function postGetIdentifier(&$result)
+    protected function postGetIdentifier($result)
     {
+        return $result;
     }
 
     /**
@@ -250,7 +255,7 @@ class AspectAbstract implements DataStoresInterface
      *
      * @param $id
      */
-    protected function preRead(&$id)
+    protected function preRead($id)
     {
     }
 
@@ -263,8 +268,7 @@ class AspectAbstract implements DataStoresInterface
     {
         $this->preRead($id);
         $result = $this->dataStore->read($id);
-        $this->postRead($result, $id);
-        return $result;
+        return $this->postRead($result, $id);
     }
 
     /**
@@ -274,9 +278,11 @@ class AspectAbstract implements DataStoresInterface
      *
      * @param mixed $result
      * @param $id
+     * @return mixed
      */
-    protected function postRead(&$result, $id)
+    protected function postRead($result, $id)
     {
+        return $result;
     }
 
     /**
@@ -286,7 +292,7 @@ class AspectAbstract implements DataStoresInterface
      *
      * @param $id
      */
-    protected function preHas(&$id)
+    protected function preHas($id)
     {
     }
 
@@ -310,9 +316,11 @@ class AspectAbstract implements DataStoresInterface
      *
      * @param mixed $result
      * @param $id
+     * @return mixed
      */
-    protected function postHas(&$result, $id)
+    protected function postHas($result, $id)
     {
+        return $result;
     }
 
     /**
@@ -322,7 +330,7 @@ class AspectAbstract implements DataStoresInterface
      *
      * @param Query $query
      */
-    protected function preQuery(Query &$query)
+    protected function preQuery(Query $query)
     {
     }
 
@@ -335,8 +343,8 @@ class AspectAbstract implements DataStoresInterface
     {
         $this->preQuery($query);
         $result = $this->dataStore->query($query);
-        $this->postQuery($result, $query);
-        return $result;
+        return $this->postQuery($result, $query);
+
     }
 
     /**
@@ -346,9 +354,11 @@ class AspectAbstract implements DataStoresInterface
      *
      * @param mixed $result
      * @param Query $query
+     * @return mixed
      */
-    protected function postQuery(&$result, Query $query)
+    protected function postQuery($result, Query $query)
     {
+        return $result;
     }
 
     /**
@@ -369,8 +379,7 @@ class AspectAbstract implements DataStoresInterface
     {
         $this->preCount();
         $result = $this->dataStore->count();
-        $this->postCount($result);
-        return $result;
+        return $this->postCount($result);
     }
 
     /**
@@ -379,8 +388,10 @@ class AspectAbstract implements DataStoresInterface
      * By default does nothing
      *
      * @param mixed $result
+     * @return mixed
      */
-    protected function postCount(&$result)
+    protected function postCount($result)
     {
+        return $result;
     }
 }
