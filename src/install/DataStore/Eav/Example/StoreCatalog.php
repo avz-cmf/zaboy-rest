@@ -56,6 +56,7 @@ class StoreCatalog extends InstallerAbstract
             $sql = new MultiInsertSql($this->dbAdapter, $key);
             $tableGateway = new TableGateway($key, $this->dbAdapter, null, null, $sql);
             $dataStore = new DbTable($tableGateway);
+            echo "create $key" . PHP_EOL;
             $dataStore->create($value, true);
         }
     }
