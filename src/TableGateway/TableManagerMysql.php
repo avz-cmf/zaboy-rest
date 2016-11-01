@@ -410,4 +410,20 @@ class TableManagerMysql
         $rowSet = $this->db->query($getTableSql, Adapter\Adapter::QUERY_MODE_EXECUTE);
         return $rowSet->toArray();
     }
+
+    public function getColumnsNames($tableName){
+
+        /** @var Adapter\Adapter $adapter */
+        $adapter = $this->db;
+        $sql = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE"
+            ." TABLE_SCHEMA = '" . $adapter->getCurrentSchema() . "'"
+            ." AND TABLE_NAME = '" . $tableName . "' ;";
+        $resSet = $adapter->query($sql, Adapter\Adapter::QUERY_MODE_EXECUTE);
+        $columnsNames = [];
+        foreach($resSet->toArray() as $column){
+            $columnsNames[] = $column['COLUMN_NAME'];
+        }
+
+        return $columnsNames;
+    }
 }

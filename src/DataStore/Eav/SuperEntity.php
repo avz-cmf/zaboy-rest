@@ -18,6 +18,7 @@ use zaboy\rest\DataStore\DataStoreException;
 use zaboy\rest\DataStore\DbTable;
 use zaboy\rest\DataStore\Interfaces\SqlQueryGetterInterface;
 use zaboy\rest\RqlParser\AggregateFunctionNode;
+use zaboy\rest\TableGateway\TableManagerMysql;
 use Zend\Db\Adapter\Adapter;
 use Zend\Db\Metadata\Source\Factory;
 use Zend\Db\Sql\Ddl\Column\Column;
@@ -109,15 +110,18 @@ class SuperEntity extends Entity implements SqlQueryGetterInterface
         /** @var Entity $entity */
         foreach ($this->joinedEntities as $entity) {
             if (is_object($entity)) {
-                $metadata = Factory::createSourceFromAdapter($adapter);
-                $table = $metadata->getTable($entity->getEntityTableName());
+
                 $entityItem = [];
-                /** @var Column $column */
-                foreach ($table->getColumns() as $column) {
-                    if (isset($itemData[$column->getName()])) {
-                        $entityItem[$column->getName()] = $itemData[$column->getName()];
+
+                $mysqlManager = new TableManagerMysql($adapter);
+                $columnsNames = $mysqlManager->getColumnsNames($entity->getEntityTableName());
+
+                foreach($columnsNames as $columnName){
+                    if (isset($itemData[$columnName])) {
+                        $entityItem[$columnName] = $itemData[$columnName];
                     }
                 }
+
                 $entityItem = $handler($entity, $entityItem);
                 $itemInserted = array_merge($itemInserted, $entityItem);
             }
