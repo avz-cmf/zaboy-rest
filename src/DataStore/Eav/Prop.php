@@ -11,6 +11,8 @@ namespace zaboy\rest\DataStore\Eav;
 
 use zaboy\rest\DataStore\DataStoreException;
 use zaboy\rest\DataStore\DbTable;
+use zaboy\rest\TableGateway\TableManagerMysql;
+use Zend\Db\Adapter\Adapter;
 use Zend\Db\Metadata\Source\Factory;
 
 /**
@@ -76,21 +78,13 @@ class Prop extends DbTable
         return $tableName = $this->dbTable->table;
     }
 
-    public function getColumnsNames()
-    {
-        $adapter = $this->dbTable->adapter;
-        $metadata = Factory::createSourceFromAdapter($adapter);
-        $tableMetadata = $metadata->getTable($this->dbTable->table);
-        $columns = $tableMetadata->getColumns();
-        foreach ($columns as $column) {
-            $columnsNames[] = $column->getName();
-        }
-        return $columnsNames;
-    }
 
     public function getLinkedColumn($entityName, $propColumn)
     {
-        $columnsNames = $this->getColumnsNames();
+        /** @var Adapter $adapter */
+        $adapter = $this->dbTable->getAdapter();
+        $mysqlManager = new TableManagerMysql($adapter);
+        $columnsNames = $mysqlManager->getColumnsNames($this->dbTable->table);
 
         //'prop_name.column_name' or 'prop_name'
         $linkedColumn = strpos($propColumn, '.') ?
