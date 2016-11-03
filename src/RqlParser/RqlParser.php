@@ -52,6 +52,7 @@ class RqlParser
         unset($parser);
         return $result;
     }
+
     protected static function prepare_rql_string($rqlQueryString){
         $sortNodePattern = '/sort\(([^\(\)\&]+)\)/';
         //$sortFieldPattern = '/([-|+]?[\w]+\,?)/g';
@@ -67,6 +68,10 @@ class RqlParser
             }
             $sortNode = trim($sortNode, ",") . ")";
             $rqlQueryString = preg_replace($sortNodePattern, $sortNode, $rqlQueryString);
+        }
+        $tempRql = preg_replace(['/\%28/', '/\%29/'], ['(',')'], $rqlQueryString);
+        if(isset($tempRql)){
+            $rqlQueryString = $tempRql;
         }
         return $rqlQueryString;
     }
@@ -100,7 +105,6 @@ class RqlParser
             ->addTokenParser(new TokenParser\Query\Fiql\ScalarOperator\LikeTokenParser())
             ->addTokenParser(new Fiql\ScalarOperator\MatchTokenParser())
             ->addTokenParser(new Basic\ScalarOperator\MatchTokenParser());
-
 
         $parser = (new Parser((new ExpressionParser())
             ->registerTypeCaster('string', new TypeCaster\StringTypeCaster())
