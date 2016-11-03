@@ -63,7 +63,6 @@ class RqlParser
                 if (!preg_match('/^[+|-]([\W\w])/', $fieldSortType)) {
                     $fieldSortType = '+' . $fieldSortType;
                 }
-
                 $sortNode .= $fieldSortType . ',';
             }
             $sortNode = trim($sortNode, ",") . ")";
