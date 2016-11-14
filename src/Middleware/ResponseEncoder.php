@@ -44,6 +44,7 @@ class ResponseEncoder implements MiddlewareInterface
             $status = $response->getStatusCode();
             $headers = $response->getHeaders();
             $response = new JsonResponse($responseBody, $status, $headers);
+            return $response;
         } else {
             $escaper = new Escaper();
             $result = '';
