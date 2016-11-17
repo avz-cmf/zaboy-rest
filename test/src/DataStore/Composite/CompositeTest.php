@@ -17,7 +17,6 @@ use zaboy\rest\install\Installer;
 class CompositeTest
 {
 
-
 }
 
 //

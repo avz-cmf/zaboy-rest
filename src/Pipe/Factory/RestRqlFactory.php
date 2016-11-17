@@ -83,6 +83,7 @@ class RestRqlFactory implements FactoryInterface
         $this->middlewares[200] = new Middleware\RequestDecoder();
         $this->middlewares[300] = $storeMiddlewareLazy;
         $this->middlewares[400] = new Middleware\ResponseEncoder();
+        $this->middlewares[500] = new Middleware\ResponseReturner();
         //$middlewares[600] = new Middleware\$errorHandler();
 
         ksort($this->middlewares);
