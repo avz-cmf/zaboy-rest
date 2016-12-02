@@ -6,7 +6,7 @@
  * Time: 10:40
  */
 
-namespace zaboy\rest\RqlParser;
+namespace zaboy\rest\Rql\Node;
 
 use Xiag\Rql\Parser\AbstractNode;
 

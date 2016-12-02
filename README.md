@@ -39,6 +39,7 @@
 
 [Детальная документация](doc/)
 
+* [zaboy Rql](https://github.com/avz-cmf/zaboy-rest/blob/master/doc/RQL_PARSER.md)
 * [Запуск тестов](https://github.com/avz-cmf/zaboy-rest/blob/master/doc/TESTS.md)
 * [DataStore Абстрактные фабрики](https://github.com/avz-cmf/zaboy-rest/blob/master/doc/DataStore%20Abstract%20Factory.md)
 * [EAV](https://github.com/avz-cmf/zaboy-rest/blob/master/doc/EAVDataStore.md)

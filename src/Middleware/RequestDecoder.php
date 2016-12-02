@@ -15,7 +15,7 @@ use Xiag\Rql\Parser\TokenParser;
 use Xiag\Rql\Parser\TokenParser\Query;
 use Xiag\Rql\Parser\TypeCaster;
 use zaboy\rest\RestException;
-use zaboy\rest\RqlParser\RqlParser;
+use zaboy\rest\Rql\RqlParser;
 use Zend\Stratigility\MiddlewareInterface;
 
 /**
@@ -71,7 +71,7 @@ class RequestDecoder implements MiddlewareInterface
         $headerLimit = $request->getHeader('Range');
         if (isset($headerLimit) && is_array($headerLimit) && count($headerLimit) > 0) {
             $match = [];
-            preg_match("/^items=([0-9]+)\-?([0-9]+)?/", $headerLimit[0], $match);
+            preg_match('/^items=([0-9]+)\-?([0-9]+)?/', $headerLimit[0], $match);
             if (count($match) > 0) {
                 $limit = [];
                 if (isset($match[2])) {

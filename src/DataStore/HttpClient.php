@@ -14,7 +14,7 @@ use zaboy\rest\DataStore\DataStoreException;
 use zaboy\rest\DataStore\ConditionBuilder\RqlConditionBuilder;
 use Xiag\Rql\Parser\Query;
 use Xiag\Rql\Parser\Node\SortNode;
-use zaboy\rest\RqlParser\RqlParser;
+use zaboy\rest\Rql\RqlParser;
 use Zend\Http\Client;
 use Zend\Http\Request;
 use Zend\Json\Json;

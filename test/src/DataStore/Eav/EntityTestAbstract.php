@@ -20,7 +20,7 @@ use zaboy\rest\DataStore\Eav\Entity;
 use zaboy\rest\DataStore\Eav\Example\StoreCatalog;
 use zaboy\rest\DataStore\Eav\Prop;
 use zaboy\rest\DataStore\Eav\SysEntities;
-use zaboy\rest\RqlParser\AggregateFunctionNode;
+use zaboy\rest\Rql\Node\AggregateFunctionNode;
 use Zend\Db\TableGateway\TableGateway;
 
 abstract class EntityTestAbstract extends \PHPUnit_Framework_TestCase

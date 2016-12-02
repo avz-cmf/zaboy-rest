@@ -11,6 +11,7 @@ namespace zaboy\rest\Middleware;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use zaboy\rest\RestException;
 use Zend\Stratigility\MiddlewareInterface;
 use Zend\Diactoros\Response\JsonResponse;
 use Zend\Escaper\Escaper;
@@ -75,7 +76,7 @@ class ResponseEncoder implements MiddlewareInterface
                     $result = $result . '<br>' . PHP_EOL;
                     break;
                 default:
-                    throw new \zaboy\rest\RestException(
+                    throw new RestException(
                     '$responseBody must be array, numeric or bool. But '
                     . gettype($responseBody) . ' given.'
                     );

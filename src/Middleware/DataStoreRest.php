@@ -18,8 +18,8 @@ use zaboy\rest\DataStore\DataStoreException;
 use zaboy\rest\DataStore\Interfaces\RefreshableInterface;
 use zaboy\rest\Middleware;
 use zaboy\rest\RestException;
-use zaboy\rest\RqlParser\AggregateFunctionNode;
-use zaboy\rest\RqlParser\XSelectNode;
+use zaboy\rest\Rql\Node\AggregateFunctionNode;
+use zaboy\rest\Rql\Node\SelectNode;
 use Zend\Diactoros\Response\JsonResponse;
 
 /**
@@ -61,7 +61,7 @@ class DataStoreRest extends Middleware\DataStoreAbstract
                     $response = $this->methodPutWithId($request, $response);
                     break;
                 case $httpMethod === 'PUT' && !($isPrimaryKeyValue):
-                    throw new \zaboy\rest\RestException('PUT without Primary Key');
+                    throw new RestException('PUT without Primary Key');
                 case $httpMethod === 'POST' && $isPrimaryKeyValue:
                     $response = $this->methodPostWithId($request, $response);
                     break;
@@ -72,17 +72,17 @@ class DataStoreRest extends Middleware\DataStoreAbstract
                     $response = $this->methodDelete($request, $response);
                     break;
                 case $httpMethod === 'DELETE' && !($isPrimaryKeyValue):
-                    throw new \zaboy\rest\RestException('DELETE without Primary Key');
+                    throw new RestException('DELETE without Primary Key');
                 case $httpMethod === "PATCH":
                     $response = $this->methodRefresh($request, $response);
                     break;
                 default:
-                    throw new \zaboy\rest\RestException(
+                    throw new RestException(
                         'Method must be GET, PUT, POST or DELETE. '
                         . $request->getMethod() . ' given'
                     );
             }
-        } catch (\zaboy\rest\RestException $ex) {
+        } catch (RestException $ex) {
             return new JsonResponse([
                 $ex->getMessage()
             ], 500);
@@ -156,7 +156,7 @@ class DataStoreRest extends Middleware\DataStoreAbstract
 
         $rowCountQuery = new Query();
         $aggregate = new AggregateFunctionNode('count', $this->dataStore->getIdentifier());
-        $rowCountQuery->setSelect(new XSelectNode([$aggregate]));
+        $rowCountQuery->setSelect(new SelectNode([$aggregate]));
 
         if ($rqlQueryObject->getQuery()) {
             $rowCountQuery->setQuery($rqlQueryObject->getQuery());
@@ -171,7 +171,7 @@ class DataStoreRest extends Middleware\DataStoreAbstract
 
         $rowCountQuery = new Query();
         $rowCountQuery
-            ->setSelect(new XSelectNode([new AggregateFunctionNode('count', $this->dataStore->getIdentifier())]));
+            ->setSelect(new SelectNode([new AggregateFunctionNode('count', $this->dataStore->getIdentifier())]));
         $rowCount = $this->dataStore->query($rowCountQuery);
         if (isset($rowCount[0][$this->dataStore->getIdentifier() . '->count'])) {
 
@@ -202,7 +202,7 @@ class DataStoreRest extends Middleware\DataStoreAbstract
         $primaryKeyIdentifier = $this->dataStore->getIdentifier();
         $row = $request->getParsedBody();
         if (!(isset($row) && is_array($row))) {
-            throw new \zaboy\rest\RestException('No body in PUT request');
+            throw new RestException('No body in PUT request');
         }
         $row = array_merge(array($primaryKeyIdentifier => $primaryKeyValue), $row);
         $overwriteMode = $request->getAttribute('Overwrite-Mode');
@@ -234,7 +234,7 @@ class DataStoreRest extends Middleware\DataStoreAbstract
 
         $row = $request->getParsedBody();
         if (!(isset($row) && is_array($row))) {
-            throw new \zaboy\rest\RestException('No body in POST request');
+            throw new RestException('No body in POST request');
         }
 
         $row = array_merge(array($primaryKeyIdentifier => $primaryKeyValue), $row);
@@ -270,7 +270,7 @@ class DataStoreRest extends Middleware\DataStoreAbstract
     {
         $row = $request->getParsedBody();
         if (!(isset($row) && is_array($row))) {
-            throw new \zaboy\rest\RestException('No body in POST request');
+            throw new RestException('No body in POST request');
         }
         $primaryKeyIdentifier = $this->dataStore->getIdentifier();
         $response = $response->withStatus(201);

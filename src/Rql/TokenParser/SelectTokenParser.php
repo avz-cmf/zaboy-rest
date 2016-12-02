@@ -7,13 +7,15 @@
  * Time: 10:29
  */
 
-namespace zaboy\rest\RqlParser;
+namespace zaboy\rest\Rql\TokenParser;
 
 use Xiag\Rql\Parser\AbstractNode;
 use Xiag\Rql\Parser\AbstractTokenParser;
 use Xiag\Rql\Parser\Exception\SyntaxErrorException;
 use Xiag\Rql\Parser\Token;
 use Xiag\Rql\Parser\TokenStream;
+use zaboy\rest\Rql\Node\AggregateFunctionNode;
+use zaboy\rest\Rql\Node\SelectNode;
 
 
 class SelectTokenParser extends AbstractTokenParser
@@ -59,7 +61,7 @@ class SelectTokenParser extends AbstractTokenParser
 
         $tokenStream->expect(Token::T_CLOSE_PARENTHESIS);
 
-        return new XSelectNode($fields);
+        return new SelectNode($fields);
     }
 
     /**
