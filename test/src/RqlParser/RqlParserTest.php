@@ -9,6 +9,7 @@
 
 namespace zaboy\test\rest\RqlParser;
 
+use phpDocumentor\Reflection\Types\Object_;
 use PHPUnit_Framework_TestCase;
 use Xiag\Rql\Parser\Node\LimitNode;
 use Xiag\Rql\Parser\Node\Query\ArrayOperator\InNode;

@@ -12,6 +12,10 @@ use Xiag\Rql\Parser\Query as StdQuery;
 
 class Query extends StdQuery
 {
+    /**
+     * Query constructor. Init query with rql string or another query obj.
+     * @param $query
+     */
     public function __construct($query)
     {
         if (is_string($query)) {

@@ -52,6 +52,10 @@ class RqlParser
         }
     }
 
+    /**
+     * @param $rqlQueryString. Static method for decode qrl string. Work without rawurlencode str.
+     * @return Query
+     */
     public static function rqlDecode($rqlQueryString)
     {
         $rqlQueryString = RqlParser::encodedStrQuery($rqlQueryString);
@@ -62,6 +66,10 @@ class RqlParser
         return $result;
     }
 
+    /**
+     * @param $rqlQueryString. Prepare rlq string. Fix bug with scope(js Query aggregate). Add '+' char for sort.
+     * @return mixed
+     */
     protected static function prepareStringRql($rqlQueryString)
     {
         $sortNodePattern = '/sort\(([^\(\)\&]+)\)/';
@@ -86,6 +94,10 @@ class RqlParser
         return $rqlQueryString;
     }
 
+    /**
+     * @param $rqlQueryString. Decode rql string with token and lexler.
+     * @return Query
+     */
     public function decode($rqlQueryString)
     {
         $rqlQueryString = RqlParser::prepareStringRql($rqlQueryString);
@@ -132,6 +144,10 @@ class RqlParser
         return $rqlQueryObject;
     }
 
+    /**
+     * @param $query. Static method for encode rql obj.
+     * @return string
+     */
     public static function rqlEncode($query)
     {
         $parser = new self();
@@ -140,6 +156,10 @@ class RqlParser
         return $result;
     }
 
+    /**
+     * @param Query $query. Encode query obj with ConditionBuilder.
+     * @return string
+     */
     public function encode(Query $query)
     {
         $conditionBuilder = $this->conditionBuilder;
@@ -151,6 +171,10 @@ class RqlParser
         return $rqlQueryString;
     }
 
+    /**
+     * @param Query $query
+     * @return string
+     */
     protected function makeLimit(Query $query)
     {
         $limitNode = $query->getLimit();
@@ -163,6 +187,10 @@ class RqlParser
         }
     }
 
+    /**
+     * @param Query $query
+     * @return string
+     */
     protected function makeSort(Query $query)
     {
         $sortNode = $query->getSort();
@@ -179,6 +207,10 @@ class RqlParser
         }
     }
 
+    /**
+     * @param Query $query
+     * @return string
+     */
     protected function makeSelect(Query $query)
     {
         $selectNode = $query->getSelect();  //What fields will be return
@@ -194,6 +226,10 @@ class RqlParser
         }
     }
 
+    /**
+     * @param $rqlString. rawurlencode rql string.
+     * @return string
+     */
     protected static function encodedStrQuery($rqlString)
     {
         $escapedRqlString = '';
