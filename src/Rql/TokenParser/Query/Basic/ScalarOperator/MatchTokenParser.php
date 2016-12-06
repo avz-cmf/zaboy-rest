@@ -6,19 +6,19 @@
  * Date: 14.07.16
  * Time: 14:53
  */
-namespace zaboy\rest\RqlParser\Fiql\ScalarOperator;
+namespace zaboy\rest\Rql\TokenParser\Query\Basic\ScalarOperator;
 
 use Xiag\Rql\Parser\Node\Query\ScalarOperator\LikeNode;
-use Xiag\Rql\Parser\TokenParser\Query\Fiql\AbstractScalarOperatorTokenParser;
+use Xiag\Rql\Parser\TokenParser\Query\Basic\AbstractScalarOperatorTokenParser;
 
 class MatchTokenParser extends AbstractScalarOperatorTokenParser
 {
     /**
      * @inheritdoc
      */
-    protected function getOperatorNames()
+    protected function getOperatorName()
     {
-        return ['match'];
+        return 'match';
     }
 
     /**

@@ -15,7 +15,7 @@ use Xiag\Rql\Parser\Node\SortNode;
 use Xiag\Rql\Parser\Query;
 use zaboy\rest\DataStore\Interfaces\DataStoresInterface;
 use zaboy\rest\DataStore\Iterators\DataStoreIterator;
-use zaboy\rest\RqlParser\AggregateFunctionNode;
+use zaboy\rest\Rql\Node\AggregateFunctionNode;
 
 /**
  * Abstract class for DataStores
@@ -115,7 +115,19 @@ abstract class DataStoreAbstract implements DataStoresInterface
             $data = $this->queryWhere($query, $limit, $offset);
             $result = $this->querySort($data, $query);
         }
-        return $this->querySelect($result, $query);
+        $result = $this->querySelect($result, $query);
+        //filled item unset field
+        $itemFiled = [];
+        foreach ($result as &$item) {
+            $keys = array_keys($item);
+            $diff = array_diff($keys, $itemFiled);
+            $itemFiled = array_merge($itemFiled, $diff);
+            $diff = array_diff($itemFiled, $keys);
+            foreach ($diff as $field) {
+                $item[$field] = null;
+            }
+        }
+        return $result;
     }
 
     protected function queryWhere(Query $query, $limit, $offset)
@@ -205,7 +217,7 @@ abstract class DataStoreAbstract implements DataStoresInterface
                         case 'min': {
                             $min = null;
                             foreach ($data as $item) {
-                                if(!isset($min)){
+                                if (!isset($min)) {
                                     $min = $item[$field->getField()];
                                 }
                                 if ($min > $item[$field->getField()]) {

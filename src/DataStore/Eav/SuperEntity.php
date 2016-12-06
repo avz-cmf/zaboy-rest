@@ -17,7 +17,7 @@ use zaboy\rest\DataStore\ConditionBuilder\SqlConditionBuilder;
 use zaboy\rest\DataStore\DataStoreException;
 use zaboy\rest\DataStore\DbTable;
 use zaboy\rest\DataStore\Interfaces\SqlQueryGetterInterface;
-use zaboy\rest\RqlParser\AggregateFunctionNode;
+use zaboy\rest\Rql\Node\AggregateFunctionNode;
 use zaboy\rest\TableGateway\TableManagerMysql;
 use Zend\Db\Adapter\Adapter;
 use Zend\Db\Metadata\Source\Factory;

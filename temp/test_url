@@ -1,0 +1,165 @@
+http://localhost:9090//api/rest/entity_tag
+http://localhost:9090//api/rest/entity_category?select(prop_product_category)
+http://localhost:9090//api/rest/entity_product?select(id,title,price,prop_linked_url)
+http://localhost:9090//api/rest/entity_product?select(id,title,price,prop_linked_url)&gt(price,50)
+http://localhost:9090//api/rest/entity_product?select(id,title,price,prop_linked_url)&gt(price,50)&limit(2,1)
+
+entity_A__l__entity_B - left join b
+entity_A__r__entity_B - right join b
+entity_A__i__entity_B - inner join b
+entity_A__o__entity_B - full outer join b -> (entity_A__l__entity_B) union all (entity_A__r__entity_B)
+
+Всегда приоритет справа на лево.
+
+entity_A__o__entity_B__i__entity_C - (entity_A__o__entity_B)__i__entity_C
+
+select * from (select * from entity_A full outer join entity_B) as Q join entity_C;
+
+interface sqlQueryGetter
+object dataStore lin
+
+
+
+public function provider_query(){
+        $query1 = new Query();
+        $query2 = new Query();
+        $query2->setQuery(
+            new AndNode([
+                new LtNode('price', 23),
+                new NeNode('icon', 'icon1.jpg'),
+            ])
+        );
+        $query3 = new Query();
+        $query3->setSelect(new SelectNode(['price', 'icon']));
+        $query4 = new Query();
+        $query4->setSort(new SortNode(['price' => -1, 'icon' => +1]));
+        return array(
+            array(
+                $query1,
+                array(
+                    [
+                        'title' => 'Plate41-mainicon',
+                        'price' => '21',
+                        'icon' => 'icon1.jpg'],
+                    [
+                        'title' => 'Plate42-mainicon',
+                        'price' => '22',
+                        'icon' => 'icon2.jpg'],
+                    [
+                        'title' => 'Plate43-mainicon',
+                        'price' => '23',
+                        'icon' => 'icon3.jpg']
+                ),
+                array(
+                    [
+                        'title' => 'Plate41-mainicon',
+                        'price' => '21',
+                        'icon' => 'icon1.jpg'],
+                    [
+                        'title' => 'Plate42-mainicon',
+                        'price' => '22',
+                        'icon' => 'icon2.jpg'],
+                    [
+                        'title' => 'Plate43-mainicon',
+                        'price' => '23',
+                        'icon' => 'icon3.jpg']
+                )
+            ),
+            array(
+                $query2,
+                array(
+                    [
+                        'title' => 'Plate41-mainicon',
+                        'price' => '21',
+                        'icon' => 'icon1.jpg'],
+                    [
+                        'title' => 'Plate42-mainicon',
+                        'price' => '22',
+                        'icon' => 'icon2.jpg'],
+                    [
+                        'title' => 'Plate43-mainicon',
+                        'price' => '23',
+                        'icon' => 'icon3.jpg']
+                ),
+                array(
+                    [
+                        'title' => 'Plate42-mainicon',
+                        'price' => '22',
+                        'icon' => 'icon2.jpg'],
+                )
+            ),
+            array(
+                $query2,
+                array(
+                    [
+                        'title' => 'Plate41-mainicon',
+                        'price' => '21',
+                        'icon' => 'icon1.jpg'],
+                    [
+                        'title' => 'Plate42-mainicon',
+                        'price' => '22',
+                        'icon' => 'icon2.jpg'],
+                    [
+                        'title' => 'Plate43-mainicon',
+                        'price' => '23',
+                        'icon' => 'icon3.jpg']
+                ),
+                array(
+                    [
+                        'price' => '21',
+                        'icon' => 'icon1.jpg'],
+                    [
+                        'price' => '22',
+                        'icon' => 'icon2.jpg'],
+                    [
+                        'price' => '23',
+                        'icon' => 'icon3.jpg']
+                ),
+            ),
+            array(
+                $query2,
+                array(
+                    [
+                        'title' => 'Plate43-mainicon',
+                        'price' => '23',
+                        'icon' => 'icon6.jpg'],
+                    [
+                        'title' => 'Plate41-mainicon',
+                        'price' => '21',
+                        'icon' => 'icon1.jpg'],
+                    [
+                        'title' => 'Plate42-mainicon',
+                        'price' => '22',
+                        'icon' => 'icon2.jpg'],
+                    [
+                        'title' => 'Plate43-mainicon',
+                        'price' => '22',
+                        'icon' => 'icon3.jpg'],
+                    [
+                        'title' => 'Plate43-mainicon',
+                        'price' => '23',
+                        'icon' => 'icon5.jpg']
+                ),
+                array(
+
+                ),
+            )
+
+        );
+    }
+
+    public function test_query(Query $query, array $created, array $expectedResult){
+        foreach ($created as $item){
+            $this->object->create($item);
+        }
+        $this->object = $this->container->get(StoreCatalog::PRODUCT_TABLE_NAME . SuperEntity::INNER_JOIN . StoreCatalog::MAINICON_TABLE_NAME);
+        $result = $this->object->query($query);
+
+        foreach ($result as $item){
+            $unset = array_diff(array_keys($item), array_keys($created[0]));
+            foreach ($unset as $key) {
+                unset($item[$key]);
+            }
+        }
+        $this->assertEquals($result, $expectedResult);
+    }

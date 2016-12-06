@@ -6,8 +6,7 @@
  * Time: 16:34
  */
 
-namespace zaboy\rest\RqlParser;
-
+namespace zaboy\rest\Rql;
 
 use Xiag\Rql\Parser\ExpressionParser;
 use Xiag\Rql\Parser\Lexer;
@@ -20,11 +19,20 @@ use Xiag\Rql\Parser\TypeCaster;
 use zaboy\rest\DataStore\ConditionBuilder\ConditionBuilderAbstract;
 use zaboy\rest\DataStore\ConditionBuilder\RqlConditionBuilder;
 use zaboy\rest\DataStore\DataStoreAbstract;
+use zaboy\rest\Rql\TokenParser\Query\Basic\ScalarOperator\MatchTokenParser as BasicMatchTokenParser;
+use zaboy\rest\Rql\TokenParser\Query\Fiql\ScalarOperator\MatchTokenParser as FiqlMatchTokenParser;
+use zaboy\rest\Rql\TokenParser\SelectTokenParser;
 
 class RqlParser
 {
     private $allowedAggregateFunction;
     private $conditionBuilder;
+
+    protected static $nodes = [
+        'select',
+        'sort',
+        'limit',
+    ];
 
     public function __construct(
         array $allowedAggregateFunction = null,
@@ -44,16 +52,26 @@ class RqlParser
         }
     }
 
+    /**
+     * @param $rqlQueryString. Static method for decode qrl string. Work without rawurlencode str.
+     * @return Query
+     */
     public static function rqlDecode($rqlQueryString)
     {
-        $rqlQueryString = RqlParser::prepare_rql_string($rqlQueryString);
+        $rqlQueryString = RqlParser::encodedStrQuery($rqlQueryString);
+        $rqlQueryString = RqlParser::prepareStringRql($rqlQueryString);
         $parser = new self();
         $result = $parser->decode($rqlQueryString);
         unset($parser);
         return $result;
     }
 
-    protected static function prepare_rql_string($rqlQueryString){
+    /**
+     * @param $rqlQueryString. Prepare rlq string. Fix bug with scope(js Query aggregate). Add '+' char for sort.
+     * @return mixed
+     */
+    protected static function prepareStringRql($rqlQueryString)
+    {
         $sortNodePattern = '/sort\(([^\(\)\&]+)\)/';
         //$sortFieldPattern = '/([-|+]?[\w]+\,?)/g';
         $match = [];
@@ -69,16 +87,20 @@ class RqlParser
             $sortNode = trim($sortNode, ",") . ")";
             $rqlQueryString = preg_replace($sortNodePattern, $sortNode, $rqlQueryString);
         }
-        $tempRql = preg_replace(['/\%28/', '/\%29/'], ['(',')'], $rqlQueryString);
-        if(isset($tempRql)){
+        $tempRql = preg_replace(['/\%28/', '/\%29/'], ['(', ')'], $rqlQueryString);
+        if (isset($tempRql)) {
             $rqlQueryString = $tempRql;
         }
         return $rqlQueryString;
     }
 
+    /**
+     * @param $rqlQueryString. Decode rql string with token and lexler.
+     * @return Query
+     */
     public function decode($rqlQueryString)
     {
-        $rqlQueryString = RqlParser::prepare_rql_string($rqlQueryString);
+        $rqlQueryString = RqlParser::prepareStringRql($rqlQueryString);
         $queryTokenParser = new TokenParserGroup();
         $queryTokenParser
             ->addTokenParser(new TokenParser\Query\GroupTokenParser($queryTokenParser))
@@ -103,8 +125,8 @@ class RqlParser
             ->addTokenParser(new TokenParser\Query\Fiql\ScalarOperator\LeTokenParser())
             ->addTokenParser(new TokenParser\Query\Fiql\ScalarOperator\GeTokenParser())
             ->addTokenParser(new TokenParser\Query\Fiql\ScalarOperator\LikeTokenParser())
-            ->addTokenParser(new Fiql\ScalarOperator\MatchTokenParser())
-            ->addTokenParser(new Basic\ScalarOperator\MatchTokenParser());
+            ->addTokenParser(new FiqlMatchTokenParser())
+            ->addTokenParser(new BasicMatchTokenParser());
 
         $parser = (new Parser((new ExpressionParser())
             ->registerTypeCaster('string', new TypeCaster\StringTypeCaster())
@@ -122,6 +144,10 @@ class RqlParser
         return $rqlQueryObject;
     }
 
+    /**
+     * @param $query. Static method for encode rql obj.
+     * @return string
+     */
     public static function rqlEncode($query)
     {
         $parser = new self();
@@ -130,6 +156,10 @@ class RqlParser
         return $result;
     }
 
+    /**
+     * @param Query $query. Encode query obj with ConditionBuilder.
+     * @return string
+     */
     public function encode(Query $query)
     {
         $conditionBuilder = $this->conditionBuilder;
@@ -137,9 +167,14 @@ class RqlParser
         $rqlQueryString = $rqlQueryString . $this->makeLimit($query);
         $rqlQueryString = $rqlQueryString . $this->makeSort($query);
         $rqlQueryString = $rqlQueryString . $this->makeSelect($query);
-        return ltrim($rqlQueryString, '&');
+        $rqlQueryString = rtrim($rqlQueryString, '&');
+        return $rqlQueryString;
     }
 
+    /**
+     * @param Query $query
+     * @return string
+     */
     protected function makeLimit(Query $query)
     {
         $limitNode = $query->getLimit();
@@ -152,6 +187,10 @@ class RqlParser
         }
     }
 
+    /**
+     * @param Query $query
+     * @return string
+     */
     protected function makeSort(Query $query)
     {
         $sortNode = $query->getSort();
@@ -168,6 +207,10 @@ class RqlParser
         }
     }
 
+    /**
+     * @param Query $query
+     * @return string
+     */
     protected function makeSelect(Query $query)
     {
         $selectNode = $query->getSelect();  //What fields will be return
@@ -182,4 +225,30 @@ class RqlParser
             return rtrim($selectString, ',') . ')';
         }
     }
+
+    /**
+     * @param $rqlString. rawurlencode rql string.
+     * @return string
+     */
+    protected static function encodedStrQuery($rqlString)
+    {
+        $escapedRqlString = '';
+        $nodes = preg_split('/\&/', $rqlString, -1, PREG_SPLIT_NO_EMPTY);
+        foreach ($nodes as $node) {
+            $match = [];
+            if (preg_match('/([\w]+)/', $node, $match)) {
+                if (!in_array($match[1], RqlParser::$nodes)) {
+                    $node = preg_replace_callback(['/\\\\([\w\W])/', '/\\@/', '/\\$/'],
+                        function (array $matches) {
+                            $value = isset($matches[1]) ? $matches[1] : $matches[0];
+                            return RqlConditionBuilder::encodeString($value);
+                        }, $node);
+                }
+                $escapedRqlString .= $node . '&';
+            }
+        }
+        $escapedRqlString = rtrim($escapedRqlString, '&');
+        return $escapedRqlString;
+    }
+
 }

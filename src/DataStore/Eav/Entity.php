@@ -15,7 +15,7 @@ use Xiag\Rql\Parser\Query;
 use zaboy\rest\DataStore\ConditionBuilder\SqlConditionBuilder;
 use zaboy\rest\DataStore\DataStoreException;
 use zaboy\rest\DataStore\DbTable;
-use zaboy\rest\RqlParser\AggregateFunctionNode;
+use zaboy\rest\Rql\Node\AggregateFunctionNode;
 use Zend\Db\Adapter\Adapter;
 use Zend\Db\Sql\Predicate\Expression;
 use Zend\Db\Sql\Select;
