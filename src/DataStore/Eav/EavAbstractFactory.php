@@ -82,7 +82,7 @@ class EavAbstractFactory extends AbstractDataStoreFactory
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
-        $db = $container->has(self::DB_SERVICE_NAME) ? $container->get(self::DB_SERVICE_NAME) : null;
+        $db = $container->has(static::DB_SERVICE_NAME) ? $container->get(static::DB_SERVICE_NAME) : null;
         if (null === $db) {
             throw new DataStoreException(
             'Can\'t create Zend\Db\TableGateway\TableGateway for ' . $requestedName
