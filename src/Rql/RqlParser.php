@@ -54,7 +54,7 @@ class RqlParser
 
     /**
      * @param $rqlQueryString. Static method for decode qrl string. Work without rawurlencode str.
-     * @return Query
+     * @return RqlQuery
      */
     public static function rqlDecode($rqlQueryString)
     {
@@ -96,7 +96,7 @@ class RqlParser
 
     /**
      * @param $rqlQueryString. Decode rql string with token and lexler.
-     * @return Query
+     * @return RqlQuery
      */
     public function decode($rqlQueryString)
     {
@@ -157,7 +157,7 @@ class RqlParser
     }
 
     /**
-     * @param Query $query. Encode query obj with ConditionBuilder.
+     * @param RqlQuery $query. Encode query obj with ConditionBuilder.
      * @return string
      */
     public function encode(Query $query)
@@ -172,7 +172,7 @@ class RqlParser
     }
 
     /**
-     * @param Query $query
+     * @param RqlQuery $query
      * @return string
      */
     protected function makeLimit(Query $query)
@@ -188,7 +188,7 @@ class RqlParser
     }
 
     /**
-     * @param Query $query
+     * @param RqlQuery $query
      * @return string
      */
     protected function makeSort(Query $query)
@@ -208,7 +208,7 @@ class RqlParser
     }
 
     /**
-     * @param Query $query
+     * @param RqlQuery $query
      * @return string
      */
     protected function makeSelect(Query $query)

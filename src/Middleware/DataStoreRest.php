@@ -19,7 +19,7 @@ use zaboy\rest\DataStore\Interfaces\RefreshableInterface;
 use zaboy\rest\Middleware;
 use zaboy\rest\RestException;
 use zaboy\rest\Rql\Node\AggregateFunctionNode;
-use zaboy\rest\Rql\Node\SelectNode;
+use zaboy\rest\Rql\Node\AggregateSelectNode;
 use Zend\Diactoros\Response\JsonResponse;
 
 /**
@@ -156,7 +156,7 @@ class DataStoreRest extends Middleware\DataStoreAbstract
 
         $rowCountQuery = new Query();
         $aggregate = new AggregateFunctionNode('count', $this->dataStore->getIdentifier());
-        $rowCountQuery->setSelect(new SelectNode([$aggregate]));
+        $rowCountQuery->setSelect(new AggregateSelectNode([$aggregate]));
 
         if ($rqlQueryObject->getQuery()) {
             $rowCountQuery->setQuery($rqlQueryObject->getQuery());
@@ -171,7 +171,7 @@ class DataStoreRest extends Middleware\DataStoreAbstract
 
         $rowCountQuery = new Query();
         $rowCountQuery
-            ->setSelect(new SelectNode([new AggregateFunctionNode('count', $this->dataStore->getIdentifier())]));
+            ->setSelect(new AggregateSelectNode([new AggregateFunctionNode('count', $this->dataStore->getIdentifier())]));
         $rowCount = $this->dataStore->query($rowCountQuery);
         if (isset($rowCount[0][$this->dataStore->getIdentifier() . '->count'])) {
 
