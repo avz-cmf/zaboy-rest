@@ -8,9 +8,9 @@
 
 namespace zaboy\rest\Rql;
 
-use Xiag\Rql\Parser\Query as StdQuery;
+use Xiag\Rql\Parser\Query;
 
-class Query extends StdQuery
+class RqlQuery extends Query
 {
     /**
      * Query constructor. Init query with rql string or another query obj.
@@ -19,7 +19,7 @@ class Query extends StdQuery
     public function __construct($query)
     {
         if (is_string($query)) {
-            /** @var Query $query */
+            /** @var RqlQuery $query */
             $query = RqlParser::rqlDecode($query);
         }
         if ($query instanceof Query) {

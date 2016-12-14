@@ -10,7 +10,7 @@ namespace zaboy\rest\Rql\Node;
 
 use Xiag\Rql\Parser\Node\SelectNode as StdSelectNode;
 
-class SelectNode extends StdSelectNode
+class AggregateSelectNode extends StdSelectNode
 {
 
 }

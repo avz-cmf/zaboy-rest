@@ -15,7 +15,7 @@ use Xiag\Rql\Parser\Exception\SyntaxErrorException;
 use Xiag\Rql\Parser\Token;
 use Xiag\Rql\Parser\TokenStream;
 use zaboy\rest\Rql\Node\AggregateFunctionNode;
-use zaboy\rest\Rql\Node\SelectNode;
+use zaboy\rest\Rql\Node\AggregateSelectNode;
 
 
 class SelectTokenParser extends AbstractTokenParser
@@ -61,7 +61,7 @@ class SelectTokenParser extends AbstractTokenParser
 
         $tokenStream->expect(Token::T_CLOSE_PARENTHESIS);
 
-        return new SelectNode($fields);
+        return new AggregateSelectNode($fields);
     }
 
     /**

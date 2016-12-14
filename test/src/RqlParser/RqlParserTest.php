@@ -24,7 +24,7 @@ use Xiag\Rql\Parser\Node\Query\ScalarOperator\NeNode;
 use Xiag\Rql\Parser\Node\SortNode;
 use Xiag\Rql\Parser\Query;
 use zaboy\rest\Rql\Node\AggregateFunctionNode;
-use zaboy\rest\Rql\Node\SelectNode;
+use zaboy\rest\Rql\Node\AggregateSelectNode;
 use zaboy\rest\Rql\RqlParser;
 
 class RqlParserTest extends PHPUnit_Framework_TestCase
@@ -57,7 +57,7 @@ class RqlParserTest extends PHPUnit_Framework_TestCase
             ])
         );
 
-        $this->queryObject->setSelect(new SelectNode([
+        $this->queryObject->setSelect(new AggregateSelectNode([
             'q',
             (new AggregateFunctionNode('max', 'q')),
             (new AggregateFunctionNode('min', 'q')),
@@ -131,7 +131,7 @@ class RqlParserTest extends PHPUnit_Framework_TestCase
         $rqlString = RqlParser::rqlDecode("eq(email,aaa@gmail.com)&select(name,age,email)");
         $query = new Query();
         $query->setQuery(new EqNode('email', 'aaa@gmail.com'));
-        $query->setSelect(new SelectNode(['name', 'age', 'email']));
+        $query->setSelect(new AggregateSelectNode(['name', 'age', 'email']));
 
         $this->assertEquals($query, $rqlString);
     }
@@ -141,7 +141,7 @@ class RqlParserTest extends PHPUnit_Framework_TestCase
         $rqlString = RqlParser::rqlDecode("eq(email,aaa@gmail.com)&limit(10,15)&sort(-name)&select(name,age,email)");
         $query = new Query();
         $query->setQuery(new EqNode('email', 'aaa@gmail.com'));
-        $query->setSelect(new SelectNode(['name', 'age', 'email']));
+        $query->setSelect(new AggregateSelectNode(['name', 'age', 'email']));
         $query->setLimit(new LimitNode(10, 15));
         $query->setSort(new SortNode(['name'=> -1]));
 
