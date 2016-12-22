@@ -27,6 +27,7 @@ use Zend\Json\Json;
  * @see http://en.wikipedia.org/wiki/Create,_read,_update_and_delete
  * @category   rest
  * @package    zaboy
+ * @todo Json::decode - try cathe
  */
 class HttpClient extends DataStoreAbstract
 {
@@ -188,7 +189,7 @@ class HttpClient extends DataStoreAbstract
         $client = $this->initHttpClient(Request::METHOD_DELETE, null, $id);
         $response = $client->send();
         if ($response->isSuccess()) {
-                $result = !empty($response->getBody()) ? $this->jsonDecode($response->getBody()) : null;
+            $result = !empty($response->getBody()) ? $this->jsonDecode($response->getBody()) : null;
         } else {
             throw new DataStoreException(
             'Status: ' . $response->getStatusCode()
