@@ -9,7 +9,9 @@
 
 namespace zaboy\test\rest\DataStore;
 
+use Xiag\Rql\Parser\Query;
 use zaboy\rest\DataStore\DbTable;
+use zaboy\rest\Rql\RqlQuery;
 use Zend\Db\Adapter\Adapter;
 use Zend\Db\TableGateway\TableGateway;
 

@@ -23,6 +23,11 @@
                  'url' => 'http://localhost/api/rest/entity_product',
                  'options' => ['timeout' => 30]
             ],
+            'testEavOverHttpDbClient' => [
+                        'class' => 'zaboy\rest\DataStore\HttpClient',
+                        'url' => 'http://localhost:9090/api/rest/db'. EavAbstractFactory::DB_NAME_DELIMITER . 'entity_product',
+                        'options' => ['timeout' => 30]
+                   ],
         ]
     ];
  ```
