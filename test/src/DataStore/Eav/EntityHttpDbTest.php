@@ -14,6 +14,6 @@ class EntityHttpDbTest extends EntityTestAbstract
 
     protected function __init()
     {
-        $this->object = $this->container->get('testEavOverHttpClient');
+        $this->object = $this->container->get('testEavOverHttpDbClient');
     }
 }
