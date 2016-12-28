@@ -9,6 +9,7 @@
 
 namespace zaboy\rest\install\DataStore\Eav;
 
+use Interop\Container\ContainerInterface;
 use Zend\Db\Adapter\AdapterInterface;
 use zaboy\rest\TableGateway\TableManagerMysql as TableManager;
 use zaboy\rest\DataStore\Eav\SysEntities;
@@ -45,9 +46,9 @@ class Installer extends InstallerAbstract
      *        ]
      *    ],
      * </code>
-     * @param type $container
+     * @param ContainerInterface $container
      */
-    public function __construct($container)
+    public function __construct(ContainerInterface $container)
     {
         parent::__construct($container);
         $this->dbAdapter = $this->container->get(EavAbstractFactory::DB_SERVICE_NAME);
@@ -101,5 +102,4 @@ class Installer extends InstallerAbstract
             $tableManager->createTable(SysEntities::TABLE_NAME);
         }
     }
-
 }

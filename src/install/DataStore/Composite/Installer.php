@@ -8,6 +8,7 @@
 
 namespace zaboy\rest\install\DataStore\Composite;
 
+use Interop\Container\ContainerInterface;
 use zaboy\rest\DataStore\Composite\Example\Store;
 use zaboy\rest\install\InstallerAbstract;
 use Zend\Db\Adapter\AdapterInterface;
@@ -35,9 +36,9 @@ class Installer extends InstallerAbstract
      *        ]
      *    ],
      * </code>
-     * @param type $container
+     * @param ContainerInterface $container
      */
-    public function __construct($container)
+    public function __construct(ContainerInterface $container)
     {
         parent::__construct($container);
         $this->dbAdapter = $this->container->get('db');
@@ -49,7 +50,6 @@ class Installer extends InstallerAbstract
             echo 'getenv("APP_ENV") !== "dev" It has did nothing';
             exit;
         }
-
         $tableManager = new TableManager($this->dbAdapter);
         $tableManager->deleteTable(Store::IMAGE_TABLE_NAME);
         $tableManager->deleteTable(Store::CATEGORY_PRODUCT_TABLE_NAME);

@@ -9,6 +9,8 @@
 
 namespace zaboy\rest\install;
 
+use Interop\Container\ContainerInterface;
+use zaboy\res\Install\InstallerInterface;
 use zaboy\rest\install\DataStore\Eav\Installer as EavInstaller;
 use Zend\Db\Adapter\Adapter;
 
@@ -18,7 +20,7 @@ use Zend\Db\Adapter\Adapter;
  * @category   Zaboy
  * @package    zaboy
  */
-class InstallerAbstract
+abstract class InstallerAbstract implements InstallerInterface
 {
 
     const PRODACTION = 'prod';
@@ -26,9 +28,18 @@ class InstallerAbstract
 
     protected $container;
 
-    public function __construct($container)
+    public function __construct(ContainerInterface $container)
     {
         $this->container = $container;
     }
 
+    /**
+     * Make clean and install.
+     * @return void
+     */
+    public function reinstall()
+    {
+        $this->uninstall();
+        $this->install();
+    }
 }
