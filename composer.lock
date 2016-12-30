@@ -9,16 +9,16 @@
     "packages": [
         {
             "name": "avz-cmf/zaboy-installer",
-            "version": "v1.0.0",
+            "version": "v1.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/avz-cmf/zaboy-installer.git",
-                "reference": "62f44ff9c0b68ec9e75e78d333b14c612efb2768"
+                "reference": "921f9fc5e3ffbc0ca5e8812ef13d0808397cc9f7"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/avz-cmf/zaboy-installer/zipball/62f44ff9c0b68ec9e75e78d333b14c612efb2768",
-                "reference": "62f44ff9c0b68ec9e75e78d333b14c612efb2768",
+                "url": "https://api.github.com/repos/avz-cmf/zaboy-installer/zipball/921f9fc5e3ffbc0ca5e8812ef13d0808397cc9f7",
+                "reference": "921f9fc5e3ffbc0ca5e8812ef13d0808397cc9f7",
                 "shasum": ""
             },
             "require": {
@@ -51,7 +51,7 @@
                 }
             ],
             "description": "Installer lib for create and automated install specific app/lib pref",
-            "time": "2016-12-30 08:22:53"
+            "time": "2016-12-30 11:19:00"
         },
         {
             "name": "composer/ca-bundle",

@@ -107,7 +107,7 @@ class EavAbstractFactory extends AbstractDataStoreFactory
             return $result;
         }
         //'sys_entities' or 'entity_table_name' or 'prop_table_name'
-        $requestedName = ($this->getEavDataStores($requestedName))[0];
+        $requestedName = $this->getEavDataStores($requestedName)[0];
         return $this->getEavDataStore($db, $requestedName);
     }
 
