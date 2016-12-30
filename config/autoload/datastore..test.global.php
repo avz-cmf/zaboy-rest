@@ -11,9 +11,9 @@ return [
     ],
 
     'tableGateway' =>[
-            'test_res_tablle' => [
-                'sql' => 'zaboy\rest\TableGateway\DbSql\MultiInsertSql'
-            ]
+        'test_res_tablle' => [
+            'sql' => 'zaboy\rest\TableGateway\DbSql\MultiInsertSql',
+        ],
     ],
 
     'dataStore' => [
@@ -43,7 +43,13 @@ return [
             'class' => 'zaboy\rest\DataStore\HttpClient',
             'url' => 'http://zaboy-rest.loc/api/rest/entity_product',
             'options' => ['timeout' => 30]
-        ],*/
+        ],
+         'testEavOverHttpDbClient' => [
+            'class' => 'zaboy\rest\DataStore\HttpClient',
+            'url' => 'http://localhost:9090/api/rest/db.entity_product',
+            'options' => ['timeout' => 30]
+        ],
+        */
         'testMemory' => [
             'class' => 'zaboy\rest\DataStore\Memory',
         ],

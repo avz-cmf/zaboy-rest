@@ -11,14 +11,10 @@ namespace zaboy\rest\DataStore\Eav;
 
 use Interop\Container\ContainerInterface;
 use zaboy\rest\DataStore\DataStoreException;
-use zaboy\rest\DataStore\Interfaces\DataStoresInterface;
-use Zend\Db\TableGateway\TableGateway;
 use zaboy\rest\DataStore\Factory\AbstractDataStoreFactory;
-use zaboy\rest\DataStore\Eav\SysEntities;
-use zaboy\rest\DataStore\Eav\Entity;
-use zaboy\rest\DataStore\Eav\Prop;
-use zaboy\rest\DataStore\Eav\SuperEntity;
+use zaboy\rest\DataStore\Interfaces\DataStoresInterface;
 use Zend\Db\Adapter\AdapterInterface;
+use Zend\Db\TableGateway\TableGateway;
 
 /**
  * Create and return an instance of the DataStore which based on DbTable
@@ -51,24 +47,31 @@ class EavAbstractFactory extends AbstractDataStoreFactory
 {
 
     const DB_SERVICE_NAME = 'eav db';
+    const DB_NAME_DELIMITER = '~';
 
     public function canCreate(ContainerInterface $container, $requestedName)
     {
-        //'SuperEtity - 'entity_table_name_1~entity_table_name_1'
+        //'SuperEtity - 'entity_table_name_1-entity_table_name_1'
         $superEtity = strpos($requestedName, SuperEntity::INNER_JOIN);
         if ($superEtity) {
             $eavDataStores = explode(SuperEntity::INNER_JOIN, $requestedName);
             foreach ($eavDataStores as $eavDataStore) {
+                //db.entity_table_name_1 -> entity_table_name_1
+                $locate = explode(EavAbstractFactory::DB_NAME_DELIMITER, $eavDataStore);
+                $eavDataStore = count($locate) == 1 ? $locate[0] : $locate[1];
                 if (strpos($eavDataStore, SysEntities::ENTITY_PREFIX) !== 0) {
                     return false;
                 }
             }
             return true;
+        } else {
+            //db.entity_table_name_1 -> entity_table_name_1
+            $locate = explode(EavAbstractFactory::DB_NAME_DELIMITER, $requestedName);
+            $eavDataStore = count($locate) == 1 ? $locate[0] : $locate[1];
+            return strpos($eavDataStore, SysEntities::ENTITY_PREFIX) === 0 ||
+                strpos($eavDataStore, SysEntities::PROP_PREFIX) === 0 ||
+                $eavDataStore == SysEntities::TABLE_NAME;
         }
-
-        return strpos($requestedName, SysEntities::ENTITY_PREFIX) === 0 ||
-                strpos($requestedName, SysEntities::PROP_PREFIX) === 0 ||
-                $requestedName == SysEntities::TABLE_NAME;
     }
 
     /**
@@ -82,16 +85,17 @@ class EavAbstractFactory extends AbstractDataStoreFactory
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
-        $db = $container->has(static::DB_SERVICE_NAME) ? $container->get(static::DB_SERVICE_NAME) : null;
+        $dbAdapterName = $this->getDbAdapterName($requestedName);
+        $db = $container->has($dbAdapterName) ? $container->get($dbAdapterName) : null;
         if (null === $db) {
             throw new DataStoreException(
-            'Can\'t create Zend\Db\TableGateway\TableGateway for ' . $requestedName
+                'Can\'t create Zend\Db\TableGateway\TableGateway for ' . $requestedName
             );
         }
 
-        //'SuperEtity - 'entity_table_name_1~entity_table_name_1'
+        //'SuperEtity - 'entity_table_name_1-entity_table_name_1'
         if (strpos($requestedName, SuperEntity::INNER_JOIN)) {
-            $eavDataStores = explode(SuperEntity::INNER_JOIN, $requestedName);
+            $eavDataStores = $this->getEavDataStores($requestedName);
             $eavDataStoresObjests = [];
             foreach ($eavDataStores as $eavDataStore) {
                 $eavDataStoresObjests[] = $this->getEavDataStore($db, $eavDataStore);
@@ -103,6 +107,7 @@ class EavAbstractFactory extends AbstractDataStoreFactory
             return $result;
         }
         //'sys_entities' or 'entity_table_name' or 'prop_table_name'
+        $requestedName = ($this->getEavDataStores($requestedName))[0];
         return $this->getEavDataStore($db, $requestedName);
     }
 
@@ -120,9 +125,42 @@ class EavAbstractFactory extends AbstractDataStoreFactory
                 return new SysEntities($tableGateway);
             default:
                 throw new DataStoreException(
-                'Can\'t create service for ' . $requestedName
+                    'Can\'t create service for ' . $requestedName
                 );
         }
     }
 
+    /**
+     * @param $requestedName
+     * @return string
+     */
+    protected function getDbAdapterName($requestedName)
+    {
+        if (strpos($requestedName, SuperEntity::INNER_JOIN)) {
+            $eavDataStores = explode(SuperEntity::INNER_JOIN, $requestedName);
+            //db.entity_table_name_1 -> entity_table_name_1
+            $locate = explode(EavAbstractFactory::DB_NAME_DELIMITER, $eavDataStores[0]);
+        } else {
+            $locate = explode(EavAbstractFactory::DB_NAME_DELIMITER, $requestedName);
+        }
+        return count($locate) == 2 ? $locate[0] : static::DB_SERVICE_NAME;
+    }
+
+    protected function getEavDataStores($requestedName)
+    {
+        if (strpos($requestedName, SuperEntity::INNER_JOIN)) {
+            $eavDataStores = explode(SuperEntity::INNER_JOIN, $requestedName);
+            foreach ($eavDataStores as &$eavDataStore) {
+                //db.entity_table_name_1 -> entity_table_name_1
+                $locate = explode(EavAbstractFactory::DB_NAME_DELIMITER, $eavDataStore);
+                $eavDataStore = count($locate) == 1 ? $locate[0] : $locate[1];
+            }
+            return $eavDataStores;
+        } else {
+            //db.entity_table_name_1 -> entity_table_name_1
+            $locate = explode(EavAbstractFactory::DB_NAME_DELIMITER, $requestedName);
+            $eavDataStore = count($locate) == 1 ? $locate[0] : $locate[1];
+            return [$eavDataStore];
+        }
+    }
 }

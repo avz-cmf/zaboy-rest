@@ -22,6 +22,11 @@
                    'url' => 'http://localhost/api/rest/entity_product',
                    'options' => ['timeout' => 30]
         ],
+       'testEavOverHttpDbClient' => [
+            'class' => 'zaboy\rest\DataStore\HttpClient',
+            'url' => 'http://localhost:9090/api/rest/db'. EavAbstractFactory::DB_NAME_DELIMITER . 'entity_product',
+            'options' => ['timeout' => 30]
+       ],
    ]
  ];
  ```
@@ -50,7 +55,7 @@
 
 Установите переменную окружения `'APP_ENV' = "dev"`;
 
-Запустите скрипт `script/install.php`, он создаст таблицы в базе.
+Запустите скрипт `composer lib-install`, он создаст таблицы в базе.
  
 
 

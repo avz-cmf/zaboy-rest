@@ -9,6 +9,7 @@
 
 namespace zaboy\rest\TableGateway\Factory;
 
+use zaboy\rest\DataStore\Interfaces\DataStoresInterface;
 use Zend\Db\TableGateway\TableGateway;
 use Zend\Db\Metadata\Metadata;
 use zaboy\rest\RestException;
@@ -37,10 +38,10 @@ class TableManagerMysqlFactory extends FactoryAbstract
      * 'use Zend\ServiceManager\AbstractFactoryInterface;' for V2 to
      * 'use Zend\ServiceManager\Factory\AbstractFactoryInterface;' for V3
      *
-     * @param  Interop\Container\ContainerInterface $container
+     * @param  ContainerInterface $container
      * @param  string $requestedName
      * @param  array $options
-     * @return \DataStores\Interfaces\DataStoresInterface
+     * @return mixed|TableManagerMysql
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {

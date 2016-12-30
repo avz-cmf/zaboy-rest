@@ -11,7 +11,7 @@ namespace zaboy\rest\Middleware\Factory;
 
 //use Zend\ServiceManager\Factory\FactoryInterface;
 //uncomment it ^^ for Zend\ServiceManager V3
-use Zend\ServiceManager\FactoryInterface;
+use Zend\ServiceManager\Factory\FactoryInterface;
 //comment it ^^ for Zend\ServiceManager V3
 use Zend\ServiceManager\ServiceLocatorInterface;
 use zaboy\rest\RestException;
@@ -19,6 +19,7 @@ use Interop\Container\ContainerInterface;
 use zaboy\rest\Middleware;
 use zaboy\rest\DataStore\DbTable;
 use zaboy\rest\DataStore\Interfaces\DataStoresInterface;
+use Zend\Stratigility\MiddlewareInterface;
 
 /**
  *
@@ -46,10 +47,11 @@ class DataStoreDirectFactory implements FactoryInterface
      * zaboy\rest\Middleware\Factory\DataStoreAbstractFactory <br>
      * to config<br>
      *
-     * @param  Interop\Container\ContainerInterface $container
+     * @param  ContainerInterface $container
      * @param  string $requestedName
      * @param  array $options
      * @return MiddlewareInterface
+     * @throws RestException
      */
     public function __invoke(ContainerInterface $container, $requestedName, array $options = null)
     {
@@ -67,7 +69,7 @@ class DataStoreDirectFactory implements FactoryInterface
             case ($resourceObject instanceof DataStoresInterface):
                 $dataStore = $resourceObject;
                 $resourceObject = new Middleware\DataStoreRest($dataStore);
-            case $resourceObject instanceof \Zend\Stratigility\MiddlewareInterface:
+            case $resourceObject instanceof MiddlewareInterface:
                 $storeMiddleware = $resourceObject;
             default:
                 if (!isset($storeMiddleware)) {
@@ -85,6 +87,7 @@ class DataStoreDirectFactory implements FactoryInterface
      *
      * @param ServiceLocatorInterface $serviceLocator
      * @return mixed
+     * @throws RestException
      */
     public function createService(ServiceLocatorInterface $serviceLocator)
     {

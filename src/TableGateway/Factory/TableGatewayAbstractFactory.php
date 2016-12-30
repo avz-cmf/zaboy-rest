@@ -62,7 +62,7 @@ class TableGatewayAbstractFactory extends AbstractFactoryAbstract
         //is there table with same name (for static tables set)?
         //$tableNames = $this->getCachedTables($container);
         //is there table with same name (for non static tables set)?
-        if ($this->setDbAdapter($container)) {
+        if ($this->setDbAdapter($container, $requestedName)) {
             $dbMetadata = new Metadata($this->db);
             $this->tableNames = $dbMetadata->getTableNames();
         }
@@ -72,11 +72,17 @@ class TableGatewayAbstractFactory extends AbstractFactoryAbstract
     /**
      *
      * @param ContainerInterface $container
+     * @param $requestedName
      * @return bool
      */
-    protected function setDbAdapter(ContainerInterface $container)
+    protected function setDbAdapter(ContainerInterface $container, $requestedName)
     {
-        if (!isset($this->db)) {
+
+        $config = $container->get('config')[TableGatewayAbstractFactory::KEY_TABLE_GATEWAY];
+        if (isset($config[$requestedName]) && isset($config[$requestedName]['adapter'])) {
+            $this->db = $container->has($config[$requestedName]['adapter']) ?
+                $container->get($config[$requestedName]['adapter']) : false;
+        } else {
             $this->db = $container->has('db') ? $container->get('db') : false;
         }
         return (bool)$this->db;
