@@ -1,6 +1,5 @@
 vendor/
 nbproject/
-phpunit.xml
 phpunit.xml.dist
 .idea
 temp
