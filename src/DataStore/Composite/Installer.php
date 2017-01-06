@@ -8,10 +8,11 @@
 
 namespace zaboy\rest\DataStore\Composite;
 
+use Composer\IO\IOInterface;
 use Interop\Container\ContainerInterface;
+use zaboy\installer\Install\InstallerAbstract;
 use zaboy\rest\DataStore\Composite\Example\Store;
 use zaboy\rest\DataStore\DbTable;
-use zaboy\rest\InstallerAbstract;
 use zaboy\rest\TableGateway\DbSql\MultiInsertSql;
 use Zend\Db\Adapter\AdapterInterface;
 use zaboy\rest\TableGateway\TableManagerMysql as TableManager;
@@ -40,10 +41,11 @@ class Installer extends InstallerAbstract
      *    ],
      * </code>
      * @param ContainerInterface $container
+     * @param IOInterface $ioComposer
      */
-    public function __construct(ContainerInterface $container)
+    public function __construct(ContainerInterface $container, IOInterface $ioComposer)
     {
-        parent::__construct($container);
+        parent::__construct($container, $ioComposer);
         $this->dbAdapter = $this->container->get('db');
     }
 
